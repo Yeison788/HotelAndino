@@ -2,7 +2,7 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>Invoice</title>
+	<title>Factura</title>
 	<link rel="stylesheet" href="style.css">
 	<link rel="license" href="https://www.opensource.org/licenses/mit-license/">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -460,25 +460,25 @@
 	$fintot=$ttot+$btot+$mepr;
 	?>
 	<header>
-		<h1>Invoice</h1>
+		<h1>Factura</h1>
 		<address>
-			<p>HOTEL BLUE BIRD,</p>
-			<p>(+91) 9505437075</p>
+			<p>HOTEL ANDINO,</p>
+			<p>(+57) 3206850961</p>
 		</address>
 		<span><img alt="" src="../image/logo.jpg"></span>
 	</header>
 	<article>
-		<h1>Recipient</h1>
+		<h1>Destinatario</h1>
 		<address>
 			<p><?php echo $Name ?> <br></p>
 		</address>
 		<table class="meta">
 			<tr>
-				<th><span>Invoice #</span></th>
+				<th><span>Factura #</span></th>
 				<td><span><?php echo $id; ?></span></td>
 			</tr>
 			<tr>
-				<th><span>Date</span></th>
+				<th><span>Fecha</span></th>
 				<td><span><?php echo $cout; ?> </span></td>
 			</tr>
 
@@ -486,60 +486,60 @@
 		<table class="inventory">
 			<thead>
 				<tr>
-					<th><span>Item</span></th>
-					<th><span>No of Days</span></th>
-					<th><span>Rate</span></th>
-					<th><span>Quantity</span></th>
-					<th><span>Price</span></th>
+					<th><span>Artículo</span></th>
+					<th><span>Número de días</span></th>
+					<th><span>Tarifa</span></th>
+					<th><span>Cantidad</span></th>
+					<th><span>Precio</span></th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
 					<td><span><?php echo $troom; ?></span></td>
 					<td><span><?php echo $days; ?> </span></td>
-					<td><span data-prefix>₹</span><span><?php echo $type_of_room; ?></span></td>
+					<td><span data-prefix>$</span><span><?php echo $type_of_room; ?></span></td>
 					<td><span><?php echo $nroom; ?> </span></td>
-					<td><span data-prefix>₹</span><span><?php echo $ttot; ?></span></td>
+					<td><span data-prefix>$</span><span><?php echo $ttot; ?></span></td>
 				</tr>
 				<tr>
 					<td><span><?php echo $bed; ?> Bed </span></td>
 					<td><span><?php echo $days; ?></span></td>
-					<td><span data-prefix>₹</span><span><?php echo $type_of_bed; ?></span></td>
+					<td><span data-prefix>$</span><span><?php echo $type_of_bed; ?></span></td>
 					<td><span><?php echo $nroom; ?> </span></td>
-					<td><span data-prefix>₹</span><span><?php echo $btot; ?></span></td>
+					<td><span data-prefix>$</span><span><?php echo $btot; ?></span></td>
 				</tr>
 				<tr>
 					<td><span><?php echo $meal; ?> </span></td>
 					<td><span><?php echo $days; ?></span></td>
-					<td><span data-prefix>₹</span><span><?php echo $type_of_meal ?></span></td>
+					<td><span data-prefix>$</span><span><?php echo $type_of_meal ?></span></td>
 					<td><span><?php echo $nroom; ?> </span></td>
-					<td><span data-prefix>₹</span><span><?php echo $mepr; ?></span></td>
+					<td><span data-prefix>$</span><span><?php echo $mepr; ?></span></td>
 				</tr>
 			</tbody>
 		</table>
 		<table class="balance">
 			<tr>
 				<th><span>Total</span></th>
-				<td><span data-prefix>₹</span><span><?php echo $fintot; ?></span></td>
+				<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
 			</tr>
 			<tr>
 				<th><span>Amount Paid</span></th>
-				<td><span data-prefix>₹</span><span>0.00</span></td>
+				<td><span data-prefix>$</span><span>0.00</span></td>
 			</tr>
 			<tr>
 				<th><span>Balance Due</span></th>
-				<td><span data-prefix>₹</span><span><?php echo $fintot; ?></span></td>
+				<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
 			</tr>
 		</table>
 	</article>
 	<aside>
 		<h1><span>Contact us</span></h1>
 		<div>
-			<p align="center">Email :- bluebird@gmail.com || Web :- www.bluebird.com || Phone :- +91 9505437075 </p>
+			<p align="center">Email :- contacto@hotelandino.com || Web :- www.hotelandino.com || Phone :- +57 0000000000 </p>
 		</div>
 	</aside>
-	<button onclick="window.print()">Print Invoice</button>
-	<!-- <button onclick="generatePDF()">Download Invoice</button>
+	<button onclick="window.print()">Imprimir Factura</button>
+	<!-- <button onclick="generatePDF()">Download Factura</button>
 
 	<script>
 		function generatePDF() {

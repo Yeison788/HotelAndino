@@ -4,13 +4,13 @@ include '../config.php';
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlueBird - Admin</title>
+    <title>Hotel Andino - Admin</title>
     <!-- fontowesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- boot -->
@@ -28,20 +28,20 @@ include '../config.php';
 <body>
     <div class="addroomsection">
         <form action="" method="POST">
-            <label for="troom">Name :</label>
+            <label for="troom">Nombre :</label>
             <input type="text" name="staffname" class="form-control">
 
-            <label for="bed">Work :</label>
+            <label for="bed">Cargo :</label>
             <select name="staffwork" class="form-control">
                 <option value selected></option>
-                <option value="Manager">Manager</option>
-                <option value="Cook">Cook</option>
-                <option value="Helper">Helper</option>
-                <option value="cleaner">cleaner</option>
-                <option value="weighter">weighter</option>
+                <option value="Manager">Gerente</option>
+                <option value="Cook">Cocinero</option>
+                <option value="Helper">Ayudante</option>
+                <option value="cleaner">Limpieza</option>
+                <option value="weighter">Mesero</option>
             </select>
 
-            <button type="submit" class="btn btn-success" name="addstaff">Add Room</button>
+            <button type="submit" class="btn btn-success" name="addstaff">Agregar personal</button>
         </form>
 
         <?php
@@ -73,7 +73,7 @@ include '../config.php';
                             <i class='fa fa-users fa-5x'></i>
 							<h3>" . $row['name'] . "</h3>
                             <div class='mb-1'>" . $row['work'] . "</div>
-                            <a href='staffdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Delete</button></a>
+                            <a href='staffdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Eliminar</button></a>
 						</div>
                     </div>";
         }

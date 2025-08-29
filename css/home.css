@@ -35,11 +35,11 @@ nav{
 }
 
 nav ul{
-    width: 500px;
+    width: 600px;
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
-    margin-top: 15px;
+    gap: 30px;
     color: black;
 }
 
@@ -75,7 +75,7 @@ ul li a:hover{
     display: flex;
     justify-content: center;
 }
-.logo .bluebirdlogo {
+.logo .LogoAndino {
     height: 100%;
 }
 

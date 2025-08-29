@@ -1,7 +1,4 @@
 # 🏨 Bluebird Hotel Management System
-
-Bluebird Hotel Management System is a comprehensive software solution designed to streamline hotel operations, enabling smooth management for both **guests** and **staff**. Built using the **Scrum methodology**, it supports features like room booking, payment processing, data analytics, and even an AI-powered chatbot! 🤖✨
-
 ## 🌐 Features
 
 ### 👥 User and Staff Logins
@@ -87,6 +84,3 @@ Password : 1234
 ```
 ---
 
-Thank you @tushar-2223 and @Tejas-Valame.
-This was enhanced from the root level.
-(https://github.com/tushar-2223/Hotel-Management-System)

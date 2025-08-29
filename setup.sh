@@ -27,7 +27,7 @@ systemctl enable httpd
 
 # Configure DB
 echo "Enter your Mysql root password or just press Enter if not configured yet"
-mysql -u root -p < $DIR/bluebirdhotel.sql
+mysql -u root -p < $DIR/hotelandino.sql
 
 # Copy project to /var/www/html
 cp -r $DIR /var/www/html/

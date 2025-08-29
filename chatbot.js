@@ -1,13 +1,13 @@
 // Objeto con respuestas en español para el hotel
 const responses = {
-    "hola": "¡Hola! Bienvenido a Blue Bird Hotel. ¿En qué puedo ayudarte hoy?",
+    "hola": "¡Hola! Bienvenido a Hotel Andino. ¿En qué puedo ayudarte hoy?",
     "buenos días": "¡Buenos días! ¿Quieres hacer una reserva o necesitas información sobre nuestros servicios?",
     "reservar": "Para hacer una reserva, por favor indícame la fecha de llegada y salida.",
     "precios": "Nuestros precios varían según la temporada y el tipo de habitación. ¿Quieres que te envíe una lista?",
     "servicios": "Ofrecemos WiFi gratis, desayuno incluido, piscina y gimnasio. ¿Quieres saber más sobre algún servicio?",
     "habitaciones": "Disponemos de habitaciones sencillas, dobles y suites. ¿Cuál prefieres?",
     "ubicación": "Estamos ubicados en el centro de la ciudad, cerca de los principales atractivos turísticos.",
-    "contacto": "Puedes contactarnos al teléfono +123 456 7890 o al correo contacto@bluebirdhotel.com.",
+    "contacto": "Puedes contactarnos al teléfono +57 000 000 0000 o al correo contacto@hotelandino.com.",
     "gracias": "¡Con gusto! Si tienes más preguntas, aquí estaré para ayudarte.",
     "adiós": "¡Gracias por visitarnos! Que tengas un excelente día.",
     "default": "Lo siento, no entendí eso. ¿Podrías reformular tu pregunta o elegir una de las opciones? 😊",

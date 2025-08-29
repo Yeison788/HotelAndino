@@ -9,13 +9,13 @@ $usermail=$_SESSION['usermail'];
 if($usermail == true){
 
 }else{
-  header("location: http://localhost/hotelmanage_system/index.php");
+  header("location: http://localhost/hotelandino/index.php");
 }
 
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
@@ -27,34 +27,34 @@ if($usermail == true){
     <link rel="stylesheet" href="../css/flash.css">
     <!-- fontowesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <title>BlueBird - Admin</title>
+    <title>Hotel Andino - Admin</title>
 </head>
 
 <body>
     <!-- mobile view -->
     <div id="mobileview">
-        <h5>Admin panel doesn't show in mobile view</h4>
+        <h5>El panel de administración no está disponible en dispositivos móviles</h4>
     </div>
   
     <!-- nav bar -->
     <nav class="uppernav">
         <div class="logo">
-            <img class="bluebirdlogo" src="../image/bluebirdlogo.png" alt="logo">
-            <p>BLUEBIRD</p>
+            <img class="HotelAndino" src="../image/LogoAndino.png" alt="logo">
+            <p>Hotel Andino</p>
         </div>
         <div class="logout">
-        <a href="../logout.php"><button class="btn btn-primary">Logout</button></a>
+        <a href="../logout.php"><button class="btn btn-primary">Cerrar sesión</button></a>
         </div>
     </nav>
     <nav class="sidenav">
         <ul>
-            <li class="pagebtn active"><img src="../image/icon/dashboard.png">&nbsp&nbsp&nbsp Dashboard</li>
-            <li class="pagebtn"><img src="../image/icon/bed.png">&nbsp&nbsp&nbsp Room Booking</li>
-            <li class="pagebtn"><img src="../image/icon/wallet.png">&nbsp&nbsp&nbsp Payment</li>            
-            <li class="pagebtn"><img src="../image/icon/bedroom.png">&nbsp&nbsp&nbsp Rooms</li>
-            <li class="pagebtn"><img src="../image/icon/staff.png">&nbsp&nbsp&nbsp Staff</li>
-            <li class="pagebtn"><img src="../image/icon/analytics.png">&nbsp&nbsp&nbsp Analytics</li>
-            <li class="pagebtn"><img src="../image/icon/security1.png">&nbsp&nbsp&nbsp Security Surveillance</li>
+            <li class="pagebtn active"><img src="../image/icon/dashboard.png">&nbsp&nbsp&nbsp Panel</li>
+            <li class="pagebtn"><img src="../image/icon/bed.png">&nbsp&nbsp&nbsp Reservas</li>
+            <li class="pagebtn"><img src="../image/icon/wallet.png">&nbsp&nbsp&nbsp Pagos</li>            
+            <li class="pagebtn"><img src="../image/icon/bedroom.png">&nbsp&nbsp&nbsp Habitaciones</li>
+            <li class="pagebtn"><img src="../image/icon/staff.png">&nbsp&nbsp&nbsp Personal</li>
+            <li class="pagebtn"><img src="../image/icon/analytics.png">&nbsp&nbsp&nbsp Analíticas</li>
+            <li class="pagebtn"><img src="../image/icon/security1.png">&nbsp&nbsp&nbsp Seguridad</li>
         </ul>
     </nav>
 

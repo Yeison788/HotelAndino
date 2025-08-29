@@ -51,7 +51,7 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -66,16 +66,16 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
 
-    <title>BlueBird - Admin </title>
+    <title>Hotel Andino - Admin </title>
 </head>
 <body>
    <div class="databox">
         <div class="box roombookbox">
-          <h2>Total Booked Room</h1>  
+          <h2>Habitaciones reservadas</h1>  
           <h1><?php echo $roombookrow ?> / <?php echo $roomrow ?></h1>
         </div>
         <div class="box guestbox">
-        <h2>Total Staff</h1>  
+        <h2>Total de personal</h1> 
           <h1><?php echo $staffrow ?></h1>
         </div>
         <div class="box profitbox">

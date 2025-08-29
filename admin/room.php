@@ -4,13 +4,13 @@ include '../config.php';
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlueBird - Admin</title>
+    <title>Hotel Andino - Admin</title>
     <!-- fontowesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- boot -->
@@ -22,26 +22,26 @@ include '../config.php';
 <body>
     <div class="addroomsection">
         <form action="" method="POST">
-            <label for="troom">Type of Room :</label>
+            <label for="troom">Tipo de habitación :</label>
             <select name="troom" class="form-control">
                 <option value selected></option>
-                <option value="Superior Room">SUPERIOR ROOM</option>
-                <option value="Deluxe Room">DELUXE ROOM</option>
-                <option value="Guest House">GUEST HOUSE</option>
-                <option value="Single Room">SINGLE ROOM</option>
+                <option value="Superior Room">HABITACIÓN SUPERIOR</option>
+                <option value="Deluxe Room">HABITACIÓN DELUXE</option>
+                <option value="Guest House">CASA DE HUÉSPEDES</option>
+                <option value="Single Room">HABITACIÓN INDIVIDUAL</option>
             </select>
 
-            <label for="bed">Type of Bed :</label>
+            <label for="bed">Tipo de cama :</label>
             <select name="bed" class="form-control">
                 <option value selected></option>
-                <option value="Single">Single</option>
-                <option value="Double">Double</option>
+                <option value="Single">Individual</option>
+                <option value="Double">Doble</option>
                 <option value="Triple">Triple</option>
-                <option value="Quad">Quad</option>
-                <option value="Triple">None</option>
+                <option value="Quad">Cuádruple</option>
+                <option value="None">Ninguna</option>
             </select>
 
-            <button type="submit" class="btn btn-success" name="addroom">Add Room</button>
+            <button type="submit" class="btn btn-success" name="addroom">Agregar habitación</button>
         </form>
 
         <?php
@@ -73,7 +73,7 @@ include '../config.php';
                             <i class='fa-solid fa-bed fa-4x mb-2'></i>
 							<h3>" . $row['type'] . "</h3>
                             <div class='mb-1'>" . $row['bedding'] . "</div>
-                            <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Delete</button></a>
+                            <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Eliminar</button></a>
 						</div>
                     </div>";
             } else if ($id == "Deluxe Room") {
@@ -82,7 +82,7 @@ include '../config.php';
                         <i class='fa-solid fa-bed fa-4x mb-2'></i>
                         <h3>" . $row['type'] . "</h3>
                         <div class='mb-1'>" . $row['bedding'] . "</div>
-                        <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Delete</button></a>
+                        <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Eliminar</button></a>
                     </div>
                     </div>";
             } else if ($id == "Guest House") {
@@ -91,7 +91,7 @@ include '../config.php';
                 <i class='fa-solid fa-bed fa-4x mb-2'></i>
 							<h3>" . $row['type'] . "</h3>
                             <div class='mb-1'>" . $row['bedding'] . "</div>
-                            <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Delete</button></a>
+                            <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Eliminar</button></a>
 					</div>
             </div>";
             } else if ($id == "Single Room") {
@@ -100,7 +100,7 @@ include '../config.php';
                         <i class='fa-solid fa-bed fa-4x mb-2'></i>
                         <h3>" . $row['type'] . "</h3>
                         <div class='mb-1'>" . $row['bedding'] . "</div>
-                        <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Delete</button></a>
+                        <a href='roomdelete.php?id=". $row['id'] ."'><button class='btn btn-danger'>Eliminar</button></a>
                     </div>
                     </div>";
             }
