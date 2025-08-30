@@ -19,17 +19,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = mysqli_stmt_get_result($stmt);
 
             if ($result && $result->num_rows > 0) {
-                $_SESSION['usermail'] = $Email;
+                $_SESSION['usermail'] = $Email;   // Sesión para usuarios
                 header("Location: home.php");
                 exit;
             } else {
                 $loginUserError = true;
             }
             mysqli_stmt_close($stmt);
-        } else { $loginUserError = true; }
+        } else { 
+            $loginUserError = true; 
+        }
     }
 
-    // == Login de Empleado ==
+    // == Login de Empleado (Admin) ==
     if (isset($_POST['Emp_login_submit'])) {
         $Email = $_POST['Emp_Email'] ?? '';
         $Password = $_POST['Emp_Password'] ?? '';
@@ -41,14 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = mysqli_stmt_get_result($stmt);
 
             if ($result && $result->num_rows > 0) {
-                $_SESSION['usermail'] = $Email;
-                header("Location: admin/admin.php");
+                $_SESSION['adminmail'] = $Email; // Sesión exclusiva de admin
+                header("Location: ./admin/admin.php");
                 exit;
             } else {
                 $loginEmpError = true;
             }
             mysqli_stmt_close($stmt);
-        } else { $loginEmpError = true; }
+        } else { 
+            $loginEmpError = true; 
+        }
     }
 
     // == Registro de Usuario ==
@@ -81,16 +85,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $_SESSION['usermail'] = $Email;
                                 header("Location: home.php");
                                 exit;
-                            } else { $signupError = "Algo salió mal"; }
-                        } else { $signupError = "Algo salió mal"; }
+                            } else { 
+                                $signupError = "Algo salió mal"; 
+                            }
+                        } else { 
+                            $signupError = "Algo salió mal"; 
+                        }
                     }
                     mysqli_stmt_close($stmt);
-                } else { $signupError = "Algo salió mal"; }
-            } else { $signupError = "Las contraseñas no coinciden"; }
+                } else { 
+                    $signupError = "Algo salió mal"; 
+                }
+            } else { 
+                $signupError = "Las contraseñas no coinciden"; 
+            }
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 
