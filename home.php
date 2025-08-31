@@ -31,9 +31,8 @@ $usermail = $_SESSION['usermail'];
       #guestdetailpanel{
         display: none;
       }
-      #guestdetailpanel .middle{
-        height: 450px;
-      }
+      #guestdetailpanel .middle{ height: 450px; }
+
     </style>
 </head>
 
@@ -41,15 +40,17 @@ $usermail = $_SESSION['usermail'];
   <nav>
     <div class="logo">
       <img class="HotelAndino" src="./image/LogoAndino.png" alt="logo">
-      <p>HOTEL ANDINO</p>
+      <p>Hotel Andino</p>
     </div>
     <ul>
+      
       <li><a href="#firstsection">Inicio</a></li>
       <li><a href="#secondsection">Habitaciones</a></li>
       <li><a href="#thirdsection">Servicios</a></li>
       <li><a href="chatbot.html">Chatbot</a></li>
+      <li><a href="turismo.php">Turismo</a></li>
       <li><a href="#contactus">Contáctanos</a></li>
-      <a href="./logout.php"><button class="btn btn-danger">Cerrar sesión</button></a>
+      <a href="./logout.php"><button class="btn btn-danger">Cerrar Sesión</button></a>
     </ul>
   </nav>
 
@@ -76,12 +77,12 @@ $usermail = $_SESSION['usermail'];
       <div id="guestdetailpanel">
         <form action="" method="POST" class="guestdetailpanelform">
             <div class="head">
-                <h3>RESERVA</h3>
+                <h3>Reserva</h3>
                 <i class="fa-solid fa-circle-xmark" onclick="closebox()"></i>
             </div>
             <div class="middle">
                 <div class="guestinfo">
-                    <h4>Información del huésped</h4>
+                    <h4 class="card-title"><i class="fa-solid fa-user"></i> Información del huésped</h4>
                     <input type="text" name="Name" placeholder="Nombre completo" required>
                     <input type="email" name="Email" placeholder="Correo electrónico" required>
 
@@ -103,13 +104,13 @@ $usermail = $_SESSION['usermail'];
                 <div class="line"></div>
 
                 <div class="reservationinfo">
-                    <h4>Información de la reserva</h4>
+                    <h4 class="card-title"><i class="fa-solid fa-bed"></i> Información de la reserva</h4>
                     <select name="RoomType" class="selectinput" required>
                         <option value="" selected disabled hidden>Tipo de habitación</option>
-                        <option value="Superior Room">HABITACIÓN SUPERIOR</option>
-                        <option value="Deluxe Room">HABITACIÓN DELUXE</option>
-                        <option value="Guest House">CASA DE HUÉSPEDES</option>
-                        <option value="Single Room">HABITACIÓN INDIVIDUAL</option>
+                        <option value="Superior Room">Habitación Superior</option>
+                        <option value="Deluxe Room">Habitación Deluxe</option>
+                        <option value="Guest House">Casa De Huésdepes</option>
+                        <option value="Single Room">Habitación Individual</option>
                     </select>
                     <select name="Bed" class="selectinput" required>
                         <option value="" selected disabled hidden>Tipo de cama</option>
@@ -127,8 +128,8 @@ $usermail = $_SESSION['usermail'];
                         <option value="" selected disabled hidden>Comidas</option>
                         <option value="Room only">Solo habitación</option>
                         <option value="Breakfast">Desayuno</option>
-                        <option value="Half Board">Media pensión</option>
-                        <option value="Full Board">Pensión completa</option>
+                        <option value="Half Board">Desayuno y Cena</option>
+                        <option value="Full Board">Comidas Completas</option>
                     </select>
                     <div class="datesection">
                         <span>

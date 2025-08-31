@@ -1,0 +1,18 @@
+:root{ --gold:#d4af37; --gold-dark:#b8860b; }
+
+#map{
+  height: 70vh;
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08);
+}
+
+.toolbar .form-label{ font-weight:600; }
+
+/* InfoWindow del mapa */
+.gm-style .gm-style-iw { color:#222; }
+
+.badge-gold{
+  background: linear-gradient(180deg,var(--gold),var(--gold-dark));
+  color:#fff;
+}

@@ -1,209 +1,204 @@
-@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Anton&family=Cookie&family=Poppins:wght@600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
 
-:root {
-    --bg-text-shadow: 0 2px 4px rgb(13 0 77 / 8%), 0 3px 6px rgb(13 0 77 / 8%), 0 8px 16px rgb(13 0 77 / 8%);
-    --bg-box-shadow: 0px 0px 20px 6px rgba(26, 30, 164, 0.31);
-}
-*::-webkit-scrollbar{
-    width: .4rem;
-}
-*::-webkit-scrollbar-track{
-    background: rgb(6, 6, 44);
-}
-*::-webkit-scrollbar-thumb{
-    background: #0040ff;
-}
+/* ===== Vars & base ===== */
+:root{
+  --gold:#d4af37;
+  --gold-dark:#b8860b;
+  --gold-light:#e4c766;
+  --ink:#1f1f1f;
 
-body {
-    background-color: #ffff;
+  --panel-bg:#ffffff;
+  --panel-soft:#f9fbff;
+  --panel-soft-2:#eef2f7;
+  --panel-border:#e8eef8;
 }
+*{margin:0;padding:0;font-family:'Poppins',sans-serif;}
 
-* {
-    margin: 0;
-    padding: 0;
-    font-family: 'Poppins', sans-serif;
-    /* text-shadow: var(--bg-text-shadow); */
-}
+/* ===== Scrollbars ===== */
+*::-webkit-scrollbar{ width:.45rem; }
+*::-webkit-scrollbar-track{ background:#2b2212; }
+*::-webkit-scrollbar-thumb{ background:var(--gold); }
 
-i{
-    font-size: 20px;
-}
-
+/* ===== Barra de búsqueda (opcional dorado suave) ===== */
 .searchsection{
-    height: 80px;
-    width: 100%;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    background-color:  #0a0d2d;
-    position: fixed;
-    z-index: 500;
+  height:74px; width:100%;
+  display:flex; justify-content:space-evenly; align-items:center;
+  background:linear-gradient(90deg,var(--gold-light),var(--gold-dark));
+  position:fixed; z-index:500;
+  box-shadow:0 4px 16px rgba(0,0,0,.15);
 }
-
 #search_bar{
-    height: 40px;
-    width: 80%;
-    border: none;
-    background-color: rgba(195, 198, 233, 0.714);
-    padding-left: 20px;
-    border-radius: 30px;
+  height:40px; width:80%;
+  border:none; border-radius:24px;
+  background:rgba(255,255,255,.7);
+  padding:0 18px; outline:none;
 }
 #adduser{
-    /* color: white; */
-    height: 40px;
-    background-color: rgb(0, 59, 254);
-    border: none;
-    border-radius: 30px;
-    padding: 0 50px;
+  height:40px; padding:0 28px; border:none; border-radius:999px;
+  background:linear-gradient(180deg,var(--gold-light),var(--gold)); color:#fff;
+  font-weight:700; cursor:pointer;
 }
-#adduser:hover{
-    background-color: rgba(0, 17, 255, 0.733);
-}
-
+#adduser:hover{ filter:brightness(.98); transform:translateY(-1px); }
 .exportexcel{
-    height: 40px;
-    width: 40px;
-    background-color: rgb(47, 255, 47);
-    border: none;
-    border-radius: 50%;
-    /* padding: 0 40px; */
+  height:40px; width:40px; border:none; border-radius:50%;
+  background:#2ecc71; color:#fff; font-weight:700; cursor:pointer;
 }
 
-/* guest panel */
+/* ===== Tabla (se mantiene) ===== */
+.roombooktable{
+  position:absolute; margin-top:80px; width:100%; height:100vh;
+  color:#0a0d2d; padding-bottom:900px;
+}
+.roombooktable thead{ background:#0a0d2d; color:#fff; text-align:center; }
+.roombooktable tbody{ text-align:center; }
+.action a{ text-decoration:none; }
+.action button{ display:flex; flex-wrap:wrap; margin:5px; }
+
+/* ======================================================================
+   ===================   MODAL: Guest Detail Panel   =====================
+   ====================================================================== */
 
 #guestdetailpanel{
-    position : fixed;
-    z-index: 1000;
-    height: 100%;
-    width: 100%;
-    display: none;
-    /* display: flex; */
-    justify-content: center;
-    /* align-items: center; */
-    background-color: #00000079;
+  position:fixed; inset:0; z-index:10000;
+  display:none; /* se muestra con JS */
+  justify-content:center; align-items:center;
+  background:rgba(0,0,0,.55);
 }
 
+/* Form = grid (header / body / footer) */
 #guestdetailpanel .guestdetailpanelform{
-    height: 620px;
-    width: 1170px;
-    background-color: #ccdff4;
-    border-radius: 10px;  
-    /* temp */
-    position: relative;
-    top: 20px;
-    animation: guestinfoform .3s ease;
+  display:grid; grid-template-rows:auto 1fr auto; gap:12px;
+  width:min(1170px,96vw); height:88vh;
+  background:var(--panel-bg);
+  border-radius:16px; overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+  animation:guestinfoform .28s ease;
 }
-a{
-    color: black;
-}
+@keyframes guestinfoform{ 0%{ transform:translateY(30px); opacity:.7 } }
 
-@keyframes guestinfoform{
-    0%{
-        transform: translateY(50px);
-    }
-}
-
+/* Header */
 .guestdetailpanelform .head{
-    /* width: 100%; */
-    padding: 0 10px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  height:60px; padding:0 16px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#fff,#faf7ea);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  position:relative;
 }
-
 .guestdetailpanelform .head h3{
-    color: #111f49;
-    position: relative;
-    left: 40%;
-    margin-top: 10px;
+  margin:0; color:var(--ink); letter-spacing:.5px;
 }
 .guestdetailpanelform .head i{
-    font-size: 25px;
-    cursor: pointer;
+  position:absolute; right:16px; top:50%; transform:translateY(-50%);
+  font-size:24px; cursor:pointer; color:#333;
 }
 
+/* Body: dos columnas + divisor + scroll interno */
 .guestdetailpanelform .middle{
-    width: 100%;
-    height: 500px;
-    margin: 10px 0 0 0;
-    display: flex;
+  overflow:auto; padding:18px; background:var(--panel-soft-2);
+  display:grid; grid-template-columns:1fr 1px 1fr; gap:18px;
+}
+#guestdetailpanel .line{ background:rgba(0,0,0,.08); border-radius:1px; }
+
+/* Tarjetas */
+.guestdetailpanelform .guestinfo,
+.guestdetailpanelform .reservationinfo{
+  background:var(--panel-soft);
+  border:1px solid var(--panel-border);
+  border-radius:12px; padding:16px;
+}
+.guestdetailpanelform .guestinfo h4,
+.guestdetailpanelform .reservationinfo h4{
+  margin:0 0 10px; color:var(--ink); display:flex; align-items:center; gap:10px;
+}
+.guestdetailpanelform .guestinfo h4 i,
+.guestdetailpanelform .reservationinfo h4 i{ color:var(--gold-dark); }
+
+/* Inputs */
+#guestdetailpanel input[type="text"],
+#guestdetailpanel input[type="email"],
+#guestdetailpanel input[type="date"],
+#guestdetailpanel .selectinput{
+  width:100%; height:44px; border-radius:12px;
+  border:1.5px solid #e8e8f0; background:#fff;
+  padding:10px 12px; margin:10px 0;
+  outline:none; transition:border-color .18s, box-shadow .18s;
+}
+#guestdetailpanel input:focus,
+#guestdetailpanel .selectinput:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 .2rem rgba(212,175,55,.16);
 }
 
-.guestdetailpanelform .middle .guestinfo{
-    width: 100%;
-    background-color: rgba(155, 187, 255, 0.752);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.guestdetailpanelform .middle .reservationinfo{
-    
-    width: 100%;
-    background-color: rgba(155, 187, 255, 0.752);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+/* Fechas lado a lado */
+#guestdetailpanel .datesection{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+#guestdetailpanel .datesection label{ font-size:12px; color:#333; margin-bottom:4px; }
 
-.line{
-    width: 10px;
-    height: 100%
-}
-
+/* Footer centrado */
 .guestdetailpanelform .footer{
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    margin: 10px;
+  background:#fff; border-top:1px solid rgba(0,0,0,.06);
+  padding:10px 16px; display:flex; justify-content:center; gap:10px;
+}
+.guestdetailpanelform .footer a{ text-decoration:none !important; }
+
+/* Botón Enviar dorado (override Bootstrap) */
+#guestdetailpanel .footer .btn-success,
+#guestdetailpanel .footer .btn-success:focus,
+#guestdetailpanel .footer .btn-success:active{
+  min-width:180px; height:44px; border:none !important; border-radius:999px !important;
+  background:linear-gradient(180deg,var(--gold-light),var(--gold)) !important;
+  color:#fff !important; font-weight:800;
+  box-shadow:0 6px 14px rgba(0,0,0,.15) !important;
+}
+#guestdetailpanel .footer .btn-success:hover{
+  background:linear-gradient(180deg,var(--gold),var(--gold-dark)) !important;
+  transform:translateY(-1px);
 }
 
-.middle input,.selectinput{
-    width: 100%;
-    border: none;
-    background-color: #d1d7ff;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 20px;
-}
+/* Scrollbar del body del modal */
+#guestdetailpanel .middle::-webkit-scrollbar{ width:8px; }
+#guestdetailpanel .middle::-webkit-scrollbar-thumb{ background:#dcdfe6; border-radius:8px; }
 
-.datesection{
-    display: flex;
+/* ===== Responsive ===== */
+@media (max-width:900px){
+  .guestdetailpanelform .middle{ grid-template-columns:1fr; padding:14px 12px; }
+  #guestdetailpanel .line{ display:none; }
+  #guestdetailpanel .datesection{ grid-template-columns:1fr; }
 }
-
-.datesection span{
-    margin: 5px;
+/* Título de tarjeta con “chip” dorado para el icono */
+.card-title{
+  display:flex; align-items:center; gap:10px;
+  margin:0 0 12px; color:#111;
 }
-
-/* room book table */
-.roombooktable{
-    position: absolute;
-    color: #0a0d2d;
-    margin-top: 80px;
-    width: 100%;
-    height: 100vh;
-
-    /* padding bottom to add space */
-    padding-bottom: 900px;
+.card-title i{
+  width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:999px; font-size:14px; color:#fff;
+  background: linear-gradient(180deg, var(--gold-light), var(--gold));
+  box-shadow: 0 4px 10px rgba(0,0,0,.12);
 }
-.roombooktable thead{
-    background-color:  #0a0d2d;
-    color: white;
-    text-align: center;
+@media (max-width: 900px){
+  .guestdetailpanelform .footer{
+    position: sticky; bottom: 0; z-index: 3;
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(6px);
+    padding: 12px 16px;
+  }
+  #guestdetailpanel .footer .btn-success{ width:100%; max-width:520px; }
 }
-.roombooktable tbody{
-    text-align: center;
+/* requerido e inválido */
+#guestdetailpanel input:required:invalid,
+#guestdetailpanel .selectinput:required:invalid{
+  border-color:#e57373;
 }
-
-.action a{
-    text-decoration: none;
+#guestdetailpanel input:required:invalid:focus,
+#guestdetailpanel .selectinput:required:invalid:focus{
+  box-shadow:0 0 0 .2rem rgba(229,115,115,.25);
 }
-
-.action button{
-    display: flex;
-    flex-wrap: wrap;
-    margin: 5px;
+.guestdetailpanelform .head i{
+  width:32px; height:32px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  transition: transform .12s ease, background-color .2s ease;
+}
+.guestdetailpanelform .head i:hover{
+  background: rgba(0,0,0,.06);
+  transform: scale(1.06);
 }

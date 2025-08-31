@@ -6,7 +6,7 @@
     <title>Graphs Display</title>
 </head>
 <body>
-    <h1>Data Analytics</h1>
+    <h1>Datos analiticos</h1>
 
     <?php
     // Folder path where images are stored

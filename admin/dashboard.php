@@ -79,9 +79,9 @@
           <h1><?php echo $staffrow ?></h1>
         </div>
         <div class="box profitbox">
-        <h2>Profit</h1>  
-          <h1><?php echo $tot?> <span>&#8377</span></h1>
-        </div>
+  <h2>Ganancias</h2>
+  <h1>COL$ <?php echo number_format($tot, 0, ',', '.'); ?></h1>
+</div>
     </div>
     <div class="chartbox">
         <div class="bookroomchart">
@@ -133,16 +133,25 @@
 
 <script>
 Morris.Bar({
- element : 'profitchart',
- data:[<?php echo $chart_data;?>],
- xkey:'date',
- ykeys:['profit'],
- labels:['Profit'],
- hideHover:'auto',
- stacked:true,
- barColors:[
-  'rgba(153, 102, 255, 1)',
- ]
+  element : 'profitchart',
+  data:[<?php echo $chart_data; ?>],
+  xkey:'date',
+  ykeys:['profit'],
+  labels:['Ganancias (COP)'],
+  hideHover:'auto',
+  stacked:true,
+  barColors:['rgba(153, 102, 255, 1)'],
+
+  // ✔ Etiquetas del eje Y en pesos
+  yLabelFormat: function (y) {
+    return 'COL$ ' + y.toLocaleString('es-CO');
+  },
+
+  // ✔ Tooltip (hover) en pesos
+  hoverCallback: function (index, options, content, row) {
+    return '<div class="morris-hover-row-label">' + row.date + '</div>' +
+           '<div class="morris-hover-point">COL$ ' + row.profit.toLocaleString('es-CO') + '</div>';
+  }
 });
 </script>
 
