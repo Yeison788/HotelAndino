@@ -217,3 +217,27 @@ section {
   .role_btn .btns { min-width: 120px; }
   .logo p { font-size: 24px; }
 }
+
+/* ==== Fix de scroll sobrante ==== */
+html, body {
+  overflow-x: hidden; /* evita scroll horizontal */
+}
+
+body::after {
+  content: "";
+  display: block;
+  clear: both; /* limpia los floats de carrusel/auth */
+}
+
+.carousel_section,
+#auth_section {
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .carousel_section,
+  #auth_section {
+    float: none;
+  }
+}

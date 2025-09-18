@@ -2,6 +2,8 @@
 include 'config.php';
 session_start();
 
+$openOnboarding = false; // 👈 abrir modal tras registro
+
 /* =========================
    Manejo de formularios PHP
    ========================= */
@@ -19,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = mysqli_stmt_get_result($stmt);
 
             if ($result && $result->num_rows > 0) {
-                $_SESSION['usermail'] = $Email;   // Sesión para usuarios
+                $_SESSION['usermail'] = $Email;
                 header("Location: home.php");
                 exit;
             } else {
@@ -43,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = mysqli_stmt_get_result($stmt);
 
             if ($result && $result->num_rows > 0) {
-                $_SESSION['adminmail'] = $Email; // Sesión exclusiva de admin
+                $_SESSION['adminmail'] = $Email;
                 header("Location: ./admin/admin.php");
                 exit;
             } else {
@@ -83,8 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             if ($ok) {
                                 $_SESSION['usermail'] = $Email;
-                                header("Location: home.php");
-                                exit;
+                                $openOnboarding = true; // ✅ abrir modal
                             } else { 
                                 $signupError = "Algo salió mal"; 
                             }
@@ -101,6 +102,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
+    // == Guardado de intereses desde el MODAL (mismo index) ==
+    if (isset($_POST['save']) || isset($_POST['skip'])) {
+
+        if (empty($_SESSION['usermail'])) {
+            header("Location: index.php");
+            exit;
+        }
+
+        $usermail = $_SESSION['usermail'];
+
+        // Obtener UserID
+        $sqlUser = "SELECT UserID FROM signup WHERE Email = ?";
+        $userId = null;
+        if ($stmt = mysqli_prepare($conn, $sqlUser)) {
+            mysqli_stmt_bind_param($stmt, "s", $usermail);
+            mysqli_stmt_execute($stmt);
+            $res = mysqli_stmt_get_result($stmt);
+            $row = mysqli_fetch_assoc($res);
+            mysqli_stmt_close($stmt);
+            if (!empty($row['UserID'])) $userId = (int)$row['UserID'];
+        }
+        if (!$userId) { header("Location: index.php"); exit; }
+
+        // Si pulsó "Guardar", insertar intereses (dividir por comas/; /| / saltos)
+        if (isset($_POST['save']) && !empty($_POST['interests']) && is_array($_POST['interests'])) {
+            $tokens = [];
+            foreach ($_POST['interests'] as $raw) {
+                foreach (preg_split('/[,\|;\/]+/u', $raw) as $part) {
+                    $t = trim($part);
+                    if ($t === '') continue;
+                    $t = mb_substr($t, 0, 50, 'UTF-8');
+                    $tokens[strtolower($t)] = $t; // dedup case-insensitive
+                }
+            }
+            $unique = array_values($tokens);
+
+            if ($stmt = mysqli_prepare($conn, "DELETE FROM user_interests WHERE UserID = ?")) {
+                mysqli_stmt_bind_param($stmt, "i", $userId);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+            if (!empty($unique) && ($stmtIns = mysqli_prepare($conn, "INSERT INTO user_interests (UserID, Interest) VALUES (?, ?)"))) {
+                foreach ($unique as $it) {
+                    mysqli_stmt_bind_param($stmtIns, "is", $userId, $it);
+                    mysqli_stmt_execute($stmtIns);
+                }
+                mysqli_stmt_close($stmtIns);
+            }
+        }
+
+        // Marcar onboarding completado (guardar o saltar)
+        if ($stmtUpd = mysqli_prepare($conn, "UPDATE signup SET OnboardingDone = 1 WHERE UserID = ?")) {
+            mysqli_stmt_bind_param($stmtUpd, "i", $userId);
+            mysqli_stmt_execute($stmtUpd);
+            mysqli_stmt_close($stmtUpd);
+        }
+
+        header("Location: home.php");
+        exit;
+    }
 }
 ?>
 
@@ -113,7 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hotel Andino</title>
 
-  <!-- Puedes mantener tu login.css si quieres; el inline ya asegura el layout -->
   <link rel="stylesheet" href="./css/login.css?v=6">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -137,14 +198,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         linear-gradient(135deg, #ffffff 0%, #f8fbff 40%, #fef9ec 100%);
     }
 
-    /* Ambas secciones a pantalla completa en alto */
     section{ height:100vh; }
-
-    /* Desktop: carrusel 50% izq, auth 50% der */
     .carousel_section{ width:50%; float:left; }
     .carousel_section + #auth_section{ width:50%; float:left; }
 
-    /* Mobile: ocultar carrusel y centrar login 100% */
     @media (max-width: 768px){
       .carousel_section{ display:none; }
       .carousel_section + #auth_section{ width:100%; float:none; }
@@ -152,14 +209,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       section{ height:auto; }
     }
 
-    /* Carrusel full-height con overlay suave */
     .carousel-image{ height:100vh; width:100%; object-fit:cover; display:block; }
     .carousel-inner{ position:relative; }
-    .carousel-inner::after{
-      content:""; position:absolute; inset:0; background-color:rgba(0,0,0,0.2);
-    }
+    .carousel-inner::after{ content:""; position:absolute; inset:0; background-color:rgba(0,0,0,0.2); }
 
-    /* Fondo con blobs alrededor del auth */
     #auth_section{
       position:relative;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -177,9 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background: radial-gradient(circle at 70% 70%, rgba(135,178,255,0.45), transparent 60%);
     }
 
-    .logo{
-      display:flex; align-items:center; gap:12px; margin-bottom:10px; position:relative; z-index:1;
-    }
+    .logo{ display:flex; align-items:center; gap:12px; margin-bottom:10px; position:relative; z-index:1; }
     .logo .hotellogo{ height:56px; width:auto; object-fit:contain; }
     .logo p{ margin:0; font-weight:700; font-size:28px; color:var(--gold-dark); }
 
@@ -191,10 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 10px 30px rgba(0,0,0,.15);
     }
 
-    .features-row{
-      display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
-      margin: 0 0 10px 0;
-    }
+    .features-row{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 0 0 10px 0; }
     .features-row .chip{
       display:inline-flex; align-items:center; gap:6px;
       padding:6px 10px; border-radius:999px;
@@ -208,14 +256,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     #Log_in h2, #sign_up h2{ font-size:22px; font-weight:700; margin:6px 0 8px; color:#333; text-align:center; }
 
     .role_btn{
-      width:100%;
-      display:flex; justify-content:center; align-items:center;
+      width:100%; display:flex; justify-content:center; align-items:center;
       gap:14px; margin:12px 0 18px; flex-wrap:wrap;
     }
     .role_btn .btns{
       display:inline-flex; align-items:center; justify-content:center;
       height:40px; min-width:140px; padding:0 18px; border-radius:999px;
-      border:1.5px solid var(--gold); background:#fff; color:var(--gold-dark);
+      border:1.5px solid var(--gold); background:#fff; color:#b8860b;
       font-weight:700; font-size:15px; cursor:pointer;
       transition: transform .08s ease, background-color .25s ease, color .25s ease, box-shadow .25s ease;
     }
@@ -255,11 +302,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
 
-<!-- ==== Carrusel a la izquierda (cambia los src para tus imágenes) ==== -->
+<!-- ==== Carrusel a la izquierda ==== -->
 <section id="carouselExampleControls" class="carousel slide carousel_section" data-bs-ride="carousel" data-bs-interval="4000">
   <div class="carousel-inner">
     <div class="carousel-item active">
-      <!-- Cambia esta línea para tu imagen principal de la izquierda -->
       <img class="carousel-image" src="./image/hotel1.jpg" alt="Hotel Andino 1">
     </div>
     <div class="carousel-item">
@@ -378,9 +424,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </section>
 
+<!-- ===== Modal Onboarding (tags) ===== -->
+<div class="modal fade" id="onboardingModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:14px;">
+      <div class="modal-header" style="border-bottom:0;">
+        <h5 class="modal-title">Cuéntanos tus intereses ✨</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <!-- Postea a este mismo index.php -->
+      <form method="POST" action="" id="onb-modal-form">
+        <div class="modal-body">
+          <p class="text-muted mb-2">Escribe tus gustos separados por coma o Enter. Ej.: <em>cafés, parques, museos</em>.</p>
+          <div class="border rounded p-2" id="tags-wrap" style="display:flex;flex-wrap:wrap;gap:8px;min-height:52px;background:#fafafa;">
+            <input id="tag-input-modal" class="border-0 flex-grow-1" type="text" placeholder="Ej.: fotografía, parques para niños, cafés bonitos" style="outline:none;background:transparent;min-width:160px;">
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:0;">
+          <button type="submit" name="skip" class="btn btn-light">Saltar</button>
+          <button type="submit" name="save" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="./javascript/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 <script> AOS.init(); </script>
+
+<!-- ===== JS: abrir el modal y gestionar tags (divide por comas/Enter/pegar) ===== -->
+<script>
+(function(){
+  // Abrir modal si el servidor lo indica
+  const shouldOpen = <?= $openOnboarding ? 'true' : 'false' ?>;
+  if (shouldOpen && typeof bootstrap !== 'undefined') {
+    new bootstrap.Modal(document.getElementById('onboardingModal'), {backdrop:'static', keyboard:false}).show();
+  }
+
+  const wrap  = document.getElementById('tags-wrap');
+  const input = document.getElementById('tag-input-modal');
+  const form  = document.getElementById('onb-modal-form');
+
+  function addTag(t){
+    t = (t||'').trim();
+    if(!t) return;
+    const exists = Array.from(wrap.querySelectorAll('input[name="interests[]"]'))
+      .some(h => h.value.toLowerCase() === t.toLowerCase());
+    if(exists) return;
+
+    const span = document.createElement('span');
+    span.className = 'badge bg-light text-dark border';
+    span.style.fontSize = '14px';
+    span.style.padding = '8px 10px';
+    span.innerHTML = `
+      <input type="hidden" name="interests[]" value="${t}">
+      <span>${t}</span>
+      <button type="button" class="btn btn-sm btn-link p-0 ms-1" aria-label="Quitar">&times;</button>
+    `;
+    wrap.insertBefore(span, input);
+  }
+
+  function addChunk(chunk){
+    (chunk||'').split(/[,\n;\/]+/).forEach(part => addTag(part.trim()));
+  }
+
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addChunk(input.value);
+      input.value = '';
+    } else if (e.key === 'Backspace' && input.value === '') {
+      const last = wrap.querySelector('span.badge:last-of-type');
+      if(last) last.remove();
+    }
+  });
+
+  input?.addEventListener('paste', (e) => {
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    if (/[,\n;\/]/.test(text)) {
+      e.preventDefault();
+      addChunk(text);
+    }
+  });
+
+  wrap?.addEventListener('click', (e) => {
+    if (e.target.matches('button[aria-label="Quitar"]')) {
+      e.target.closest('.badge').remove();
+    }
+  });
+
+  // ✅ FIX: si el usuario escribió y no presionó Enter, dividimos en submit
+  form?.addEventListener('submit', () => {
+    const v = (input?.value || '').trim();
+    if (v) { addChunk(v); input.value = ''; }
+  });
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+/* ===== Vars & base ===== */
+:root {
+  --gold: #d4af37;
+  --gold-dark: #b8860b;
+  --gold-light: #e4c766;
+  --ink: #1f1f1f;
+
+  --panel-bg: #ffffff;
+  --panel-soft: #f9fbff;
+  --panel-border: #e8eef8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== Scrollbar ===== */
+*::-webkit-scrollbar { width: .45rem; }
+*::-webkit-scrollbar-track { background: #2b2212; }
+*::-webkit-scrollbar-thumb { background: var(--gold); }
+
+/* ===== Barra superior (agregar personal) ===== */
+.addroomsection {
+  height: 74px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--gold-light), var(--gold-dark));
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+.addroomsection form {
+  display: flex;
+  align-items: center;   /* centra verticalmente todo */
+  gap: 14px;             /* espacio entre elementos */
+  margin: 0;
+}
+
+.addroomsection label {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;   /* alinea el ":" con el input */
+  margin-right: 6px;
+}
+
+.addroomsection input,
+.addroomsection select {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+  height: 36px;
+  line-height: 1.2;
+  font-size: 14px;
+}
+
+.addroomsection button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 13px;       /* 👈 más pequeño */
+  background: linear-gradient(180deg, var(--gold-light), var(--gold));
+  color: #fff;
+  cursor: pointer;
+  transition: all .2s ease;
+  height: 36px;          /* mismo alto que inputs */
+}
+
+.addroomsection button:hover {
+  background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+  transform: translateY(-1px);
+}
+
+/* ===== Listado staff ===== */
+.staff-page .room {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 100px 20px 40px; /* deja espacio por la barra fija */
+}
+
+.staff-page .roombox {
+  min-height: 180px;
+  background: #eef2ff;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.staff-page .roombox:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(0,0,0,.2);
+}
+
+.staff-page .roombox i {
+  color: var(--gold-dark);
+  margin-bottom: 8px;
+}
+
+.staff-page .roombox h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+.staff-page .roombox .mb-2 {
+  font-size: 14px;
+  color: #555;
+}
+
+.staff-page .roombox button {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.staff-page .roombox .btn-danger {
+  background: #e74c3c;
+  color: #fff;
+}
+.staff-page .roombox .btn-danger:hover {
+  background: #c0392b;
+}

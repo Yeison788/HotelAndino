@@ -172,7 +172,7 @@ body{
 .mainscreen{
   /* deja espacio para la barra superior y el menú lateral */
   margin-left: var(--sidenav-w);
-  margin-top: calc(var(--topbar-h) + 4px);
+  margin-top: var(--topbar-h);  
   height: calc(100vh - var(--topbar-h));
   background: transparent;
 }
