@@ -399,65 +399,74 @@
 
 	<?php
 	
-	ob_start();
-	include '../config.php';
+        ob_start();
+        include '../config.php';
 
-	$id = $_GET['id'];
+        if (!function_exists('formatCop')) {
+            function formatCop($amount)
+            {
+                return 'COP ' . number_format((float)$amount, 0, ',', '.');
+            }
+        }
 
-	$sql = "select * from payment where id = '$id' ";
-	$re = mysqli_query($conn, $sql);
-	while ($row = mysqli_fetch_array($re)) {
-		$id = $row['id'];
-		$Name = $row['Name'];
-		$troom = $row['RoomType'];
-		$bed = $row['Bed'];
-		$nroom = $row['NoofRoom'];
-		$cin = $row['cin'];
-		$cout = $row['cout'];
-		$meal = $row['meal'];
-		$ttot = $row['roomtotal'];
-		$mepr = $row['mealtotal'];
-		$btot = $row['bedtotal'];
-		$fintot = $row['finaltotal'];
-		$days = $row['noofdays'];
-	}
+        $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-	$type_of_room = 0;
-	if ($troom == "Superior Room") {
-		$type_of_room = 3000;
-	} else if ($troom == "Deluxe Room") {
-		$type_of_room = 2000;
-	} else if ($troom == "Guest House") {
-		$type_of_room = 1500;
-	} else if ($troom == "Single Room") {
-		$type_of_room = 1000;
-	}
+        $sql = "SELECT * FROM payment WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
 
-	$ttot = $days * $type_of_room;
-	if ($bed == "Single") {
-		$type_of_bed = $type_of_room * 1 / 100;
-	} else if ($bed == "Double") {
-		$type_of_bed = $type_of_room * 2 / 100;
-	} else if ($bed == "Triple") {
-		$type_of_bed = $type_of_room * 3 / 100;
-	} else if ($bed == "Quad") {
-		$type_of_bed = $type_of_room * 4 / 100;
-	} else if ($bed == "None") {
-		$type_of_bed = $type_of_room * 0 / 100;
-	}
-	$btot=$days*$type_of_bed;
+        if (!$row) {
+            ob_end_clean();
+            echo '<h2>No se encontró la factura solicitada.</h2>';
+            exit;
+        }
 
-	if ($meal == "Room only") {
-		$type_of_meal = $type_of_bed * 0;
-	} else if ($meal == "Breakfast") {
-		$type_of_meal = $type_of_bed * 2;
-	} else if ($meal == "Half Board") {
-		$type_of_meal = $type_of_bed * 3;
-	} else if ($meal == "Full Board") {
-		$type_of_meal = $type_of_bed * 4;
-	}
-	$mepr=$days*$type_of_meal;
-	$fintot=$ttot+$btot+$mepr;
+        $id = $row['id'];
+        $Name = $row['Name'];
+        $troom = $row['RoomType'];
+        $bed = $row['Bed'];
+        $nroom = (int) $row['NoofRoom'];
+        $cin = $row['cin'];
+        $cout = $row['cout'];
+        $meal = $row['meal'];
+        $roomTotalStored = (float) $row['roomtotal'];
+        $mealTotalStored = (float) $row['mealtotal'];
+        $finalTotalStored = (float) $row['finaltotal'];
+        $days = (int) $row['noofdays'];
+
+        $guestCount = max(1, (int) $bed);
+        $roomsBooked = max(1, $nroom);
+        $daysBooked = max(1, $days);
+
+        $baseRate = 60000;
+        $extraGuestRate = 25000;
+        $ratePerNight = $baseRate + max(0, $guestCount - 1) * $extraGuestRate;
+
+        $roomTotal = $roomTotalStored > 0 ? $roomTotalStored : $ratePerNight * $roomsBooked * $daysBooked;
+        $roomNightlyRate = $roomsBooked * $daysBooked > 0 ? $roomTotal / ($roomsBooked * $daysBooked) : $ratePerNight;
+
+        $mealRates = [
+            'Room only'        => 0,
+            'Breakfast'        => 15000,
+            'Half Board'       => 28000,
+            'Full Board'       => 42000,
+            'Solo habitación'  => 0,
+            'Desayuno'         => 15000,
+            'Media pensión'    => 28000,
+            'Pensión completa' => 42000,
+        ];
+
+        $mealRatePerGuest = $mealRates[$meal] ?? 0;
+        $mealTotal = $mealTotalStored > 0 ? $mealTotalStored : $mealRatePerGuest * $guestCount * $daysBooked;
+        if ($mealTotal > 0 && $guestCount * $daysBooked > 0) {
+            $mealRatePerGuest = $mealTotal / ($guestCount * $daysBooked);
+        }
+
+        $finalTotal = $finalTotalStored > 0 ? $finalTotalStored : $roomTotal + $mealTotal;
 	?>
 	<header>
 		<h1>Factura</h1>
@@ -470,67 +479,60 @@
 	<article>
 		<h1>Destinatario</h1>
 		<address>
-			<p><?php echo $Name ?> <br></p>
+                        <p><?php echo htmlspecialchars($Name); ?> <br></p>
 		</address>
 		<table class="meta">
 			<tr>
 				<th><span>Factura #</span></th>
-				<td><span><?php echo $id; ?></span></td>
+                                <td><span><?php echo $id; ?></span></td>
 			</tr>
 			<tr>
 				<th><span>Fecha</span></th>
-				<td><span><?php echo $cout; ?> </span></td>
+                                <td><span><?php echo htmlspecialchars($cout); ?> </span></td>
 			</tr>
 
 		</table>
-		<table class="inventory">
-			<thead>
-				<tr>
-					<th><span>Artículo</span></th>
-					<th><span>Número de días</span></th>
-					<th><span>Tarifa</span></th>
-					<th><span>Cantidad</span></th>
-					<th><span>Precio</span></th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td><span><?php echo $troom; ?></span></td>
-					<td><span><?php echo $days; ?> </span></td>
-					<td><span data-prefix>$</span><span><?php echo $type_of_room; ?></span></td>
-					<td><span><?php echo $nroom; ?> </span></td>
-					<td><span data-prefix>$</span><span><?php echo $ttot; ?></span></td>
-				</tr>
-				<tr>
-					<td><span><?php echo $bed; ?> Bed </span></td>
-					<td><span><?php echo $days; ?></span></td>
-					<td><span data-prefix>$</span><span><?php echo $type_of_bed; ?></span></td>
-					<td><span><?php echo $nroom; ?> </span></td>
-					<td><span data-prefix>$</span><span><?php echo $btot; ?></span></td>
-				</tr>
-				<tr>
-					<td><span><?php echo $meal; ?> </span></td>
-					<td><span><?php echo $days; ?></span></td>
-					<td><span data-prefix>$</span><span><?php echo $type_of_meal ?></span></td>
-					<td><span><?php echo $nroom; ?> </span></td>
-					<td><span data-prefix>$</span><span><?php echo $mepr; ?></span></td>
-				</tr>
-			</tbody>
-		</table>
-		<table class="balance">
-			<tr>
-				<th><span>Total</span></th>
-				<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
-			</tr>
-			<tr>
-				<th><span>Amount Paid</span></th>
-				<td><span data-prefix>$</span><span>0.00</span></td>
-			</tr>
-			<tr>
-				<th><span>Balance Due</span></th>
-				<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
-			</tr>
-		</table>
+                <table class="inventory">
+                        <thead>
+                                <tr>
+                                        <th><span>Artículo</span></th>
+                                        <th><span>Noches</span></th>
+                                        <th><span>Tarifa (COP)</span></th>
+                                        <th><span>Cantidad</span></th>
+                                        <th><span>Subtotal (COP)</span></th>
+                                </tr>
+                        </thead>
+                        <tbody>
+                                <tr>
+                                        <td><span><?php echo htmlspecialchars($troom); ?></span></td>
+                                        <td><span><?php echo $daysBooked; ?></span></td>
+                                        <td><span><?php echo formatCop($roomNightlyRate); ?></span></td>
+                                        <td><span><?php echo $roomsBooked; ?></span></td>
+                                        <td><span><?php echo formatCop($roomTotal); ?></span></td>
+                                </tr>
+                                <tr>
+                                        <td><span><?php echo 'Plan de alimentación: ' . htmlspecialchars($meal); ?></span></td>
+                                        <td><span><?php echo $daysBooked; ?></span></td>
+                                        <td><span><?php echo formatCop($mealRatePerGuest); ?></span></td>
+                                        <td><span><?php echo $guestCount; ?></span></td>
+                                        <td><span><?php echo formatCop($mealTotal); ?></span></td>
+                                </tr>
+                        </tbody>
+                </table>
+                <table class="balance">
+                        <tr>
+                                <th><span>Total</span></th>
+                                <td><span><?php echo formatCop($finalTotal); ?></span></td>
+                        </tr>
+                        <tr>
+                                <th><span>Pagado</span></th>
+                                <td><span><?php echo formatCop(0); ?></span></td>
+                        </tr>
+                        <tr>
+                                <th><span>Saldo pendiente</span></th>
+                                <td><span><?php echo formatCop($finalTotal); ?></span></td>
+                        </tr>
+                </table>
 	</article>
 	<aside>
 		<h1><span>Contact us</span></h1>

@@ -197,18 +197,18 @@ $usermail = $_SESSION['usermail'];
                     <h4 class="card-title"><i class="fa-solid fa-bed"></i> Información de la reserva</h4>
                     <select name="RoomType" class="selectinput" required>
                         <option value="" selected disabled hidden>Tipo de habitación</option>
-                        <option value="Superior Room">Habitación Superior</option>
-                        <option value="Deluxe Room">Habitación Deluxe</option>
-                        <option value="Guest House">Casa De Huésdepes</option>
-                        <option value="Single Room">Habitación Individual</option>
+                        <option value="Habitación Sencilla">Habitación Sencilla</option>
+                        <option value="Habitación Doble">Habitación Doble</option>
+                        <option value="Habitación Múltiple">Habitación Múltiple</option>
                     </select>
                     <select name="Bed" class="selectinput" required>
-                        <option value="" selected disabled hidden>Tipo de cama</option>
-                        <option value="Single">Individual</option>
-                        <option value="Double">Doble</option>
-                        <option value="Triple">Triple</option>
-                        <option value="Quad">Cuádruple</option>
-                        <option value="None">Ninguna</option>
+                        <option value="" selected disabled hidden>Cantidad de huéspedes</option>
+                        <option value="1">1 huésped</option>
+                        <option value="2">2 huéspedes</option>
+                        <option value="3">3 huéspedes</option>
+                        <option value="4">4 huéspedes</option>
+                        <option value="5">5 huéspedes</option>
+                        <option value="6">6 huéspedes</option>
                     </select>
                     <select name="NoofRoom" class="selectinput" required>
                         <option value="" selected disabled hidden>Número de habitaciones</option>
@@ -241,18 +241,18 @@ $usermail = $_SESSION['usermail'];
         <!-- ==== room book php ====-->
         <?php
             if (isset($_POST['guestdetailsubmit'])) {
-                $Name     = trim($_POST['Name'] ?? '');
-                $Email    = trim($_POST['Email'] ?? '');
-                $Country  = trim($_POST['Country'] ?? '');
-                $Phone    = trim($_POST['Phone'] ?? '');
-                $RoomType = trim($_POST['RoomType'] ?? '');
-                $Bed      = trim($_POST['Bed'] ?? '');
-                $NoofRoom = (int)($_POST['NoofRoom'] ?? 0);
-                $Meal     = trim($_POST['Meal'] ?? '');
-                $cin      = $_POST['cin'] ?? '';
-                $cout     = $_POST['cout'] ?? '';
+                $Name       = trim($_POST['Name'] ?? '');
+                $Email      = trim($_POST['Email'] ?? '');
+                $Country    = trim($_POST['Country'] ?? '');
+                $Phone      = trim($_POST['Phone'] ?? '');
+                $RoomType   = trim($_POST['RoomType'] ?? '');
+                $guestCount = (int)($_POST['Bed'] ?? 0);
+                $NoofRoom   = (int)($_POST['NoofRoom'] ?? 0);
+                $Meal       = trim($_POST['Meal'] ?? '');
+                $cin        = $_POST['cin'] ?? '';
+                $cout       = $_POST['cout'] ?? '';
 
-                if ($Name === "" || $Email === "" || $Country === "" || $RoomType === "" || $Bed === "" || $NoofRoom < 1 || $Meal === "" || $cin === "" || $cout === "") {
+                if ($Name === '' || $Email === '' || $Country === '' || $RoomType === '' || $guestCount <= 0 || $NoofRoom < 1 || $Meal === '' || $cin === '' || $cout === '') {
                     echo "<script>swal({ title: 'Completa los datos correctamente', icon: 'error' });</script>";
                 } else {
                     $d1 = strtotime($cin);
@@ -260,31 +260,83 @@ $usermail = $_SESSION['usermail'];
                     if ($d1 === false || $d2 === false || $d2 <= $d1) {
                         echo "<script>swal({ title: 'Rango de fechas inválido', icon: 'error' });</script>";
                     } else {
-                        $nodays = (int)round(($d2 - $d1) / 86400); // días
-                        $sta = "NotConfirm";
+                        $nodays = max(1, (int)ceil(($d2 - $d1) / 86400));
+                        $guestCount = max(1, $guestCount);
+                        $NoofRoom = max(1, $NoofRoom);
 
-                        $sql = "INSERT INTO roombook
-                                (Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        $baseRate = 60000; // COP
+                        $extraGuestRate = 25000; // COP por huésped adicional
+                        $ratePerNight = $baseRate + max(0, $guestCount - 1) * $extraGuestRate;
+                        $totalPrice = $ratePerNight * $nodays * $NoofRoom;
 
-                        if ($stmt = mysqli_prepare($conn, $sql)) {
-                            mysqli_stmt_bind_param(
-                                $stmt,
-                                "ssssssissssi",
-                                $Name, $Email, $Country, $Phone, $RoomType, $Bed, $NoofRoom, $Meal, $cin, $cout, $sta, $nodays
-                            );
-                            $ok = mysqli_stmt_execute($stmt);
-                            mysqli_stmt_close($stmt);
+                        $assignedRoomId = null;
+                        $assignedRoomNumber = null;
 
-                            if ($ok) {
-                                echo "<script>
-                                    swal({ title: 'Reserva exitosa', icon: 'success' });
-                                </script>";
-                            } else {
-                                echo "<script>swal({ title: 'Algo salió mal al guardar', icon: 'error' });</script>";
+                        if ($roomStmt = $conn->prepare("SELECT id, room_number FROM room WHERE type = ? AND status = 'Disponible' AND CAST(bedding AS UNSIGNED) >= ? ORDER BY CAST(room_number AS UNSIGNED) ASC LIMIT 1")) {
+                            $roomStmt->bind_param('si', $RoomType, $guestCount);
+                            if ($roomStmt->execute()) {
+                                $roomStmt->bind_result($roomId, $roomNumber);
+                                if ($roomStmt->fetch()) {
+                                    $assignedRoomId = $roomId;
+                                    $assignedRoomNumber = $roomNumber;
+                                }
                             }
+                            $roomStmt->close();
+                        }
+
+                        if ($assignedRoomId === null) {
+                            echo "<script>swal({ title: 'No hay disponibilidad para el tipo solicitado', icon: 'error' });</script>";
                         } else {
-                            echo "<script>swal({ title: 'Error preparando consulta', icon: 'error' });</script>";
+                            $sta = 'NotConfirm';
+                            $guestCountValue = (string)$guestCount;
+
+                            $sql = "INSERT INTO roombook
+                                    (room_id, Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays, total_price)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                            if ($stmt = mysqli_prepare($conn, $sql)) {
+                                mysqli_stmt_bind_param(
+                                    $stmt,
+                                    'issssssisssssid',
+                                    $assignedRoomId,
+                                    $Name,
+                                    $Email,
+                                    $Country,
+                                    $Phone,
+                                    $RoomType,
+                                    $guestCountValue,
+                                    $NoofRoom,
+                                    $Meal,
+                                    $cin,
+                                    $cout,
+                                    $sta,
+                                    $nodays,
+                                    $totalPrice
+                                );
+                                $ok = mysqli_stmt_execute($stmt);
+                                mysqli_stmt_close($stmt);
+
+                                if ($ok) {
+                                    if ($update = $conn->prepare("UPDATE room SET status='Reservada' WHERE id=?")) {
+                                        $update->bind_param('i', $assignedRoomId);
+                                        $update->execute();
+                                        $update->close();
+                                    }
+
+                                    $priceFormatted = number_format($totalPrice, 0, ',', '.');
+                                    $roomText = $assignedRoomNumber !== null ? 'Habitación ' . $assignedRoomNumber : 'una habitación';
+                                    $alertPayload = [
+                                        'title' => 'Reserva exitosa',
+                                        'text'  => 'Se asignó ' . $roomText . '. Total: COP ' . $priceFormatted,
+                                        'icon'  => 'success'
+                                    ];
+                                    echo '<script>swal(' . json_encode($alertPayload, JSON_UNESCAPED_UNICODE) . ');</script>';
+                                } else {
+                                    echo "<script>swal({ title: 'Algo salió mal al guardar', icon: 'error' });</script>";
+                                }
+                            } else {
+                                echo "<script>swal({ title: 'Error preparando consulta', icon: 'error' });</script>";
+                            }
                         }
                     }
                 }
@@ -303,7 +355,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h1"></div>
           <div class="roomdata">
-            <h2>Habitación Superior</h2>
+            <h2>Habitación Sencilla</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>
@@ -317,7 +369,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h2"></div>
           <div class="roomdata">
-            <h2>Habitación Deluxe</h2>
+            <h2>Habitación Doble</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>
@@ -330,7 +382,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h3"></div>
           <div class="roomdata">
-            <h2>Habitación de Huéspedes</h2>
+            <h2>Habitación Múltiple</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>
@@ -342,7 +394,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h4"></div>
           <div class="roomdata">
-            <h2>Habitación Individual</h2>
+            <h2>Estadías Grupales</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>

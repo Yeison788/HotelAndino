@@ -59,7 +59,7 @@ CREATE TABLE `room` (
   `room_number` VARCHAR(10) NOT NULL,       -- 101..113 / 201..213 / etc.
   `type` VARCHAR(50) NOT NULL,
   `bedding` VARCHAR(50) NOT NULL,
-  `status` ENUM('Disponible','Pendiente','Ocupada') NOT NULL DEFAULT 'Disponible',
+  `status` ENUM('Disponible','Reservada','Limpieza','Ocupada') NOT NULL DEFAULT 'Disponible',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_room_number` (`room_number`),
   KEY `idx_room_floor` (`floor`),
@@ -69,61 +69,126 @@ CREATE TABLE `room` (
 -- ✅ Seed de habitaciones (Pisos 1–4, 13 por piso)
 INSERT INTO `room` (`floor`, `room_number`, `type`, `bedding`, `status`) VALUES
 -- Piso 1 (101–113)
-(1, '101', 'Superior Room', 'Single', 'Disponible'),
-(1, '102', 'Superior Room', 'Double', 'Disponible'),
-(1, '103', 'Superior Room', 'Triple', 'Disponible'),
-(1, '104', 'Deluxe Room',   'Single', 'Disponible'),
-(1, '105', 'Deluxe Room',   'Double', 'Disponible'),
-(1, '106', 'Deluxe Room',   'Triple', 'Disponible'),
-(1, '107', 'Guest House',   'Single', 'Disponible'),
-(1, '108', 'Guest House',   'Double', 'Disponible'),
-(1, '109', 'Guest House',   'Triple', 'Disponible'),
-(1, '110', 'Single Room',   'Single', 'Disponible'),
-(1, '111', 'Superior Room', 'Quad',   'Disponible'),
-(1, '112', 'Deluxe Room',   'Quad',   'Disponible'),
-(1, '113', 'Guest House',   'Quad',   'Disponible'),
+(1, '101', 'Habitación Sencilla', '1', 'Disponible'),
+(1, '102', 'Habitación Sencilla', '1', 'Disponible'),
+(1, '103', 'Habitación Sencilla', '1', 'Disponible'),
+(1, '104', 'Habitación Sencilla', '1', 'Disponible'),
+(1, '105', 'Habitación Doble',    '2', 'Disponible'),
+(1, '106', 'Habitación Doble',    '2', 'Disponible'),
+(1, '107', 'Habitación Doble',    '2', 'Disponible'),
+(1, '108', 'Habitación Doble',    '2', 'Disponible'),
+(1, '109', 'Habitación Múltiple', '3', 'Disponible'),
+(1, '110', 'Habitación Múltiple', '3', 'Disponible'),
+(1, '111', 'Habitación Múltiple', '4', 'Disponible'),
+(1, '112', 'Habitación Múltiple', '5', 'Disponible'),
+(1, '113', 'Habitación Múltiple', '6', 'Disponible'),
 -- Piso 2 (201–213)
-(2, '201', 'Superior Room', 'Single', 'Disponible'),
-(2, '202', 'Superior Room', 'Double', 'Disponible'),
-(2, '203', 'Superior Room', 'Triple', 'Disponible'),
-(2, '204', 'Deluxe Room',   'Single', 'Disponible'),
-(2, '205', 'Deluxe Room',   'Double', 'Disponible'),
-(2, '206', 'Deluxe Room',   'Triple', 'Disponible'),
-(2, '207', 'Guest House',   'Single', 'Disponible'),
-(2, '208', 'Guest House',   'Double', 'Disponible'),
-(2, '209', 'Guest House',   'Triple', 'Disponible'),
-(2, '210', 'Single Room',   'Single', 'Disponible'),
-(2, '211', 'Superior Room', 'Quad',   'Disponible'),
-(2, '212', 'Deluxe Room',   'Quad',   'Disponible'),
-(2, '213', 'Guest House',   'Quad',   'Disponible'),
+(2, '201', 'Habitación Sencilla', '1', 'Disponible'),
+(2, '202', 'Habitación Sencilla', '1', 'Disponible'),
+(2, '203', 'Habitación Sencilla', '1', 'Disponible'),
+(2, '204', 'Habitación Sencilla', '1', 'Disponible'),
+(2, '205', 'Habitación Doble',    '2', 'Disponible'),
+(2, '206', 'Habitación Doble',    '2', 'Disponible'),
+(2, '207', 'Habitación Doble',    '2', 'Disponible'),
+(2, '208', 'Habitación Doble',    '2', 'Disponible'),
+(2, '209', 'Habitación Múltiple', '3', 'Disponible'),
+(2, '210', 'Habitación Múltiple', '3', 'Disponible'),
+(2, '211', 'Habitación Múltiple', '4', 'Disponible'),
+(2, '212', 'Habitación Múltiple', '5', 'Disponible'),
+(2, '213', 'Habitación Múltiple', '6', 'Disponible'),
 -- Piso 3 (301–313)
-(3, '301', 'Superior Room', 'Single', 'Disponible'),
-(3, '302', 'Superior Room', 'Double', 'Disponible'),
-(3, '303', 'Superior Room', 'Triple', 'Disponible'),
-(3, '304', 'Deluxe Room',   'Single', 'Disponible'),
-(3, '305', 'Deluxe Room',   'Double', 'Disponible'),
-(3, '306', 'Deluxe Room',   'Triple', 'Disponible'),
-(3, '307', 'Guest House',   'Single', 'Disponible'),
-(3, '308', 'Guest House',   'Double', 'Disponible'),
-(3, '309', 'Guest House',   'Triple', 'Disponible'),
-(3, '310', 'Single Room',   'Single', 'Disponible'),
-(3, '311', 'Superior Room', 'Quad',   'Disponible'),
-(3, '312', 'Deluxe Room',   'Quad',   'Disponible'),
-(3, '313', 'Guest House',   'Quad',   'Disponible'),
+(3, '301', 'Habitación Sencilla', '1', 'Disponible'),
+(3, '302', 'Habitación Sencilla', '1', 'Disponible'),
+(3, '303', 'Habitación Sencilla', '1', 'Disponible'),
+(3, '304', 'Habitación Sencilla', '1', 'Disponible'),
+(3, '305', 'Habitación Doble',    '2', 'Disponible'),
+(3, '306', 'Habitación Doble',    '2', 'Disponible'),
+(3, '307', 'Habitación Doble',    '2', 'Disponible'),
+(3, '308', 'Habitación Doble',    '2', 'Disponible'),
+(3, '309', 'Habitación Múltiple', '3', 'Disponible'),
+(3, '310', 'Habitación Múltiple', '3', 'Disponible'),
+(3, '311', 'Habitación Múltiple', '4', 'Disponible'),
+(3, '312', 'Habitación Múltiple', '5', 'Disponible'),
+(3, '313', 'Habitación Múltiple', '6', 'Disponible'),
 -- Piso 4 (401–413)
-(4, '401', 'Superior Room', 'Single', 'Disponible'),
-(4, '402', 'Superior Room', 'Double', 'Disponible'),
-(4, '403', 'Superior Room', 'Triple', 'Disponible'),
-(4, '404', 'Deluxe Room',   'Single', 'Disponible'),
-(4, '405', 'Deluxe Room',   'Double', 'Disponible'),
-(4, '406', 'Deluxe Room',   'Triple', 'Disponible'),
-(4, '407', 'Guest House',   'Single', 'Disponible'),
-(4, '408', 'Guest House',   'Double', 'Disponible'),
-(4, '409', 'Guest House',   'Triple', 'Disponible'),
-(4, '410', 'Single Room',   'Single', 'Disponible'),
-(4, '411', 'Superior Room', 'Quad',   'Disponible'),
-(4, '412', 'Deluxe Room',   'Quad',   'Disponible'),
-(4, '413', 'Guest House',   'Quad',   'Disponible');
+(4, '401', 'Habitación Sencilla', '1', 'Disponible'),
+(4, '402', 'Habitación Sencilla', '1', 'Disponible'),
+(4, '403', 'Habitación Sencilla', '1', 'Disponible'),
+(4, '404', 'Habitación Sencilla', '1', 'Disponible'),
+(4, '405', 'Habitación Doble',    '2', 'Disponible'),
+(4, '406', 'Habitación Doble',    '2', 'Disponible'),
+(4, '407', 'Habitación Doble',    '2', 'Disponible'),
+(4, '408', 'Habitación Doble',    '2', 'Disponible'),
+(4, '409', 'Habitación Múltiple', '3', 'Disponible'),
+(4, '410', 'Habitación Múltiple', '3', 'Disponible'),
+(4, '411', 'Habitación Múltiple', '4', 'Disponible'),
+(4, '412', 'Habitación Múltiple', '5', 'Disponible'),
+(4, '413', 'Habitación Múltiple', '6', 'Disponible');
+
+-- ======================================================
+-- Tabla: room_types (catálogo editable desde admin)
+-- ======================================================
+CREATE TABLE `room_types` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(80) NOT NULL,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_room_types_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `room_types` (`name`, `description`) VALUES
+('Habitación Sencilla', 'Pensada para viajeros que buscan comodidad con todos los esenciales para una persona.'),
+('Habitación Doble', 'Perfecta para parejas o amigos que desean compartir y disfrutar de dos espacios de descanso.'),
+('Habitación Múltiple', 'Nuestra opción más amplia para familias o grupos, con capacidad flexible hasta seis huéspedes.')
+ON DUPLICATE KEY UPDATE
+  `description` = VALUES(`description`);
+
+-- ======================================================
+-- Tabla: products (inventario simple para ventas)
+-- ======================================================
+CREATE TABLE `products` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(120) NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_products_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================================
+-- Tabla: sales (registro de ventas internas)
+-- ======================================================
+CREATE TABLE `sales` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `product_id` INT DEFAULT NULL,
+  `details` VARCHAR(190) DEFAULT NULL,
+  `quantity` INT NOT NULL DEFAULT 1,
+  `total` DECIMAL(10,2) NOT NULL DEFAULT 0,
+  `sold_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sales_product` (`product_id`),
+  CONSTRAINT `fk_sales_product` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================================
+-- Tabla: room_stays (detalle de huéspedes por habitación)
+-- ======================================================
+CREATE TABLE `room_stays` (
+  `room_id` INT NOT NULL,
+  `guest_id` VARCHAR(40) NOT NULL,
+  `guest_name` VARCHAR(120) NOT NULL,
+  `nationality` VARCHAR(80) NOT NULL,
+  `check_in_date` DATE NOT NULL,
+  `check_in_time` TIME NOT NULL,
+  `check_out_date` DATE NOT NULL,
+  `receptionist_email` VARCHAR(190) NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`room_id`),
+  CONSTRAINT `fk_room_stays_room` FOREIGN KEY (`room_id`) REFERENCES `room`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
 -- Tabla: roombook (reservas)
@@ -143,6 +208,7 @@ CREATE TABLE `roombook` (
   `cout` DATE NOT NULL,
   `nodays` INT NOT NULL,
   `stat` VARCHAR(30) NOT NULL,
+  `total_price` DECIMAL(10,2) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_roombook_room_id` (`room_id`),
   CONSTRAINT `fk_roombook_room`

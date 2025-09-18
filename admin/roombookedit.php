@@ -3,7 +3,7 @@
 include '../config.php';
 
 // fetch room data
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 $sql ="Select * from roombook where id = '$id'";
 $re = mysqli_query($conn,$sql);
@@ -17,101 +17,95 @@ while($row=mysqli_fetch_array($re))
     $cout = $row['cout'];
     $noofday = $row['nodays'];
     $stat = $row['stat'];
+    $CurrentRoomType = $row['RoomType'];
+    $CurrentBed = $row['Bed'];
+    $CurrentNoofRoom = $row['NoofRoom'];
+    $CurrentMeal = $row['Meal'];
+    $CurrentTotal = isset($row['total_price']) ? (float)$row['total_price'] : 0;
 }
 
 if (isset($_POST['guestdetailedit'])) {
-    $EditName = $_POST['Name'];
-    $EditEmail = $_POST['Email'];
-    $EditCountry = $_POST['Country'];
-    $EditPhone = $_POST['Phone'];
-    $EditRoomType = $_POST['RoomType'];
-    $EditBed = $_POST['Bed'];
-    $EditNoofRoom = $_POST['NoofRoom'];
-    $EditMeal = $_POST['Meal'];
-    $Editcin = $_POST['cin'];
-    $Editcout = $_POST['cout'];
+    $EditName = trim($_POST['Name'] ?? '');
+    $EditEmail = trim($_POST['Email'] ?? '');
+    $EditCountry = trim($_POST['Country'] ?? '');
+    $EditPhone = trim($_POST['Phone'] ?? '');
+    $EditRoomType = trim($_POST['RoomType'] ?? '');
+    $EditBed = (int)($_POST['Bed'] ?? 0);
+    $EditNoofRoom = (int)($_POST['NoofRoom'] ?? 1);
+    $EditMeal = trim($_POST['Meal'] ?? '');
+    $Editcin = $_POST['cin'] ?? '';
+    $Editcout = $_POST['cout'] ?? '';
 
-    $sql = "UPDATE roombook SET Name = '$EditName',Email = '$EditEmail',Country='$EditCountry',Phone='$EditPhone',RoomType='$EditRoomType',Bed='$EditBed',NoofRoom='$EditNoofRoom',Meal='$EditMeal',cin='$Editcin',cout='$Editcout',nodays = datediff('$Editcout','$Editcin') WHERE id = '$id'";
+    $d1 = strtotime($Editcin);
+    $d2 = strtotime($Editcout);
+    $Editnodays = ($d1 && $d2 && $d2 > $d1) ? max(1, (int)ceil(($d2 - $d1) / 86400)) : 1;
 
-    $result = mysqli_query($conn, $sql);
+    $guestCount = max(1, $EditBed);
+    $roomsBooked = max(1, $EditNoofRoom);
+    $guestCountValue = (string)$guestCount;
 
-    $type_of_room = 0;
-    if($EditRoomType=="Superior Room")
-    {
-        $type_of_room = 3000;
-    }
-    else if($EditRoomType=="Deluxe Room")
-    {
-        $type_of_room = 2000;
-    }
-    else if($EditRoomType=="Guest House")
-    {
-        $type_of_room = 1500;
-    }
-    else if($EditRoomType=="Single Room")
-    {
-        $type_of_room = 1000;
-    }
-    
-    
-    if($EditBed=="Single")
-    {
-        $type_of_bed = $type_of_room * 1/100;
-    }
-    else if($EditBed=="Double")
-    {
-        $type_of_bed = $type_of_room * 2/100;
-    }
-    else if($EditBed=="Triple")
-    {
-        $type_of_bed = $type_of_room * 3/100;
-    }
-    else if($EditBed=="Quad")
-    {
-        $type_of_bed = $type_of_room * 4/100;
-    }
-    else if($EditBed=="None")
-    {
-        $type_of_bed = $type_of_room * 0/100;
-    }
+    $ratePerNight = 60000 + max(0, $guestCount - 1) * 25000;
+    $totalPrice = $ratePerNight * $Editnodays * $roomsBooked;
 
-    if($EditMeal=="Room only")
-    {
-        $type_of_meal=$type_of_bed * 0;
-    }
-    else if($EditMeal=="Breakfast")
-    {
-        $type_of_meal=$type_of_bed * 2;
-    }
-    else if($EditMeal=="Half Board")
-    {
-        $type_of_meal=$type_of_bed * 3;
-    }
-    else if($EditMeal=="Full Board")
-    {
-        $type_of_meal=$type_of_bed * 4;
-    }
-    
-    // noofday update
-    $psql ="Select * from roombook where id = '$id'";
-    $presult = mysqli_query($conn,$psql);
-    $prow=mysqli_fetch_array($presult);
-    $Editnoofday = $prow['nodays'];
+    $mealRates = [
+        'Room only'  => 0,
+        'Breakfast'  => 15000,
+        'Half Board' => 28000,
+        'Full Board' => 42000,
+        'Solo habitación' => 0,
+        'Desayuno' => 15000,
+        'Media pensión' => 28000,
+        'Pensión completa' => 42000,
+    ];
+    $mealRate = $mealRates[$EditMeal] ?? 0;
+    $mealTotal = $mealRate * $guestCount * $Editnodays;
+    $bedTotal = 0.0;
+    $finalTotal = $totalPrice + $mealTotal;
 
-    $editttot = $type_of_room*$Editnoofday * $EditNoofRoom;
-    $editmepr = $type_of_meal*$Editnoofday;
-    $editbtot = $type_of_bed*$Editnoofday;
-
-    $editfintot = $editttot + $editmepr + $editbtot;
-
-    $psql = "UPDATE payment SET Name = '$EditName',Email = '$EditEmail',RoomType='$EditRoomType',Bed='$EditBed',NoofRoom='$EditNoofRoom',Meal='$EditMeal',cin='$Editcin',cout='$Editcout',noofdays = '$Editnoofday',roomtotal = '$editttot',bedtotal = '$editbtot',mealtotal = '$editmepr',finaltotal = '$editfintot' WHERE id = '$id'";
-
-    $paymentresult = mysqli_query($conn,$psql);
-
-    if ($paymentresult) {
-            header("Location:roombook.php");
+    if ($stmt = $conn->prepare("UPDATE roombook SET Name = ?, Email = ?, Country = ?, Phone = ?, RoomType = ?, Bed = ?, NoofRoom = ?, Meal = ?, cin = ?, cout = ?, nodays = ?, total_price = ? WHERE id = ?")) {
+        $stmt->bind_param(
+            'ssssssisssiddi',
+            $EditName,
+            $EditEmail,
+            $EditCountry,
+            $EditPhone,
+            $EditRoomType,
+            $guestCountValue,
+            $roomsBooked,
+            $EditMeal,
+            $Editcin,
+            $Editcout,
+            $Editnodays,
+            $totalPrice,
+            $id
+        );
+        $stmt->execute();
+        $stmt->close();
     }
 
+    if ($stmt = $conn->prepare("UPDATE payment SET Name = ?, Email = ?, RoomType = ?, Bed = ?, NoofRoom = ?, Meal = ?, cin = ?, cout = ?, noofdays = ?, roomtotal = ?, bedtotal = ?, mealtotal = ?, finaltotal = ? WHERE id = ?")) {
+        $stmt->bind_param(
+            'ssssisssiddddi',
+            $EditName,
+            $EditEmail,
+            $EditRoomType,
+            $guestCountValue,
+            $roomsBooked,
+            $EditMeal,
+            $Editcin,
+            $Editcout,
+            $Editnodays,
+            $totalPrice,
+            $bedTotal,
+            $mealTotal,
+            $finalTotal,
+            $id
+        );
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    header("Location:roombook.php");
 }
 ?>
 
@@ -188,34 +182,27 @@ if (isset($_POST['guestdetailedit'])) {
 
                 <div class="reservationinfo">
                     <h4>Reservation information</h4>
-                    <select name="RoomType" class="selectinput">
-						<option value selected >Type Of Room</option>
-                        <option value="Superior Room">SUPERIOR ROOM</option>
-                        <option value="Deluxe Room">DELUXE ROOM</option>
-						<option value="Guest House">GUEST HOUSE</option>
-						<option value="Single Room">SINGLE ROOM</option>
+                    <select name="RoomType" class="selectinput" required>
+                        <option value="" disabled <?php echo empty($CurrentRoomType) ? 'selected' : ''; ?>>Tipo de habitación</option>
+                        <option value="Habitación Sencilla" <?php echo $CurrentRoomType === 'Habitación Sencilla' ? 'selected' : ''; ?>>Habitación Sencilla</option>
+                        <option value="Habitación Doble" <?php echo $CurrentRoomType === 'Habitación Doble' ? 'selected' : ''; ?>>Habitación Doble</option>
+                        <option value="Habitación Múltiple" <?php echo $CurrentRoomType === 'Habitación Múltiple' ? 'selected' : ''; ?>>Habitación Múltiple</option>
                     </select>
-                    <select name="Bed" class="selectinput">
-						<option value selected >Bedding Type</option>
-                        <option value="Single">Single</option>
-                        <option value="Double">Double</option>
-						<option value="Triple">Triple</option>
-                        <option value="Quad">Quad</option>
-						<option value="None">None</option>
+                    <select name="Bed" class="selectinput" required>
+                        <option value="" disabled <?php echo empty($CurrentBed) ? 'selected' : ''; ?>>Cantidad de huéspedes</option>
+                        <?php for ($guests = 1; $guests <= 6; $guests++): ?>
+                            <option value="<?php echo $guests; ?>" <?php echo (int)$CurrentBed === $guests ? 'selected' : ''; ?>><?php echo $guests; ?> huésped<?php echo $guests > 1 ? 'es' : ''; ?></option>
+                        <?php endfor; ?>
                     </select>
-                    <select name="NoofRoom" class="selectinput">
-						<option value selected >No of Room</option>
-                        <option value="1">1</option>
-                        <!-- <option value="1">2</option>
-                        <option value="1">3</option> -->
+                    <select name="NoofRoom" class="selectinput" required>
+                        <option value="1" <?php echo (int)$CurrentNoofRoom === 1 ? 'selected' : ''; ?>>1</option>
                     </select>
-                    <select name="Meal" class="selectinput">
-						<option value selected >Meal</option>
-                        <option value="Room only">Room only</option>
-                        <option value="Breakfast">Breakfast</option>
-						<option value="Half Board">Half Board</option>
-						<option value="Full Board">Full Board</option>
-					</select>
+                    <select name="Meal" class="selectinput" required>
+                        <option value="Room only" <?php echo $CurrentMeal === 'Room only' ? 'selected' : ''; ?>>Room only</option>
+                        <option value="Breakfast" <?php echo $CurrentMeal === 'Breakfast' ? 'selected' : ''; ?>>Breakfast</option>
+                        <option value="Half Board" <?php echo $CurrentMeal === 'Half Board' ? 'selected' : ''; ?>>Half Board</option>
+                        <option value="Full Board" <?php echo $CurrentMeal === 'Full Board' ? 'selected' : ''; ?>>Full Board</option>
+                    </select>
                     <div class="datesection">
                         <span>
                             <label for="cin"> Check-In</label>

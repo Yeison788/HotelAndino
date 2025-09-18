@@ -166,6 +166,12 @@ body{
   display: block;
 }
 
+.sidenav ul li i{
+  font-size: 18px;
+  width: 23px;
+  text-align: center;
+}
+
 /* =========================================================
    Área principal (iframes)
    ========================================================= */
