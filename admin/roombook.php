@@ -2,6 +2,20 @@
 session_start();
 include '../config.php';
 
+function formatGuestCapacity($value)
+{
+    $capacity = (int)$value;
+    if ($capacity <= 0) {
+        return 'Sin definir';
+    }
+    return $capacity . ' huésped' . ($capacity === 1 ? '' : 'es');
+}
+
+function formatCurrencyCOP($amount)
+{
+    return number_format((float)$amount, 0, ',', '.');
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -57,20 +71,20 @@ include '../config.php';
 
                 <div class="reservationinfo">
                     <h4>Información de la reserva</h4>
-                    <select name="RoomType" class="selectinput">
-						<option value selected >Tipo de habitación</option>
-                        <option value="Superior Room">HABITACIÓN SUPERIOR</option>
-                        <option value="Deluxe Room">HABITACIÓN DELUXE</option>
-						<option value="Guest House">CASA DE HUÉSPEDES</option>
-						<option value="Single Room">HABITACIÓN INDIVIDUAL</option>
+                    <select name="RoomType" class="selectinput" required>
+                        <option value selected>Tipo de habitación</option>
+                        <option value="Habitación Sencilla">Habitación Sencilla</option>
+                        <option value="Habitación Doble">Habitación Doble</option>
+                        <option value="Habitación Múltiple">Habitación Múltiple</option>
                     </select>
-                    <select name="Bed" class="selectinput">
-						<option value selected >Tipo de cama</option>
-                        <option value="Single">Individual</option>
-                        <option value="Double">Doble</option>
-						<option value="Triple">Triple</option>
-                        <option value="Quad">Cuádruple</option>
-						<option value="None">Ninguna</option>
+                    <select name="Bed" class="selectinput" required>
+                        <option value selected>Cantidad de huéspedes</option>
+                        <option value="1">1 huésped</option>
+                        <option value="2">2 huéspedes</option>
+                        <option value="3">3 huéspedes</option>
+                        <option value="4">4 huéspedes</option>
+                        <option value="5">5 huéspedes</option>
+                        <option value="6">6 huéspedes</option>
                     </select>
                     <select name="NoofRoom" class="selectinput">
 						<option value selected >Número de habitaciones</option>
@@ -105,174 +119,158 @@ include '../config.php';
         <?php       
         // <!-- room availablity start-->
 
-        $rsql ="select * from room";
-        $rre= mysqli_query($conn,$rsql);
-        $r = 0;
-        $sc = 0;
-        $gh = 0;
-        $sr = 0;
-        $dr = 0;
+        $rsql = "SELECT * FROM room";
+        $rre = mysqli_query($conn, $rsql);
 
-        while($rrow=mysqli_fetch_array($rre))
-        {
-            $r = $r + 1;
-            $s = $rrow['type'];
-            if($s=="Superior Room")
-            {
-                $sc = $sc+ 1;
-            }
-            if($s=="Guest House")
-            {
-                $gh = $gh + 1;
-            }
-            if($s=="Single Room" )
-            {
-                $sr = $sr + 1;
-            }
-            if($s=="Deluxe Room" )
-            {
-                $dr = $dr + 1;
+        $roomTypeTotals = [
+            'Habitación Sencilla' => 0,
+            'Habitación Doble'    => 0,
+            'Habitación Múltiple' => 0,
+        ];
+
+        while ($rrow = mysqli_fetch_array($rre)) {
+            $type = $rrow['type'];
+            if (array_key_exists($type, $roomTypeTotals)) {
+                $roomTypeTotals[$type]++;
             }
         }
 
-        $csql ="select * from payment";
-        $cre= mysqli_query($conn,$csql);
-        $cr =0 ;
-        $csc =0;
-        $cgh = 0;
-        $csr = 0;
-        $cdr = 0;
-        while($crow=mysqli_fetch_array($cre))
-        {
-            $cr = $cr + 1;
-            $cs = $crow['RoomType'];
-                        
-            if($cs=="Superior Room")
-            {
-                $csc = $csc + 1;
-            }
-                        
-            if($cs=="Guest House" )
-            {
-                $cgh = $cgh + 1;
-            }
-            if($cs=="Single Room")
-            {
-                $csr = $csr + 1;
-            }
-            if($cs=="Deluxe Room")
-            {
-                $cdr = $cdr + 1;
+        $reservationTotals = [
+            'Habitación Sencilla' => 0,
+            'Habitación Doble'    => 0,
+            'Habitación Múltiple' => 0,
+        ];
+
+        $csql = "SELECT RoomType FROM payment";
+        $cre = mysqli_query($conn, $csql);
+        while ($crow = mysqli_fetch_array($cre)) {
+            $type = $crow['RoomType'];
+            if (array_key_exists($type, $reservationTotals)) {
+                $reservationTotals[$type]++;
             }
         }
-        // room availablity
-        // Superior Room =>
-        $f1 =$sc - $csc;
-        if($f1 <=0 )
-        {	
-            $f1 = "NO";
+
+        $availabilityByType = [];
+        foreach ($roomTypeTotals as $type => $totalRooms) {
+            $confirmed = $reservationTotals[$type] ?? 0;
+            $available = $totalRooms - $confirmed;
+            $availabilityByType[$type] = $available > 0 ? $available : "NO";
         }
-        // Guest House =>
-        $f2 =  $gh -$cgh;
-        if($f2 <=0 )
-        {	
-            $f2 = "NO";
+
+        $totalRooms = array_sum($roomTypeTotals);
+        $totalConfirmed = array_sum($reservationTotals);
+        $totalAvailable = $totalRooms - $totalConfirmed;
+        if ($totalAvailable <= 0) {
+            $totalAvailable = "NO";
         }
-        // Single Room =>
-        $f3 =$sr - $csr;
-        if($f3 <=0 )
-        {	
-            $f3 = "NO";
-        }
-        // Deluxe Room =>
-        $f4 =$dr - $cdr; 
-        if($f4 <=0 )
-        {	
-            $f4 = "NO";
-        }
-        //total available room =>
-        $f5 =$r-$cr; 
-        if($f5 <=0 )
-        {
-            $f5 = "NO";
-        }
+
+        $f1 = $availabilityByType['Habitación Sencilla'];
+        $f2 = $availabilityByType['Habitación Doble'];
+        $f3 = $availabilityByType['Habitación Múltiple'];
+        $f5 = $totalAvailable;
         ?>
         <!-- room availablity end-->
 
         <!-- ==== room book php ====-->
-        <?php       
+        <?php
             if (isset($_POST['guestdetailsubmit'])) {
-                $Name = $_POST['Name'];
-                $Email = $_POST['Email'];
-                $Country = $_POST['Country'];
-                $Phone = $_POST['Phone'];
-                $RoomType = $_POST['RoomType'];
-                $Bed = $_POST['Bed'];
-                $NoofRoom = $_POST['NoofRoom'];
-                $Meal = $_POST['Meal'];
-                $cin = $_POST['cin'];
-                $cout = $_POST['cout'];
+                $Name = trim($_POST['Name'] ?? '');
+                $Email = trim($_POST['Email'] ?? '');
+                $Country = trim($_POST['Country'] ?? '');
+                $Phone = trim($_POST['Phone'] ?? '');
+                $RoomType = trim($_POST['RoomType'] ?? '');
+                $guestCount = (int)($_POST['Bed'] ?? 0);
+                $NoofRoom = (int)($_POST['NoofRoom'] ?? 0);
+                $Meal = trim($_POST['Meal'] ?? '');
+                $cin = $_POST['cin'] ?? '';
+                $cout = $_POST['cout'] ?? '';
 
-                if($Name == "" || $Email == "" || $Country == ""){
-                    echo "<script>swal({
-                        title: 'Fill the proper details',
-                        icon: 'error',
-                    });
-                    </script>";
-                }
-                else{
-                    $sta = "NotConfirm";
-                    $sql = "INSERT INTO roombook(Name,Email,Country,Phone,RoomType,Bed,NoofRoom,Meal,cin,cout,stat,nodays) VALUES ('$Name','$Email','$Country','$Phone','$RoomType','$Bed','$NoofRoom','$Meal','$cin','$cout','$sta',datediff('$cout','$cin'))";
-                    $result = mysqli_query($conn, $sql);
+                if ($Name === '' || $Email === '' || $Country === '' || $RoomType === '' || $guestCount <= 0 || $NoofRoom < 1 || $Meal === '' || $cin === '' || $cout === '') {
+                    echo "<script>swal({ title: 'Completa los datos correctamente', icon: 'error' });</script>";
+                } else {
+                    $d1 = strtotime($cin);
+                    $d2 = strtotime($cout);
+                    if ($d1 === false || $d2 === false || $d2 <= $d1) {
+                        echo "<script>swal({ title: 'Rango de fechas inválido', icon: 'error' });</script>";
+                    } else {
+                        $nodays = max(1, (int)ceil(($d2 - $d1) / 86400));
+                        $guestCount = max(1, $guestCount);
+                        $NoofRoom = max(1, $NoofRoom);
 
-                    // if($f1=="NO")
-                    // {
-                    //     echo "<script>swal({
-                    //         title: 'Superior Room is not available',
-                    //         icon: 'error',
-                    //     });
-                    //     </script>";
-                    // }
-                    // else if($f2=="NO")
-                    // {
-                    //     echo "<script>swal({
-                    //         title: 'Guest House is not available',
-                    //         icon: 'error',
-                    //     });
-                    //     </script>";
-                    // }
-                    // else if($f3 == "NO")
-                    // {
-                    //     echo "<script>swal({
-                    //         title: 'Si Room is not available',
-                    //         icon: 'error',
-                    //     });
-                    //     </script>";
-                    // }
-                    // else if($f4 == "NO")
-                    // {
-                    //     echo "<script>swal({
-                    //         title: 'Deluxe Room is not available',
-                    //         icon: 'error',
-                    //     });
-                    //     </script>";
-                    // }
-                    // else if($result = mysqli_query($conn, $sql))
-                    // {
-                        if ($result) {
-                            echo "<script>swal({
-                                title: 'Reservation successful',
-                                icon: 'success',
-                            });
-                        </script>";
-                        } else {
-                            echo "<script>swal({
-                                    title: 'Something went wrong',
-                                    icon: 'error',
-                                });
-                        </script>";
+                        $baseRate = 60000;
+                        $extraGuestRate = 25000;
+                        $ratePerNight = $baseRate + max(0, $guestCount - 1) * $extraGuestRate;
+                        $totalPrice = $ratePerNight * $nodays * $NoofRoom;
+
+                        $assignedRoomId = null;
+                        $assignedRoomNumber = null;
+
+                        if ($roomStmt = $conn->prepare("SELECT id, room_number FROM room WHERE type = ? AND status = 'Disponible' AND CAST(bedding AS UNSIGNED) >= ? ORDER BY CAST(room_number AS UNSIGNED) ASC LIMIT 1")) {
+                            $roomStmt->bind_param('si', $RoomType, $guestCount);
+                            if ($roomStmt->execute()) {
+                                $roomStmt->bind_result($roomId, $roomNumber);
+                                if ($roomStmt->fetch()) {
+                                    $assignedRoomId = $roomId;
+                                    $assignedRoomNumber = $roomNumber;
+                                }
+                            }
+                            $roomStmt->close();
                         }
-                    // }
+
+                        if ($assignedRoomId === null) {
+                            echo "<script>swal({ title: 'No hay habitaciones disponibles para esa capacidad', icon: 'error' });</script>";
+                        } else {
+                            $sta = 'NotConfirm';
+                            $guestCountValue = (string)$guestCount;
+
+                            $sql = "INSERT INTO roombook
+                                    (room_id, Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays, total_price)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                            if ($stmt = $conn->prepare($sql)) {
+                                $stmt->bind_param(
+                                    'issssssisssssid',
+                                    $assignedRoomId,
+                                    $Name,
+                                    $Email,
+                                    $Country,
+                                    $Phone,
+                                    $RoomType,
+                                    $guestCountValue,
+                                    $NoofRoom,
+                                    $Meal,
+                                    $cin,
+                                    $cout,
+                                    $sta,
+                                    $nodays,
+                                    $totalPrice
+                                );
+                                $ok = $stmt->execute();
+                                $stmt->close();
+
+                                if ($ok) {
+                                    if ($update = $conn->prepare("UPDATE room SET status='Reservada' WHERE id=?")) {
+                                        $update->bind_param('i', $assignedRoomId);
+                                        $update->execute();
+                                        $update->close();
+                                    }
+
+                                    $priceFormatted = number_format($totalPrice, 0, ',', '.');
+                                    $roomText = $assignedRoomNumber ? 'Habitación ' . $assignedRoomNumber : 'una habitación disponible';
+                                    $alertPayload = [
+                                        'title' => 'Reserva creada',
+                                        'text'  => 'Asignada ' . $roomText . '. Total: COP ' . $priceFormatted,
+                                        'icon'  => 'success'
+                                    ];
+                                    echo '<script>swal(' . json_encode($alertPayload, JSON_UNESCAPED_UNICODE) . ');</script>';
+                                } else {
+                                    echo "<script>swal({ title: 'Algo salió mal al guardar', icon: 'error' });</script>";
+                                }
+                            } else {
+                                echo "<script>swal({ title: 'Error preparando consulta', icon: 'error' });</script>";
+                            }
+                        }
+                    }
                 }
             }
         ?>
@@ -303,12 +301,13 @@ include '../config.php';
                     <th scope="col">País</th>
                     <th scope="col">Teléfono</th>
                     <th scope="col">Tipo de habitación</th>
-                    <th scope="col">Tipo de cama</th>
+                    <th scope="col">Cantidad de huéspedes</th>
                     <th scope="col">Número de habitaciones</th>
                     <th scope="col">Comida</th>
                     <th scope="col">Llegada</th>
                     <th scope="col">Salida</th>
                     <th scope="col">Número de días</th>
+                    <th scope="col">Precio total (COP)</th>
                     <th scope="col">Estado</th>
                     <th scope="col" class="action">Acción</th>
                     <!-- <th>Delete</th> -->
@@ -326,12 +325,13 @@ include '../config.php';
                     <td><?php echo $res['Country'] ?></td>
                     <td><?php echo $res['Phone'] ?></td>
                     <td><?php echo $res['RoomType'] ?></td>
-                    <td><?php echo $res['Bed'] ?></td>
+                    <td><?php echo htmlspecialchars(formatGuestCapacity($res['Bed'])); ?></td>
                     <td><?php echo $res['NoofRoom'] ?></td>
                     <td><?php echo $res['Meal'] ?></td>
                     <td><?php echo $res['cin'] ?></td>
                     <td><?php echo $res['cout'] ?></td>
                     <td><?php echo $res['nodays'] ?></td>
+                    <td><?php echo 'COP ' . formatCurrencyCOP($res['total_price'] ?? 0); ?></td>
                     <td><?php echo $res['stat'] ?></td>
                     <td class="action">
                         <?php

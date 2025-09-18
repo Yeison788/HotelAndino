@@ -51,13 +51,13 @@ if (!$adminmail) {
     <!-- side nav -->
     <nav class="sidenav">
         <ul>
-            <li class="pagebtn active"><img src="../image/icon/dashboard.png">&nbsp;&nbsp; Panel</li>
-            <li class="pagebtn"><img src="../image/icon/bed.png">&nbsp;&nbsp; Reservas</li>
-            <li class="pagebtn"><img src="../image/icon/wallet.png">&nbsp;&nbsp; Pagos</li>            
-            <li class="pagebtn"><img src="../image/icon/bedroom.png">&nbsp;&nbsp; Habitaciones</li>
-            <li class="pagebtn"><img src="../image/icon/staff.png">&nbsp;&nbsp; Personal</li>
-            <li class="pagebtn"><img src="../image/icon/analytics.png">&nbsp;&nbsp; Analíticas</li>
-            <li class="pagebtn"><img src="../image/icon/security1.png">&nbsp;&nbsp; Seguridad</li>
+            <li class="pagebtn active"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Panel</li>
+            <li class="pagebtn"><i class="fa-solid fa-bed"></i>&nbsp;&nbsp; Reservas</li>
+            <li class="pagebtn"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
+            <li class="pagebtn"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
+            <li class="pagebtn"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
+            <li class="pagebtn"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</li>
+            <li class="pagebtn"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Ver</li>
         </ul>
     </nav>
 
@@ -68,8 +68,8 @@ if (!$adminmail) {
         <iframe class="frames frame3" src="./payment.php" frameborder="0"></iframe>
         <iframe class="frames frame4" src="./room.php" frameborder="0"></iframe>
         <iframe class="frames frame5" src="./staff.php" frameborder="0"></iframe>
-        <iframe class="frames frame6" src="./analytics.php" frameborder="0"></iframe>
-        <iframe class="frames frame7" src="./security.php" frameborder="0"></iframe>
+        <iframe class="frames frame6" src="./records.php" frameborder="0"></iframe>
+        <iframe class="frames frame7" src="./room-status.php" frameborder="0"></iframe>
     </div>
 
     <script src="./javascript/script.js"></script>

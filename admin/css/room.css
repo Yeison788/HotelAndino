@@ -100,7 +100,7 @@ body {
 /* ======= Badge estados (etiqueta de estado) ======= */
 .badge {
   display: inline-block;
-  width: 90px;          /* tamaño fijo: el recuadro no cambia */
+  width: 110px;          /* tamaño fijo: el recuadro no cambia */
   text-align: center;
   padding: 6px 12px;
   border-radius: 999px;
@@ -110,6 +110,7 @@ body {
 }
 .bg-success { background: #28a745 !important; color: #fff; }
 .bg-warning { background: #ffc107 !important; color: #000; }
+.bg-info { background: #0dcaf0 !important; color: #000; }
 .bg-danger  { background: #dc3545 !important; color: #fff; }
 .bg-secondary { background: #6c757d !important; color: #fff; }
 
@@ -158,10 +159,24 @@ form select.form-select-sm {
 
 .icon-wrapper .badge {
   position: static;     /* sin absolute: no se corre */
-  width: 90px;          /* recuadro fijo */
+  width: 110px;          /* recuadro fijo */
   text-align: center;
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 999px;
   transition: background .25s ease, color .25s ease;
+}
+
+.guest-summary {
+  background: #f8f9fb;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.guest-summary h6 {
+  font-size: 15px;
+}
+
+.guest-summary p {
+  font-size: 13px;
 }

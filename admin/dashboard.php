@@ -17,22 +17,26 @@
     $roomre = mysqli_query($conn, $roomsql);
     $roomrow = mysqli_num_rows($roomre);
 
-    //roombook roomtype
-    $chartroom1 = "SELECT * FROM roombook WHERE RoomType='Superior Room'";
-    $chartroom1re = mysqli_query($conn, $chartroom1);
-    $chartroom1row = mysqli_num_rows($chartroom1re);
+    // Reservas por tipo de habitación
+    $roomTypeCounts = [
+        'Habitación Sencilla' => 0,
+        'Habitación Doble'    => 0,
+        'Habitación Múltiple' => 0,
+    ];
 
-    $chartroom2 = "SELECT * FROM roombook WHERE RoomType='Deluxe Room'";
-    $chartroom2re = mysqli_query($conn, $chartroom2);
-    $chartroom2row = mysqli_num_rows($chartroom2re);
+    $chartRoomSql = "SELECT RoomType, COUNT(*) AS total FROM roombook GROUP BY RoomType";
+    if ($chartRoomResult = mysqli_query($conn, $chartRoomSql)) {
+        while ($chartRoomRow = mysqli_fetch_assoc($chartRoomResult)) {
+            $type = $chartRoomRow['RoomType'];
+            if (array_key_exists($type, $roomTypeCounts)) {
+                $roomTypeCounts[$type] = (int) $chartRoomRow['total'];
+            }
+        }
+        mysqli_free_result($chartRoomResult);
+    }
 
-    $chartroom3 = "SELECT * FROM roombook WHERE RoomType='Guest House'";
-    $chartroom3re = mysqli_query($conn, $chartroom3);
-    $chartroom3row = mysqli_num_rows($chartroom3re);
-
-    $chartroom4 = "SELECT * FROM roombook WHERE RoomType='Single Room'";
-    $chartroom4re = mysqli_query($conn, $chartroom4);
-    $chartroom4row = mysqli_num_rows($chartroom4re);
+    $chartRoomLabels = array_keys($roomTypeCounts);
+    $chartRoomValues = array_values($roomTypeCounts);
 ?>
 <!-- moriss profit -->
 <?php 	
@@ -86,7 +90,7 @@
     <div class="chartbox">
         <div class="bookroomchart">
             <canvas id="bookroomchart"></canvas>
-            <h3 style="text-align: center;margin:10px 0;">Booked Room</h3>
+            <h3 style="text-align: center;margin:10px 0;">Reservas por tipo</h3>
         </div>
         <div class="profitchart" >
             <div id="profitchart"></div>
@@ -98,25 +102,19 @@
 
 
 <script>
-        const labels = [
-          'Superior Room',
-          'Deluxe Room',
-          'Guest House',
-          'Single Room',
-        ];
-      
+        const labels = <?php echo json_encode($chartRoomLabels, JSON_UNESCAPED_UNICODE); ?>;
+
         const data = {
           labels: labels,
           datasets: [{
-            label: 'My First dataset',
+            label: 'Reservas',
             backgroundColor: [
                 'rgba(255, 99, 132, 1)',
-                'rgba(255, 159, 64, 1)',
                 'rgba(54, 162, 235, 1)',
                 'rgba(153, 102, 255, 1)',
             ],
             borderColor: 'black',
-            data: [<?php echo $chartroom1row ?>,<?php echo $chartroom2row ?>,<?php echo $chartroom3row ?>,<?php echo $chartroom4row ?>],
+            data: <?php echo json_encode($chartRoomValues, JSON_NUMERIC_CHECK); ?>,
           }]
         };
   

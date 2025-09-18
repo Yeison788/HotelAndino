@@ -31,13 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
           // Actualizar badge visualmente
           const badge = document.querySelector(`#room-${roomId} .badge`);
           if (badge) {
+            const classMap = {
+              'Disponible': 'bg-success text-white',
+              'Reservada': 'bg-warning text-dark',
+              'Limpieza': 'bg-info text-dark',
+              'Ocupada': 'bg-danger text-white'
+            };
             badge.textContent = status;
-            badge.className = 'badge ' + (
-              status === 'Disponible' ? 'bg-success text-white' :
-              status === 'Pendiente'  ? 'bg-warning text-dark' :
-              status === 'Ocupada'    ? 'bg-danger text-white' :
-              'bg-secondary text-white'
-            );
+            badge.className = 'badge ' + (classMap[status] || 'bg-secondary text-white');
           }
         })
         .catch((err) => {
