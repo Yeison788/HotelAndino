@@ -2,6 +2,10 @@
 include 'config.php';
 session_start();
 
+require_once __DIR__ . '/admin/includes/admin_bootstrap.php';
+ensureEmpStructure($conn);
+ensureRoomRates($conn);
+
 $openOnboarding = false; // 👈 abrir modal tras registro
 
 /* =========================
@@ -35,25 +39,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // == Login de Empleado (Admin) ==
     if (isset($_POST['Emp_login_submit'])) {
-        $Email = $_POST['Emp_Email'] ?? '';
+        $Email = trim($_POST['Emp_Email'] ?? '');
         $Password = $_POST['Emp_Password'] ?? '';
 
-        $sql = "SELECT * FROM emp_login WHERE Emp_Email = ? AND BINARY Emp_Password = ?";
+        $sql = "SELECT Emp_Email, Emp_Password, FullName, Role, Permissions, IsSuperAdmin FROM emp_login WHERE Emp_Email = ? LIMIT 1";
         if ($stmt = mysqli_prepare($conn, $sql)) {
-            mysqli_stmt_bind_param($stmt, "ss", $Email, $Password);
+            mysqli_stmt_bind_param($stmt, "s", $Email);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
-
-            if ($result && $result->num_rows > 0) {
-                $_SESSION['adminmail'] = $Email;
-                header("Location: ./admin/admin.php");
-                exit;
-            } else {
-                $loginEmpError = true;
-            }
+            $row = $result ? mysqli_fetch_assoc($result) : null;
             mysqli_stmt_close($stmt);
-        } else { 
-            $loginEmpError = true; 
+
+            if ($row) {
+                $storedPassword = $row['Emp_Password'] ?? '';
+                $isValid = hash_equals($storedPassword, $Password);
+                if (!$isValid && strlen($storedPassword) > 0) {
+                    $isValid = password_verify($Password, $storedPassword);
+                }
+
+                if ($isValid) {
+                    $perms = [];
+                    if (!empty($row['Permissions'])) {
+                        $decoded = json_decode($row['Permissions'], true);
+                        if (is_array($decoded)) {
+                            $perms = array_values(array_unique(array_map('strval', $decoded)));
+                        }
+                    }
+                    $isSuper = !empty($row['IsSuperAdmin']);
+                    if ($row['Emp_Email'] === 'admin@hotelandino.com') {
+                        $isSuper = true;
+                        $perms = array_keys(admin_available_permissions());
+                    }
+
+                    $_SESSION['adminmail'] = $row['Emp_Email'];
+                    $_SESSION['admin_name'] = $row['FullName'] ?: $row['Emp_Email'];
+                    $_SESSION['admin_role'] = $row['Role'] ?: '';
+                    $_SESSION['admin_permissions'] = $perms;
+                    $_SESSION['admin_is_super'] = $isSuper;
+
+                    header("Location: ./admin/admin.php");
+                    exit;
+                }
+            }
+
+            $loginEmpError = true;
+        } else {
+            $loginEmpError = true;
         }
     }
 

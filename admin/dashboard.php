@@ -1,6 +1,12 @@
 <?php
     session_start();
     include '../config.php';
+    require_once __DIR__ . '/includes/admin_bootstrap.php';
+
+    ensureEmpStructure($conn);
+    ensureRoomRates($conn);
+    admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
+    admin_require_permission('dashboard');
 
     // roombook
     $roombooksql ="Select * from roombook";

@@ -1,12 +1,20 @@
 <?php
 session_start();
 include '../config.php';
+require_once __DIR__ . '/includes/admin_bootstrap.php';
+
 if (!isset($_SESSION['adminmail'])) {
     header('Location: ../index.php');
     exit;
 }
 
-$adminEmail = $_SESSION['adminmail'];
+ensureEmpStructure($conn);
+ensureRoomRates($conn);
+admin_refresh_session($conn, $_SESSION['adminmail']);
+admin_require_permission('habitaciones');
+
+$employee = admin_current_employee();
+$adminEmail = $employee['email'];
 
 // Aseguramos nuevas opciones de estado y tabla de estancias
 mysqli_query($conn, "ALTER TABLE room MODIFY status ENUM('Disponible','Reservada','Limpieza','Ocupada') NOT NULL DEFAULT 'Disponible'");
@@ -129,7 +137,12 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Gestión de Habitaciones</h2>
-        <span class="badge bg-dark">Recepcionista: <?php echo htmlspecialchars($adminEmail); ?></span>
+        <span class="badge bg-dark">
+          <?php echo htmlspecialchars($employee['name'] ?: $adminEmail); ?>
+          <?php if (!empty($employee['role'])): ?>
+            · <?php echo htmlspecialchars($employee['role']); ?>
+          <?php endif; ?>
+        </span>
       </div>
 
       <!-- Selector de piso -->
@@ -156,6 +169,9 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
             'Ocupada' => 'bg-danger text-white',
             default => 'bg-secondary text-white'
           };
+          $basePrice = admin_room_base_price($conn, $row['type']);
+          $stayPrice = ($stay && (float)$stay['price'] > 0) ? (float)$stay['price'] : $basePrice;
+          $priceInputValue = rtrim(rtrim(number_format($stayPrice, 2, '.', ''), '0'), '.');
           ?>
           <div class="col-md-4">
             <div class="card shadow-sm h-100">
@@ -179,9 +195,9 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
                     <p class="mb-1 text-muted">Nacionalidad: <?php echo htmlspecialchars($stay['nationality']); ?></p>
                     <p class="mb-1 text-muted">Ingreso: <?php echo date('d/m/Y', strtotime($stay['check_in_date'])); ?> · <?php echo substr($stay['check_in_time'], 0, 5); ?></p>
                     <p class="mb-0 text-muted">Salida: <?php echo date('d/m/Y', strtotime($stay['check_out_date'])); ?></p>
-                    <p class="mb-0 text-muted">Precio: COP <?php echo number_format($stay['price'], 0, ',', '.'); ?></p>
+                    <p class="mb-0 text-muted">Precio: COP <?php echo number_format($stayPrice, 0, ',', '.'); ?></p>
                   <?php else: ?>
-                    <p class="text-muted mb-0">Sin datos del huésped.</p>
+                    <p class="text-muted mb-0">Sin datos del huésped. Precio base: COP <?php echo number_format($basePrice, 0, ',', '.'); ?></p>
                   <?php endif; ?>
                 </div>
 
@@ -263,11 +279,11 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
                       </div>
                       <div class="col-md-4">
                         <label class="form-label">Recepcionista</label>
-                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($adminEmail); ?>" readonly>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars(($employee['name'] ?: $adminEmail) . ' · ' . $adminEmail); ?>" readonly>
                       </div>
                       <div class="col-md-4">
                         <label class="form-label" for="price-<?php echo $row['id']; ?>">Precio (COP)</label>
-                        <input type="number" class="form-control" id="price-<?php echo $row['id']; ?>" name="price" step="0.01" min="0" value="<?php echo $stay ? htmlspecialchars($stay['price']) : ''; ?>" required>
+                        <input type="number" class="form-control" id="price-<?php echo $row['id']; ?>" name="price" step="0.01" min="0" value="<?php echo htmlspecialchars($priceInputValue); ?>" required>
                       </div>
                     </div>
                   </div>

@@ -1,9 +1,20 @@
 <?php
 
+session_start();
 include '../config.php';
+require_once __DIR__ . '/includes/admin_bootstrap.php';
+
+ensureEmpStructure($conn);
+ensureRoomRates($conn);
+admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
+admin_require_permission('reservas');
 
 // fetch room data
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($id <= 0) {
+    header('Location: roombook.php');
+    exit;
+}
 
 $sql ="Select * from roombook where id = '$id'";
 $re = mysqli_query($conn,$sql);
@@ -35,62 +46,25 @@ if (isset($_POST['guestdetailedit'])) {
 
     $result = mysqli_query($conn, $sql);
 
-    $type_of_room = 0;
-    if($EditRoomType=="Habitación Doble")
-    {
-        $type_of_room = 3000;
-    }
-    else if($EditRoomType=="Habitación Suite")
-    {
-        $type_of_room = 2000;
-    }
-    else if($EditRoomType=="Habitación Múltiple")
-    {
-        $type_of_room = 1500;
-    }
-    else if($EditRoomType=="Habitación Sencilla")
-    {
-        $type_of_room = 1000;
-    }
+    $type_of_room = admin_room_base_price($conn, $EditRoomType);
 
+    $bedFactor = match ($EditBed) {
+        '1 cliente' => 0.01,
+        '2 clientes' => 0.02,
+        '3 clientes' => 0.03,
+        '4 clientes' => 0.04,
+        default => 0.0,
+    };
+    $type_of_bed = $type_of_room * $bedFactor;
 
-    if($EditBed=="1 cliente")
-    {
-        $type_of_bed = $type_of_room * 1/100;
-    }
-    else if($EditBed=="2 clientes")
-    {
-        $type_of_bed = $type_of_room * 2/100;
-    }
-    else if($EditBed=="3 clientes")
-    {
-        $type_of_bed = $type_of_room * 3/100;
-    }
-    else if($EditBed=="4 clientes")
-    {
-        $type_of_bed = $type_of_room * 4/100;
-    }
-    else if($EditBed=="None")
-    {
-        $type_of_bed = $type_of_room * 0/100;
-    }
-
-    if($EditMeal=="Room only")
-    {
-        $type_of_meal=$type_of_bed * 0;
-    }
-    else if($EditMeal=="Breakfast")
-    {
-        $type_of_meal=$type_of_bed * 2;
-    }
-    else if($EditMeal=="Half Board")
-    {
-        $type_of_meal=$type_of_bed * 3;
-    }
-    else if($EditMeal=="Full Board")
-    {
-        $type_of_meal=$type_of_bed * 4;
-    }
+    $mealMultiplier = match ($EditMeal) {
+        'Room only' => 0,
+        'Breakfast' => 2,
+        'Half Board' => 3,
+        'Full Board' => 4,
+        default => 0,
+    };
+    $type_of_meal = $type_of_bed * $mealMultiplier;
     
     // noofday update
     $psql ="Select * from roombook where id = '$id'";

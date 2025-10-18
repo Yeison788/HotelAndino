@@ -1,8 +1,19 @@
 <?php
 
+session_start();
 include '../config.php';
+require_once __DIR__ . '/includes/admin_bootstrap.php';
 
-$id = $_GET['id'];
+ensureEmpStructure($conn);
+ensureRoomRates($conn);
+admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
+admin_require_permission('reservas');
+
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($id <= 0) {
+    header('Location: roombook.php');
+    exit;
+}
 
 $sql ="Select * from roombook where id = '$id'";
 $re = mysqli_query($conn,$sql);
@@ -32,62 +43,25 @@ if($stat == "NotConfirm")
 
     if($result){
 
-        $type_of_room = 0;      
-        if($RoomType=="Habitación Doble")
-        {
-            $type_of_room = 3000;
-        }
-        else if($RoomType=="Habitación Suite")
-        {
-            $type_of_room = 2000;
-        }
-        else if($RoomType=="Habitación Múltiple")
-        {
-            $type_of_room = 1500;
-        }
-        else if($RoomType=="Habitación Sencilla")
-        {
-            $type_of_room = 1000;
-        }
+        $type_of_room = admin_room_base_price($conn, $RoomType);
 
+        $bedFactor = match ($Bed) {
+            '1 cliente' => 0.01,
+            '2 clientes' => 0.02,
+            '3 clientes' => 0.03,
+            '4 clientes' => 0.04,
+            default => 0.0,
+        };
+        $type_of_bed = $type_of_room * $bedFactor;
 
-        if($Bed=="1 cliente")
-        {
-            $type_of_bed = $type_of_room * 1/100;
-        }
-        else if($Bed=="2 clientes")
-        {
-            $type_of_bed = $type_of_room * 2/100;
-        }
-        else if($Bed=="3 clientes")
-        {
-            $type_of_bed = $type_of_room * 3/100;
-        }
-        else if($Bed=="4 clientes")
-        {
-            $type_of_bed = $type_of_room * 4/100;
-        }
-            else if($Bed=="None")
-        {
-            $type_of_bed = $type_of_room * 0/100;
-        }
-
-        if($Meal=="Room only")
-        {
-            $type_of_meal=$type_of_bed * 0;
-        }
-        else if($Meal=="Breakfast")
-        {
-            $type_of_meal=$type_of_bed * 2;
-        }
-        else if($Meal=="Half Board")
-        {
-            $type_of_meal=$type_of_bed * 3;
-        }
-        else if($Meal=="Full Board")
-        {
-            $type_of_meal=$type_of_bed * 4;
-        }
+        $mealMultiplier = match ($Meal) {
+            'Room only' => 0,
+            'Breakfast' => 2,
+            'Half Board' => 3,
+            'Full Board' => 4,
+            default => 0,
+        };
+        $type_of_meal = $type_of_bed * $mealMultiplier;
                                                             
         $ttot = $type_of_room *  $noofday * $NoofRoom;
         $mepr = $type_of_meal *  $noofday;
