@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/admin_bootstrap.php';
 
 ensureEmpStructure($conn);
 ensureRoomRates($conn);
+admin_ensure_guest_portal($conn);
 admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
 admin_require_permission('reservas');
 

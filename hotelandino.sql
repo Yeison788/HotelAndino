@@ -189,6 +189,7 @@ CREATE TABLE `room_stays` (
 CREATE TABLE `roombook` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `room_id` INT NULL,
+  `user_id` INT NULL,
   `Name` VARCHAR(50) NOT NULL,
   `Email` VARCHAR(50) NOT NULL,
   `Country` VARCHAR(30) NOT NULL,
@@ -201,11 +202,17 @@ CREATE TABLE `roombook` (
   `cout` DATE NOT NULL,
   `nodays` INT NOT NULL,
   `stat` VARCHAR(30) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_roombook_room_id` (`room_id`),
+  KEY `idx_roombook_user_id` (`user_id`),
   CONSTRAINT `fk_roombook_room`
     FOREIGN KEY (`room_id`) REFERENCES `room`(`id`)
-    ON UPDATE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_roombook_user`
+    FOREIGN KEY (`user_id`) REFERENCES `signup`(`UserID`)
+    ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================
@@ -227,6 +234,49 @@ CREATE TABLE `payment` (
   `mealtotal` DECIMAL(10,2) NOT NULL,
   `finaltotal` DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================================
+-- Tabla: guest_service_requests (solicitudes durante la estancia)
+-- ======================================================
+CREATE TABLE `guest_service_requests` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `roombook_id` INT NOT NULL,
+  `user_id` INT NULL,
+  `request_type` VARCHAR(40) NOT NULL,
+  `details` TEXT NULL,
+  `status` ENUM('pendiente','en_proceso','completado','cancelado') NOT NULL DEFAULT 'pendiente',
+  `charge_amount` DECIMAL(10,2) NULL,
+  `requested_by` ENUM('guest','staff') NOT NULL DEFAULT 'guest',
+  `response_note` TEXT NULL,
+  `handled_by` VARCHAR(190) NULL,
+  `resolved_at` DATETIME NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_guest_requests_room` (`roombook_id`),
+  KEY `idx_guest_requests_user` (`user_id`),
+  CONSTRAINT `fk_guest_requests_reservation` FOREIGN KEY (`roombook_id`) REFERENCES `roombook`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_guest_requests_user` FOREIGN KEY (`user_id`) REFERENCES `signup`(`UserID`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================================
+-- Tabla: system_notifications (alertas para staff)
+-- ======================================================
+CREATE TABLE `system_notifications` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `audience` ENUM('admin','recepcion','staff') NOT NULL DEFAULT 'admin',
+  `title` VARCHAR(190) NOT NULL,
+  `message` TEXT NOT NULL,
+  `link` VARCHAR(255) NULL,
+  `related_reservation_id` INT NULL,
+  `related_request_id` INT NULL,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_notifications_audience` (`audience`),
+  KEY `idx_notifications_reservation` (`related_reservation_id`),
+  KEY `idx_notifications_request` (`related_request_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================================

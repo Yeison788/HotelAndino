@@ -1,5 +1,6 @@
 <?php
 include 'config.php';
+require_once __DIR__ . '/includes/guest_portal.php';
 session_start();
 
 /* ===========
@@ -9,7 +10,91 @@ if (empty($_SESSION['usermail'])) {
   header("Location: index.php");
   exit;
 }
+
 $usermail = $_SESSION['usermail'];
+
+guest_portal_ensure_schema($conn);
+
+$currentUser = guest_portal_fetch_user($conn, $usermail);
+if (!$currentUser) {
+  header("Location: logout.php");
+  exit;
+}
+
+$userId = (int) ($currentUser['UserID'] ?? 0);
+$profileName = $currentUser['Username'] ?: $usermail;
+$profileInitial = strtoupper(substr($profileName, 0, 1));
+$requestTypes = guest_portal_request_types();
+
+$reservations = $userId ? guest_portal_reservations_for_user($conn, $userId) : [];
+$activeReservation = $userId ? guest_portal_active_reservation($conn, $userId) : null;
+$userRequests = $userId ? guest_portal_requests_for_user($conn, $userId) : [];
+$openRequestsCount = count(array_filter(
+  $userRequests,
+  static fn($item) => in_array($item['status'] ?? '', ['pendiente', 'en_proceso'], true)
+));
+
+$requestsByReservation = [];
+foreach ($userRequests as $requestRow) {
+  $rid = (int) ($requestRow['roombook_id'] ?? 0);
+  if (!isset($requestsByReservation[$rid])) {
+    $requestsByReservation[$rid] = [];
+  }
+  $requestsByReservation[$rid][] = $requestRow;
+}
+
+$confirmedReservations = array_filter(
+  $reservations,
+  static fn(array $row): bool => in_array($row['stat'] ?? '', ['Confirm', 'Ocupado', 'CheckIn'], true)
+);
+$confirmedReservationIds = array_map(static fn($row) => (int) ($row['id'] ?? 0), $confirmedReservations);
+
+if ($userId && isset($_POST['create_service_request'])) {
+  $reservationId = (int) ($_POST['reservation_id'] ?? 0);
+  $requestType = $_POST['request_type'] ?? '';
+  $requestDetail = trim($_POST['request_detail'] ?? '');
+
+  $isValidReservation = in_array($reservationId, $confirmedReservationIds, true);
+  $isValidType = isset($requestTypes[$requestType]);
+
+  if ($isValidReservation && $isValidType) {
+    $requestId = guest_portal_create_request($conn, $reservationId, $userId, $requestType, $requestDetail);
+
+    if ($requestId) {
+      $selectedReservation = null;
+      foreach ($reservations as $row) {
+        if ((int) ($row['id'] ?? 0) === $reservationId) {
+          $selectedReservation = $row;
+          break;
+        }
+      }
+      $message = sprintf('Nueva solicitud de %s para %s', $profileName, strtolower($requestTypes[$requestType] ?? 'servicio'));
+      guest_portal_record_notification($conn, 'admin', 'Solicitud de habitación', $message, 'admin/guest-requests.php', $reservationId, $requestId);
+      guest_portal_record_notification($conn, 'recepcion', 'Solicitud de habitación', $message, 'admin/guest-requests.php', $reservationId, $requestId);
+
+      $_SESSION['guest_request_flash'] = [
+        'type' => 'success',
+        'text' => 'Tu solicitud fue enviada al equipo del hotel. Te contactaremos pronto.',
+      ];
+    } else {
+      $_SESSION['guest_request_flash'] = [
+        'type' => 'error',
+        'text' => 'No fue posible registrar tu solicitud. Intenta nuevamente.',
+      ];
+    }
+  } else {
+    $_SESSION['guest_request_flash'] = [
+      'type' => 'error',
+      'text' => 'Selecciona una reserva y un servicio válidos para continuar.',
+    ];
+  }
+
+  header('Location: home.php');
+  exit;
+}
+
+$guestRequestFlash = $_SESSION['guest_request_flash'] ?? null;
+unset($_SESSION['guest_request_flash']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -140,9 +225,39 @@ $usermail = $_SESSION['usermail'];
       <!-- EDITADO: Se elimina el enlace que abría el chatbot desde la navbar -->
       <li><a href="turismo.php">Turismo</a></li>
       <li><a href="#contactus">Contáctanos</a></li>
-      <a href="./logout.php"><button class="btn btn-danger">Cerrar Sesión</button></a>
+      <li class="nav-profile">
+        <button class="nav-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="nav-profile-avatar" aria-hidden="true"><?php echo htmlspecialchars($profileInitial); ?></span>
+          <span class="visually-hidden">Abrir menú de perfil</span>
+        </button>
+        <div class="nav-profile-dropdown" role="menu">
+          <div class="nav-profile-summary">
+            <span class="nav-profile-avatar nav-profile-avatar--lg" aria-hidden="true"><?php echo htmlspecialchars($profileInitial); ?></span>
+            <div class="nav-profile-text">
+              <strong><?php echo htmlspecialchars($profileName); ?></strong>
+              <span><?php echo htmlspecialchars($usermail); ?></span>
+            </div>
+          </div>
+          <div class="nav-profile-actions">
+            <a class="nav-profile-link" href="#guest-experience"><i class="fa-solid fa-door-open"></i> Mi habitación</a>
+            <a class="nav-profile-link" href="onboarding.php"><i class="fa-solid fa-sliders"></i> Preferencias</a>
+            <div class="nav-profile-divider"></div>
+            <a class="nav-profile-link nav-profile-link--logout" href="./logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+          </div>
+        </div>
+      </li>
     </ul>
   </nav>
+
+  <?php if (!empty($guestRequestFlash)): ?>
+    <script>
+      swal({
+        title: <?php echo json_encode($guestRequestFlash['type'] === 'success' ? '¡Listo!' : 'Aviso'); ?>,
+        text: <?php echo json_encode($guestRequestFlash['text']); ?>,
+        icon: <?php echo json_encode($guestRequestFlash['type'] === 'success' ? 'success' : 'error'); ?>
+      });
+    </script>
+  <?php endif; ?>
 
   <section id="firstsection" class="carousel slide carousel_section" data-bs-ride="carousel">
     <div class="carousel-inner">
@@ -263,23 +378,40 @@ $usermail = $_SESSION['usermail'];
                         $nodays = (int)round(($d2 - $d1) / 86400); // días
                         $sta = "NotConfirm";
 
-                        $sql = "INSERT INTO roombook
-                                (Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        $sql = "INSERT INTO roombook"
+                                . "(user_id, Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays)"
+                                . "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                         if ($stmt = mysqli_prepare($conn, $sql)) {
                             mysqli_stmt_bind_param(
                                 $stmt,
-                                "ssssssissssi",
-                                $Name, $Email, $Country, $Phone, $RoomType, $Bed, $NoofRoom, $Meal, $cin, $cout, $sta, $nodays
+                                "issssssissssi",
+                                $userId,
+                                $Name,
+                                $Email,
+                                $Country,
+                                $Phone,
+                                $RoomType,
+                                $Bed,
+                                $NoofRoom,
+                                $Meal,
+                                $cin,
+                                $cout,
+                                $sta,
+                                $nodays
                             );
                             $ok = mysqli_stmt_execute($stmt);
+                            $reservationId = $ok ? mysqli_insert_id($conn) : 0;
                             mysqli_stmt_close($stmt);
 
-                            if ($ok) {
-                                echo "<script>
-                                    swal({ title: 'Reserva exitosa', icon: 'success' });
-                                </script>";
+                            if ($ok && $reservationId > 0) {
+                                $notifMessage = sprintf('Nueva reserva pendiente de %s (%s)', $Name, $Email);
+                                guest_portal_record_notification($conn, 'admin', 'Reserva solicitada', $notifMessage, 'admin/roombook.php', $reservationId, null);
+                                guest_portal_record_notification($conn, 'recepcion', 'Reserva solicitada', $notifMessage, 'admin/roombook.php', $reservationId, null);
+
+                                echo "<script>"
+                                    . "swal({ title: 'Reserva exitosa', text: 'Nuestro equipo confirmará tu habitación muy pronto.', icon: 'success' });"
+                                . "</script>";
                             } else {
                                 echo "<script>swal({ title: 'Algo salió mal al guardar', icon: 'error' });</script>";
                             }
@@ -292,6 +424,197 @@ $usermail = $_SESSION['usermail'];
             ?>
           </div>
 
+    </div>
+  </section>
+
+  <?php
+    $activeReservationRequests = [];
+    $minibarTotal = 0.0;
+    if ($activeReservation) {
+      $activeReservationId = (int) ($activeReservation['id'] ?? 0);
+      $activeReservationRequests = $requestsByReservation[$activeReservationId] ?? [];
+      foreach ($activeReservationRequests as $req) {
+        if (($req['request_type'] ?? '') === 'minibar' && $req['charge_amount'] !== null) {
+          $minibarTotal += (float) $req['charge_amount'];
+        }
+      }
+    }
+  ?>
+
+  <section id="guest-experience" class="guest-experience">
+    <div class="guest-experience__layout">
+      <article class="guest-card guest-card--profile">
+        <h2 class="guest-card__title">Hola, <?php echo htmlspecialchars($profileName); ?></h2>
+        <p class="guest-card__subtitle">Tu correo registrado es <strong><?php echo htmlspecialchars($usermail); ?></strong></p>
+        <ul class="guest-card__stats">
+          <li>
+            <span class="label">Reservas totales</span>
+            <span class="value"><?php echo count($reservations); ?></span>
+          </li>
+          <li>
+            <span class="label">Reservas confirmadas</span>
+            <span class="value"><?php echo count($confirmedReservationIds); ?></span>
+          </li>
+          <li>
+            <span class="label">Solicitudes abiertas</span>
+            <span class="value"><?php echo $openRequestsCount; ?></span>
+          </li>
+        </ul>
+      </article>
+
+      <article class="guest-card guest-card--room">
+        <?php if ($activeReservation): ?>
+          <?php
+            $activeId = (int) ($activeReservation['id'] ?? 0);
+            $activeStatus = $activeReservation['stat'] ?? '';
+            $statusLabel = match ($activeStatus) {
+              'Confirm'              => 'Confirmada',
+              'Ocupado', 'CheckIn'   => 'En curso',
+              'NotConfirm'           => 'Pendiente',
+              default                => ucfirst(strtolower($activeStatus)),
+            };
+            $checkIn  = !empty($activeReservation['cin']) ? date('d/m/Y', strtotime($activeReservation['cin'])) : '—';
+            $checkOut = !empty($activeReservation['cout']) ? date('d/m/Y', strtotime($activeReservation['cout'])) : '—';
+            $roomNumber = $activeReservation['room_number'] ?? null;
+            $roomType   = $activeReservation['RoomType'] ?? ($activeReservation['room_type_name'] ?? 'Habitación');
+            $activeRequestsCount = count($activeReservationRequests);
+          ?>
+          <header class="guest-room__header">
+            <div>
+              <h3 class="guest-card__title">Tu habitación</h3>
+              <p class="guest-card__subtitle">
+                <?php echo htmlspecialchars($roomType); ?>
+                <?php if ($roomNumber): ?> · #<?php echo htmlspecialchars($roomNumber); ?><?php endif; ?>
+              </p>
+            </div>
+            <span class="status-badge status-<?php echo htmlspecialchars(strtolower($activeStatus)); ?>">
+              <?php echo htmlspecialchars($statusLabel); ?>
+            </span>
+          </header>
+          <div class="guest-room__grid">
+            <div>
+              <span class="label">Check-in</span>
+              <span class="value"><?php echo htmlspecialchars($checkIn); ?></span>
+            </div>
+            <div>
+              <span class="label">Check-out</span>
+              <span class="value"><?php echo htmlspecialchars($checkOut); ?></span>
+            </div>
+            <div>
+              <span class="label">Solicitudes registradas</span>
+              <span class="value"><?php echo $activeRequestsCount; ?></span>
+            </div>
+            <div>
+              <span class="label">Consumo minibar</span>
+              <span class="value"><?php echo $minibarTotal > 0 ? 'COP ' . number_format($minibarTotal, 0, ',', '.') : 'Sin consumos'; ?></span>
+            </div>
+          </div>
+
+          <div class="guest-request-form">
+            <h4>Solicita asistencia</h4>
+            <form method="post" class="guest-request-form__form">
+              <input type="hidden" name="reservation_id" value="<?php echo $activeId; ?>">
+              <label for="request_type" class="form-label">¿Qué necesitas?</label>
+              <select class="form-select" id="request_type" name="request_type" required>
+                <option value="" disabled selected>Selecciona una opción</option>
+                <?php foreach ($requestTypes as $typeKey => $typeLabel): ?>
+                  <option value="<?php echo htmlspecialchars($typeKey); ?>"><?php echo htmlspecialchars($typeLabel); ?></option>
+                <?php endforeach; ?>
+              </select>
+              <label for="request_detail" class="form-label">Detalles adicionales</label>
+              <textarea id="request_detail" name="request_detail" rows="3" class="form-control" placeholder="Cuéntanos si necesitas algo específico (opcional)"></textarea>
+              <button class="btn btn-primary" type="submit" name="create_service_request" value="1">
+                <i class="fa-solid fa-paper-plane"></i> Enviar solicitud
+              </button>
+            </form>
+          </div>
+
+          <div class="guest-requests">
+            <h4>Historial de solicitudes</h4>
+            <?php if (!empty($activeReservationRequests)): ?>
+              <ul class="guest-requests__list">
+                <?php foreach ($activeReservationRequests as $request): ?>
+                  <?php
+                    $badgeStatus = guest_portal_format_status($request['status'] ?? '');
+                    $badgeClass = 'status-' . preg_replace('/[^a-z_\-]/i', '', strtolower($request['status'] ?? 'pendiente'));
+                    $updatedAt = $request['updated_at'] ?? $request['created_at'] ?? '';
+                    $updatedLabel = $updatedAt ? date('d/m/Y H:i', strtotime($updatedAt)) : '—';
+                    $typeLabel = $requestTypes[$request['request_type']] ?? ucfirst($request['request_type'] ?? 'Servicio');
+                  ?>
+                  <li>
+                    <div class="guest-requests__header">
+                      <span class="guest-requests__type"><?php echo htmlspecialchars($typeLabel); ?></span>
+                      <span class="status-badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($badgeStatus); ?></span>
+                    </div>
+                    <?php if (!empty($request['details'])): ?>
+                      <p class="guest-requests__details"><?php echo nl2br(htmlspecialchars($request['details'])); ?></p>
+                    <?php endif; ?>
+                    <div class="guest-requests__meta">
+                      <span>Actualizado: <?php echo htmlspecialchars($updatedLabel); ?></span>
+                      <?php if ($request['charge_amount'] !== null): ?>
+                        <span>Consumo: COP <?php echo number_format((float) $request['charge_amount'], 0, ',', '.'); ?></span>
+                      <?php endif; ?>
+                    </div>
+                  </li>
+                <?php endforeach; ?>
+              </ul>
+            <?php else: ?>
+              <p class="guest-muted">Aún no registras solicitudes para esta reserva.</p>
+            <?php endif; ?>
+          </div>
+        <?php else: ?>
+          <div class="guest-empty">
+            <h3 class="guest-card__title">Aún no tienes una habitación confirmada</h3>
+            <p class="guest-card__subtitle">Cuando el equipo confirme tu reserva podrás gestionar tus solicitudes aquí.</p>
+            <a href="#firstsection" class="btn btn-primary"><i class="fa-solid fa-calendar-plus"></i> Reservar ahora</a>
+          </div>
+        <?php endif; ?>
+      </article>
+    </div>
+
+    <div class="guest-history">
+      <h3 class="guest-card__title">Mis reservas</h3>
+      <?php if (!empty($reservations)): ?>
+        <div class="table-responsive">
+          <table class="guest-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tipo</th>
+                <th>Ingreso</th>
+                <th>Salida</th>
+                <th>Estado</th>
+                <th>Noches</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($reservations as $reservation): ?>
+                <?php
+                  $status = $reservation['stat'] ?? '';
+                  $statusText = match ($status) {
+                    'Confirm'              => 'Confirmada',
+                    'NotConfirm'           => 'Pendiente',
+                    'Ocupado', 'CheckIn'   => 'En curso',
+                    default                => ucfirst(strtolower($status)),
+                  };
+                  $cin = !empty($reservation['cin']) ? date('d/m/Y', strtotime($reservation['cin'])) : '—';
+                  $cout = !empty($reservation['cout']) ? date('d/m/Y', strtotime($reservation['cout'])) : '—';
+                ?>
+                <tr>
+                  <td><?php echo (int) ($reservation['id'] ?? 0); ?></td>
+                  <td><?php echo htmlspecialchars($reservation['RoomType'] ?? 'Habitación'); ?></td>
+                  <td><?php echo htmlspecialchars($cin); ?></td>
+                  <td><?php echo htmlspecialchars($cout); ?></td>
+                  <td><span class="status-badge status-<?php echo htmlspecialchars(strtolower($status)); ?>"><?php echo htmlspecialchars($statusText); ?></span></td>
+                  <td><?php echo (int) ($reservation['nodays'] ?? 0); ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php else: ?>
+        <p class="guest-muted">Aún no has registrado reservas. ¡Empieza creando una desde el formulario superior!</p>
+      <?php endif; ?>
     </div>
   </section>
 
@@ -416,6 +739,39 @@ $usermail = $_SESSION['usermail'];
   var bookbox = document.getElementById("guestdetailpanel");
   function openbookbox(){ bookbox.style.display = "flex"; }
   function closebox(){ bookbox.style.display = "none"; }
+
+  // ===== Perfil =====
+  (function(){
+    const profile = document.querySelector('.nav-profile');
+    if (!profile) return;
+    const trigger = profile.querySelector('.nav-profile-trigger');
+    const dropdown = profile.querySelector('.nav-profile-dropdown');
+
+    const setOpen = (open) => {
+      if (!dropdown) return;
+      profile.classList.toggle('is-open', open);
+      if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    if (trigger) trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const isOpen = profile.classList.contains('is-open');
+      setOpen(!isOpen);
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!profile.contains(event.target)) {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    });
+  })();
 
   // ===== Chatbot =====
   function toggleChatbot(forceClose){

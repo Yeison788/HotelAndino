@@ -2,6 +2,8 @@
 /**
  * Utilidades comunes para el panel administrativo.
  */
+
+require_once dirname(__DIR__, 2) . '/includes/guest_portal.php';
 if (!function_exists('admin_column_exists')) {
     function admin_column_exists(mysqli $conn, string $table, string $column): bool
     {
@@ -96,6 +98,13 @@ if (!function_exists('ensureEmpStructure')) {
             $stmt->execute();
             $stmt->close();
         }
+    }
+}
+
+if (!function_exists('admin_ensure_guest_portal')) {
+    function admin_ensure_guest_portal(mysqli $conn): void
+    {
+        guest_portal_ensure_schema($conn);
     }
 }
 
@@ -323,5 +332,5 @@ if (!function_exists('admin_first_records_view')) {
         return 'summary';
     }
 }
-}
+
 
