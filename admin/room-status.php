@@ -1,11 +1,20 @@
 <?php
 session_start();
 include '../config.php';
+require_once __DIR__ . '/includes/admin_bootstrap.php';
 
 if (!isset($_SESSION['adminmail'])) {
     header('Location: ../index.php');
     exit;
 }
+
+ensureEmpStructure($conn);
+ensureRoomRates($conn);
+admin_refresh_session($conn, $_SESSION['adminmail']);
+admin_require_permission('estado_habitaciones');
+
+$flashMessages = $_SESSION['estado_flash'] ?? [];
+$_SESSION['estado_flash'] = [];
 
 mysqli_query($conn, "ALTER TABLE room MODIFY status ENUM('Disponible','Reservada','Limpieza','Ocupada') NOT NULL DEFAULT 'Disponible'");
 
@@ -59,8 +68,18 @@ if ($result) {
                 <h2 class="mb-1">Estado de habitaciones</h2>
                 <p class="text-muted mb-0">Consulta rápidamente qué habitaciones están ocupadas, reservadas o en limpieza.</p>
             </div>
-            <span class="badge bg-secondary">Actualizado: <?php echo date('d/m/Y H:i'); ?></span>
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2">
+                <span class="badge bg-secondary">Actualizado: <?php echo date('d/m/Y H:i'); ?></span>
+                <a href="export_room_status.php" class="btn btn-outline-primary"><i class="fa-solid fa-file-arrow-down me-2"></i>Descargar informe</a>
+            </div>
         </div>
+
+        <?php foreach ($flashMessages as $message): ?>
+            <div class="alert alert-<?php echo htmlspecialchars($message['type']); ?> alert-dismissible fade show" role="alert">
+                <?php echo htmlspecialchars($message['text']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        <?php endforeach; ?>
 
         <div class="row g-4">
             <?php

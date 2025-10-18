@@ -28,6 +28,10 @@ while($row=mysqli_fetch_array($re))
     $cout = $row['cout'];
     $noofday = $row['nodays'];
     $stat = $row['stat'];
+    $RoomType = $row['RoomType'];
+    $Bed = $row['Bed'];
+    $NoofRoom = $row['NoofRoom'];
+    $Meal = $row['Meal'];
 }
 
 if (isset($_POST['guestdetailedit'])) {
@@ -104,106 +108,128 @@ if (isset($_POST['guestdetailedit'])) {
     <!-- sweet alert -->
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <link rel="stylesheet" href="./css/roombook.css">
-    <style>
-        #editpanel{
-            position : fixed;
-            z-index: 1000;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            /* align-items: center; */
-            background-color: #00000079;
-        }
-        #editpanel .guestdetailpanelform{
-            height: 620px;
-            width: 1170px;
-            background-color: #ccdff4;
-            border-radius: 10px;  
-            /* temp */
-            position: relative;
-            top: 20px;
-            animation: guestinfoform .3s ease;
-        }
-
-    </style>
-    <title>Document</title>
+    <link rel="stylesheet" href="./css/roombook-edit.css">
+    <title>Editar reserva</title>
 </head>
-<body>
-    <div id="editpanel">
-        <form method="POST" class="guestdetailpanelform">
-            <div class="head">
-                <h3>EDIT RESERVATION</h3>
-                <a href="./roombook.php"><i class="fa-solid fa-circle-xmark"></i></a>
+
+<body class="bg-light">
+<?php
+    $countries = array("Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia (Hrvatska)", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands (Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "France Metropolitan", "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard and Mc Donald Islands", "Holy See (Vatican City State)", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, Democratic People's Republic of", "Korea, Republic of", "Kuwait", "Kyrgyzstan", "Lao, People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libyan Arab Jamahiriya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, The Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia (Slovak Republic)", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "Spain", "Sri Lanka", "St. Helena", "St. Pierre and Miquelon", "Sudan", "Suriname", "Svalbard and Jan Mayen Islands", "Swaziland", "Sweden", "Switzerland", "Syrian Arab Republic", "Taiwan, Province of China", "Tajikistan", "Tanzania, United Republic of", "Thailand", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands (British)", "Virgin Islands (U.S.)", "Wallis and Futuna Islands", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe");
+    $roomTypes = [
+        'Habitación Doble',
+        'Habitación Suite',
+        'Habitación Múltiple',
+        'Habitación Sencilla',
+    ];
+    $bedOptions = ['1 cliente', '2 clientes', '3 clientes', '4 clientes', 'None'];
+    $mealOptions = ['Room only', 'Breakfast', 'Half Board', 'Full Board'];
+?>
+    <div class="container py-4 roombook-edit">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h1 class="h4 mb-1">Editar reserva</h1>
+                <p class="text-muted mb-0">Actualiza los datos del huésped y los detalles de su estadía.</p>
             </div>
-            <div class="middle">
-                <div class="guestinfo">
-                    <h4>Guest information</h4>
-                    <input type="text" name="Name" placeholder="Enter Full name" value="<?php echo $Name ?>">
-                    <input type="email" name="Email" placeholder="Enter Email" value="<?php echo $Email ?>">
+            <a href="./roombook.php" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-2"></i>Volver a reservas</a>
+        </div>
 
-                    <?php
-                    $countries = array("Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia (Hrvatska)", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands (Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "France Metropolitan", "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard and Mc Donald Islands", "Holy See (Vatican City State)", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, Democratic People's Republic of", "Korea, Republic of", "Kuwait", "Kyrgyzstan", "Lao, People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libyan Arab Jamahiriya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, The Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia (Slovak Republic)", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "Spain", "Sri Lanka", "St. Helena", "St. Pierre and Miquelon", "Sudan", "Suriname", "Svalbard and Jan Mayen Islands", "Swaziland", "Sweden", "Switzerland", "Syrian Arab Republic", "Taiwan, Province of China", "Tajikistan", "Tanzania, United Republic of", "Thailand", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands (British)", "Virgin Islands (U.S.)", "Wallis and Futuna Islands", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe");
-                    ?>
-
-                    <select name="Country" class="selectinput">
-						<option value selected >Select your country</option>
-                        <?php
-							foreach($countries as $key => $value):
-							echo '<option value="'.$value.'">'.$value.'</option>';
-                            //close your tags!!
-							endforeach;
-						?>
-                    </select>
-                    <input type="text" name="Phone" placeholder="Enter Phoneno"  value="<?php echo $Phone ?>">
+        <form method="POST" class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="section-card">
+                            <h2 class="section-title"><i class="fa-solid fa-user me-2"></i>Datos del huésped</h2>
+                            <div class="mb-3">
+                                <label class="form-label" for="guest-name">Nombre completo</label>
+                                <input type="text" class="form-control" id="guest-name" name="Name" value="<?php echo htmlspecialchars($Name); ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="guest-email">Correo electrónico</label>
+                                <input type="email" class="form-control" id="guest-email" name="Email" value="<?php echo htmlspecialchars($Email); ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="guest-country">País</label>
+                                <select class="form-select" id="guest-country" name="Country" required>
+                                    <option value="">Selecciona tu país</option>
+                                    <?php foreach ($countries as $country): ?>
+                                        <option value="<?php echo htmlspecialchars($country); ?>" <?php echo strcasecmp($Country, $country) === 0 ? 'selected' : ''; ?>><?php echo htmlspecialchars($country); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="guest-phone">Teléfono</label>
+                                <input type="text" class="form-control" id="guest-phone" name="Phone" value="<?php echo htmlspecialchars($Phone); ?>" placeholder="Ej. +57 300 000 0000">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="section-card">
+                            <h2 class="section-title"><i class="fa-solid fa-bed me-2"></i>Detalles de la reserva</h2>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="room-type">Tipo de habitación</label>
+                                    <select class="form-select" id="room-type" name="RoomType" required>
+                                        <option value="">Selecciona una opción</option>
+                                        <?php foreach ($roomTypes as $type): ?>
+                                            <option value="<?php echo htmlspecialchars($type); ?>" <?php echo strcasecmp($RoomType, $type) === 0 ? 'selected' : ''; ?>><?php echo htmlspecialchars($type); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="room-bed">Capacidad</label>
+                                    <select class="form-select" id="room-bed" name="Bed" required>
+                                        <option value="">Selecciona una opción</option>
+                                        <?php foreach ($bedOptions as $option): ?>
+                                            <option value="<?php echo htmlspecialchars($option); ?>" <?php echo strcasecmp($Bed, $option) === 0 ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($option)); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="room-count">Número de habitaciones</label>
+                                    <select class="form-select" id="room-count" name="NoofRoom" required>
+                                        <option value="">Selecciona una opción</option>
+                                        <option value="1" <?php echo (int)$NoofRoom === 1 ? 'selected' : ''; ?>>1</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="room-meal">Plan de alimentación</label>
+                                    <select class="form-select" id="room-meal" name="Meal" required>
+                                        <option value="">Selecciona una opción</option>
+                                        <?php foreach ($mealOptions as $option): ?>
+                                            <option value="<?php echo htmlspecialchars($option); ?>" <?php echo strcasecmp($Meal, $option) === 0 ? 'selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="check-in">Check-in</label>
+                                    <input type="date" class="form-control" id="check-in" name="cin" value="<?php echo htmlspecialchars($cin); ?>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="check-out">Check-out</label>
+                                    <input type="date" class="form-control" id="check-out" name="cout" value="<?php echo htmlspecialchars($cout); ?>" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="line"></div>
-
-                <div class="reservationinfo">
-                    <h4>Reservation information</h4>
-                    <select name="RoomType" class="selectinput">
-                                                <option value selected >Tipo de habitación</option>
-                        <option value="Habitación Doble">HABITACIÓN DOBLE</option>
-                        <option value="Habitación Suite">HABITACIÓN SUITE</option>
-                                                <option value="Habitación Múltiple">HABITACIÓN MÚLTIPLE</option>
-                                                <option value="Habitación Sencilla">HABITACIÓN SENCILLA</option>
-                    </select>
-                    <select name="Bed" class="selectinput">
-                                                <option value selected >Capacidad</option>
-                        <option value="1 cliente">1 cliente</option>
-                        <option value="2 clientes">2 clientes</option>
-                                                <option value="3 clientes">3 clientes</option>
-                        <option value="4 clientes">4 clientes</option>
-                                                <option value="None">Sin adicional</option>
-                    </select>
-                    <select name="NoofRoom" class="selectinput">
-						<option value selected >No of Room</option>
-                        <option value="1">1</option>
-                        <!-- <option value="1">2</option>
-                        <option value="1">3</option> -->
-                    </select>
-                    <select name="Meal" class="selectinput">
-						<option value selected >Meal</option>
-                        <option value="Room only">Room only</option>
-                        <option value="Breakfast">Breakfast</option>
-						<option value="Half Board">Half Board</option>
-						<option value="Full Board">Full Board</option>
-					</select>
-                    <div class="datesection">
-                        <span>
-                            <label for="cin"> Check-In</label>
-                            <input name="cin" type ="date" value="<?php echo $cin ?>">
-                        </span>
-                        <span>
-                            <label for="cin"> Check-Out</label>
-                            <input name="cout" type ="date" value="<?php echo $cout ?>">
-                        </span>
+                <div class="row g-4 mt-1">
+                    <div class="col-lg-4">
+                        <div class="summary-card">
+                            <span class="summary-label">Estado actual</span>
+                            <span class="summary-value badge text-bg-primary"><?php echo htmlspecialchars($stat); ?></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="summary-card">
+                            <span class="summary-label">Noches</span>
+                            <span class="summary-value"><?php echo (int)$noofday; ?></span>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="footer">
-                <button class="btn btn-success" name="guestdetailedit">Edit</button>
+            <div class="card-footer bg-white d-flex flex-column flex-md-row justify-content-end gap-2 py-3 px-4">
+                <a href="./roombook.php" class="btn btn-outline-secondary"><i class="fa-solid fa-circle-xmark me-2"></i>Cancelar</a>
+                <button type="submit" class="btn btn-primary" name="guestdetailedit"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar cambios</button>
             </div>
         </form>
     </div>

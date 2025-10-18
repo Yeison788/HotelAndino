@@ -8,6 +8,57 @@
     admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
     admin_require_permission('pagos');
 
+    function payment_normalize_price(string $value): ?string
+    {
+        $clean = preg_replace('/[^0-9,\.]/', '', str_replace(' ', '', trim($value)));
+        if ($clean === '') {
+            return null;
+        }
+        $hasComma = strpos($clean, ',') !== false;
+        $hasDot = strpos($clean, '.') !== false;
+        if ($hasComma && $hasDot) {
+            if (strrpos($clean, ',') > strrpos($clean, '.')) {
+                $clean = str_replace('.', '', $clean);
+                $clean = str_replace(',', '.', $clean);
+            } else {
+                $clean = str_replace(',', '', $clean);
+            }
+        } elseif ($hasComma && !$hasDot) {
+            $clean = str_replace(',', '.', $clean);
+        }
+        return is_numeric($clean) ? number_format((float)$clean, 2, '.', '') : null;
+    }
+
+    if (!isset($_SESSION['payments_flash']) || !is_array($_SESSION['payments_flash'])) {
+        $_SESSION['payments_flash'] = [];
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room_rates'])) {
+        $rates = $_POST['rates'] ?? [];
+        $updated = 0;
+        foreach ($rates as $type => $priceRaw) {
+            $normalized = payment_normalize_price((string)$priceRaw);
+            if ($normalized === null) {
+                continue;
+            }
+            if ($stmt = $conn->prepare('UPDATE room_rates SET base_price = ? WHERE room_type = ?')) {
+                $normalizedFloat = (float)$normalized;
+                $stmt->bind_param('ds', $normalizedFloat, $type);
+                if ($stmt->execute()) {
+                    $updated++;
+                }
+                $stmt->close();
+            }
+        }
+        if ($updated > 0) {
+            $_SESSION['payments_flash'][] = ['type' => 'success', 'text' => 'Tarifas de habitaciones actualizadas correctamente.'];
+        } else {
+            $_SESSION['payments_flash'][] = ['type' => 'warning', 'text' => 'No se detectaron cambios en las tarifas enviadas.'];
+        }
+        header('Location: payment.php');
+        exit;
+    }
+
     $totals = [
         'count' => 0,
         'room' => 0,
@@ -30,6 +81,22 @@
     }
     $totals['avg'] = $totals['count'] > 0 ? $totals['final'] / $totals['count'] : 0;
     $hasPayments = $paymantresult && $totals['count'] > 0;
+
+    $roomRates = [];
+    if ($result = mysqli_query($conn, 'SELECT room_type, base_price FROM room_rates ORDER BY room_type')) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $roomRates[$row['room_type']] = (float)$row['base_price'];
+        }
+        mysqli_free_result($result);
+    }
+    foreach (admin_default_room_rates() as $type => $price) {
+        if (!isset($roomRates[$type])) {
+            $roomRates[$type] = $price;
+        }
+    }
+
+    $flashMessages = $_SESSION['payments_flash'];
+    $_SESSION['payments_flash'] = [];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -48,11 +115,23 @@
                 <h1 class="h3 mb-1">Pagos y facturación</h1>
                 <p class="text-muted mb-0">Control de los cobros confirmados para huéspedes y reservas.</p>
             </div>
-            <div class="text-md-end">
-                <span class="text-muted small text-uppercase">Total facturado</span>
-                <div class="fs-4 fw-semibold">COP <?php echo number_format($totals['final'], 0, ',', '.'); ?></div>
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#roomRatesModal">
+                    <i class="fa-solid fa-tags me-2"></i>Editar tarifas de habitaciones
+                </button>
+                <div class="text-sm-end">
+                    <span class="text-muted small text-uppercase d-block">Total facturado</span>
+                    <div class="fs-4 fw-semibold">COP <?php echo number_format($totals['final'], 0, ',', '.'); ?></div>
+                </div>
             </div>
         </div>
+
+        <?php foreach ($flashMessages as $message): ?>
+            <div class="alert alert-<?php echo htmlspecialchars($message['type']); ?> alert-dismissible fade show" role="alert">
+                <?php echo htmlspecialchars($message['text']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        <?php endforeach; ?>
 
         <?php if ($hasPayments): ?>
             <div class="row g-3 mb-4">
@@ -206,6 +285,36 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Descargar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="roomRatesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content" method="post">
+                <input type="hidden" name="update_room_rates" value="1">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar tarifas base de habitaciones</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Las tarifas aquí definidas se utilizan como referencia para cálculos automáticos y pueden ajustarse para negociaciones especiales.</p>
+                    <div class="row g-3">
+                        <?php foreach ($roomRates as $type => $price): ?>
+                            <div class="col-md-6">
+                                <label class="form-label"><?php echo htmlspecialchars($type); ?></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">COP</span>
+                                    <input type="text" class="form-control" name="rates[<?php echo htmlspecialchars($type); ?>]" value="<?php echo number_format($price, 0, ',', '.'); ?>" inputmode="decimal" required>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar tarifas</button>
                 </div>
             </form>
         </div>

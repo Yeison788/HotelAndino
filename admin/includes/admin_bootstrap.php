@@ -65,6 +65,7 @@ if (!function_exists('admin_default_room_rates')) {
             'Habitación Suite'     => 150000.00,
         ];
     }
+}
 
 if (!function_exists('ensureEmpStructure')) {
     function ensureEmpStructure(mysqli $conn): void
@@ -119,6 +120,39 @@ if (!function_exists('ensureRoomRates')) {
             }
             $stmt->close();
         }
+    }
+}
+
+if (!function_exists('ensureStaffStructure')) {
+    function ensureStaffStructure(mysqli $conn): void
+    {
+        $columns = [
+            'category'        => "ALTER TABLE staff ADD COLUMN category ENUM('administrativo','operativo') NOT NULL DEFAULT 'operativo' AFTER work",
+            'admin_email'     => "ALTER TABLE staff ADD COLUMN admin_email VARCHAR(190) NULL UNIQUE AFTER category",
+            'document_number' => "ALTER TABLE staff ADD COLUMN document_number VARCHAR(40) NULL AFTER admin_email",
+            'email'           => "ALTER TABLE staff ADD COLUMN email VARCHAR(120) NULL AFTER document_number",
+            'phone'           => "ALTER TABLE staff ADD COLUMN phone VARCHAR(40) NULL AFTER email",
+            'hire_date'       => "ALTER TABLE staff ADD COLUMN hire_date DATE NULL AFTER phone",
+            'salary'          => "ALTER TABLE staff ADD COLUMN salary DECIMAL(12,2) NULL AFTER hire_date",
+            'notes'           => "ALTER TABLE staff ADD COLUMN notes TEXT NULL AFTER salary",
+        ];
+
+        foreach ($columns as $column => $alterSql) {
+            if (!admin_column_exists($conn, 'staff', $column)) {
+                mysqli_query($conn, $alterSql);
+            }
+        }
+    }
+}
+
+if (!function_exists('admin_is_ajax_request')) {
+    function admin_is_ajax_request(): bool
+    {
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            return true;
+        }
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        return stripos($accept, 'application/json') !== false;
     }
 }
 
@@ -288,5 +322,6 @@ if (!function_exists('admin_first_records_view')) {
         }
         return 'summary';
     }
+}
 }
 

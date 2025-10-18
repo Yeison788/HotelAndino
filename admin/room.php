@@ -13,6 +13,25 @@ ensureRoomRates($conn);
 admin_refresh_session($conn, $_SESSION['adminmail']);
 admin_require_permission('habitaciones');
 
+$renderGuestSummary = function (?array $stay, float $basePrice, float $displayPrice): string {
+    ob_start();
+    if ($stay) {
+        ?>
+        <p class="mb-1">ID: <strong><?php echo htmlspecialchars($stay['guest_id']); ?></strong></p>
+        <p class="mb-1">Nombre: <strong><?php echo htmlspecialchars($stay['guest_name']); ?></strong></p>
+        <p class="mb-1 text-muted">Nacionalidad: <?php echo htmlspecialchars($stay['nationality']); ?></p>
+        <p class="mb-1 text-muted">Ingreso: <?php echo date('d/m/Y', strtotime($stay['check_in_date'])); ?> · <?php echo htmlspecialchars(substr($stay['check_in_time'], 0, 5)); ?></p>
+        <p class="mb-0 text-muted">Salida: <?php echo date('d/m/Y', strtotime($stay['check_out_date'])); ?></p>
+        <p class="mb-0 text-muted">Precio: COP <?php echo number_format($displayPrice, 0, ',', '.'); ?></p>
+        <?php
+    } else {
+        ?>
+        <p class="text-muted mb-0">Sin datos del huésped. Precio base: COP <?php echo number_format($basePrice, 0, ',', '.'); ?></p>
+        <?php
+    }
+    return trim(ob_get_clean());
+};
+
 $employee = admin_current_employee();
 $adminEmail = $employee['email'];
 
@@ -89,6 +108,47 @@ if (isset($_POST['save_stay'])) {
         }
     }
 
+    $stayData = null;
+    if ($roomId > 0) {
+        if ($result = mysqli_query($conn, 'SELECT * FROM room_stays WHERE room_id = ' . $roomId . ' LIMIT 1')) {
+            $stayData = mysqli_fetch_assoc($result) ?: null;
+            mysqli_free_result($result);
+        }
+    }
+    $roomInfo = null;
+    if ($roomId > 0) {
+        if ($result = mysqli_query($conn, 'SELECT room_number, type, bedding FROM room WHERE id = ' . $roomId . ' LIMIT 1')) {
+            $roomInfo = mysqli_fetch_assoc($result) ?: null;
+            mysqli_free_result($result);
+        }
+    }
+    $roomTypeForPrice = $roomInfo['type'] ?? '';
+    $basePrice = $roomTypeForPrice !== '' ? admin_room_base_price($conn, $roomTypeForPrice) : 0.0;
+    $displayPrice = ($stayData && (float)$stayData['price'] > 0) ? (float)$stayData['price'] : $basePrice;
+
+    if (admin_is_ajax_request()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'room_id' => $roomId,
+            'guest' => $stayData ? [
+                'id' => $stayData['guest_id'],
+                'name' => $stayData['guest_name'],
+                'nationality' => $stayData['nationality'],
+                'check_in_date' => $stayData['check_in_date'],
+                'check_in_time' => substr($stayData['check_in_time'], 0, 5),
+                'check_out_date' => $stayData['check_out_date'],
+                'price' => number_format($displayPrice, 0, ',', '.'),
+            ] : null,
+            'room' => $roomInfo ? [
+                'type' => $roomInfo['type'],
+                'bedding' => $roomInfo['bedding'],
+            ] : ['type' => $roomTypeForPrice, 'bedding' => ''],
+            'summary_html' => $renderGuestSummary($stayData, $basePrice, $displayPrice),
+        ]);
+        exit;
+    }
+
     $floorRedirect = isset($_GET['floor']) ? intval($_GET['floor']) : 1;
     header('Location: room.php?floor=' . $floorRedirect);
     exit;
@@ -106,6 +166,17 @@ if (isset($_POST['edit_room'])) {
             $stmt->close();
         }
     }
+    if (admin_is_ajax_request()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'room_id' => $roomId,
+            'type' => $type,
+            'bedding' => $bedding,
+        ]);
+        exit;
+    }
+
     header('Location: room.php?floor=' . ($_GET['floor'] ?? ''));
     exit;
 }
@@ -183,22 +254,13 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
                   </div>
                   <div class="text-end">
                     <h5 class="card-title mb-1">Hab. <?php echo htmlspecialchars($row['room_number']); ?></h5>
-                    <p class="mb-0 text-muted"><?php echo htmlspecialchars($row['type']); ?> · <?php echo htmlspecialchars($row['bedding']); ?></p>
+                    <p class="mb-0 text-muted room-type-label" data-room-type="<?php echo $row['id']; ?>"><?php echo htmlspecialchars($row['type']); ?> · <?php echo htmlspecialchars($row['bedding']); ?></p>
                   </div>
                 </div>
 
-          <div class="mb-3 guest-summary">
+          <div class="mb-3 guest-summary" data-room-summary="<?php echo $row['id']; ?>">
                   <h6 class="fw-semibold mb-1">Huésped</h6>
-                  <?php if ($stay): ?>
-                    <p class="mb-1">ID: <strong><?php echo htmlspecialchars($stay['guest_id']); ?></strong></p>
-                    <p class="mb-1">Nombre: <strong><?php echo htmlspecialchars($stay['guest_name']); ?></strong></p>
-                    <p class="mb-1 text-muted">Nacionalidad: <?php echo htmlspecialchars($stay['nationality']); ?></p>
-                    <p class="mb-1 text-muted">Ingreso: <?php echo date('d/m/Y', strtotime($stay['check_in_date'])); ?> · <?php echo substr($stay['check_in_time'], 0, 5); ?></p>
-                    <p class="mb-0 text-muted">Salida: <?php echo date('d/m/Y', strtotime($stay['check_out_date'])); ?></p>
-                    <p class="mb-0 text-muted">Precio: COP <?php echo number_format($stayPrice, 0, ',', '.'); ?></p>
-                  <?php else: ?>
-                    <p class="text-muted mb-0">Sin datos del huésped. Precio base: COP <?php echo number_format($basePrice, 0, ',', '.'); ?></p>
-                  <?php endif; ?>
+                  <div class="guest-summary-content"><?php echo $renderGuestSummary($stay, $basePrice, $stayPrice); ?></div>
                 </div>
 
                 <form method="POST" class="d-flex flex-wrap justify-content-center gap-1 mb-3 js-status-form" data-room="<?php echo $row['id']; ?>">
@@ -210,7 +272,7 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
                   <button type="submit" name="status" value="Ocupada" class="btn btn-sm btn-outline-danger">Ocupada</button>
                 </form>
 
-                <form method="POST" class="mb-3">
+                <form method="POST" class="mb-3 js-room-config-form" data-room="<?php echo $row['id']; ?>">
                   <input type="hidden" name="room_id" value="<?php echo $row['id']; ?>">
                   <input type="hidden" name="edit_room" value="1">
                   <div class="row g-2">
@@ -244,7 +306,7 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
           <div class="modal fade" id="stayModal-<?php echo $row['id']; ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
               <div class="modal-content">
-                <form method="POST">
+                <form method="POST" class="js-stay-form" data-room="<?php echo $row['id']; ?>">
                   <div class="modal-header">
                     <h5 class="modal-title">Huésped Hab. <?php echo htmlspecialchars($row['room_number']); ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
