@@ -51,12 +51,16 @@ body {
     align-items: center;
     flex-direction: column;
     box-shadow: var(--bg-box-shadow);
+    padding: 20px;
+    text-align: center;
 }
 
 .databox .box h1 {
-    font-size: 80px;
+    font-size: clamp(36px, 6vw, 64px);
     font-family: 'Hind Siliguri', sans-serif;
     color: var(--color-darkgold);
+    margin: 0;
+    word-break: break-word;
 }
 
 .box:nth-child(1),

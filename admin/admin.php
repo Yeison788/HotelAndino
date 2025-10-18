@@ -16,6 +16,7 @@ ensureRoomRates($conn);
 admin_refresh_session($conn, $adminmail);
 
 $employee = admin_current_employee();
+$avatarPath = !empty($employee['avatar']) ? '../' . ltrim($employee['avatar'], '/') : '../image/Profile.png';
 $hasRecords = admin_has_records_access();
 $recordsDefaultView = admin_first_records_view();
 
@@ -71,14 +72,27 @@ foreach ($framesPermissions as $idx => $allowed) {
             <img class="HotelAndino" src="../image/LogoAndino.png" alt="logo">
             <p>Hotel Andino</p>
         </div>
-        <div class="logout d-flex align-items-center gap-3">
-            <div class="text-end">
-                <div class="fw-semibold text-white">Hola, <?php echo htmlspecialchars($employee['name']); ?></div>
-                <?php if (!empty($employee['role'])): ?>
-                    <div class="small text-white-50"><?php echo htmlspecialchars($employee['role']); ?></div>
-                <?php endif; ?>
+        <div class="profile-menu">
+            <button class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                <img src="<?php echo htmlspecialchars($avatarPath); ?>" alt="Perfil" class="profile-avatar">
+            </button>
+            <div class="profile-dropdown" role="menu">
+                <div class="profile-summary">
+                    <img src="<?php echo htmlspecialchars($avatarPath); ?>" alt="Avatar" class="profile-avatar">
+                    <div class="profile-text">
+                        <div class="profile-name"><?php echo htmlspecialchars($employee['name'] ?: 'Administrador'); ?></div>
+                        <?php if (!empty($employee['role'])): ?>
+                            <div class="profile-role"><?php echo htmlspecialchars($employee['role']); ?></div>
+                        <?php endif; ?>
+                        <div class="profile-email"><?php echo htmlspecialchars($employee['email']); ?></div>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <a class="dropdown-item" href="./profile.php"><i class="fa-solid fa-user-pen"></i> Editar perfil</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="../logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+                </div>
             </div>
-            <a href="../logout.php"><button class="btn btn-primary">Cerrar sesión</button></a>
         </div>
     </nav>
 

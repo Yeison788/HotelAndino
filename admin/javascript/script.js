@@ -44,4 +44,31 @@ document.addEventListener('DOMContentLoaded', () => {
   if (initialButton) {
     activateButton(initialButton);
   }
+
+  const profileMenu = document.querySelector('.profile-menu');
+  const profileTrigger = document.querySelector('.profile-trigger');
+  if (profileMenu && profileTrigger) {
+    const closeMenu = () => {
+      profileMenu.classList.remove('is-open');
+      profileTrigger.setAttribute('aria-expanded', 'false');
+    };
+
+    profileTrigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const isOpen = profileMenu.classList.toggle('is-open');
+      profileTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!profileMenu.contains(event.target)) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    });
+  }
 });

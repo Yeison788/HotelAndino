@@ -65,7 +65,6 @@ if (!function_exists('admin_default_room_rates')) {
             'Habitación Suite'     => 150000.00,
         ];
     }
-}
 
 if (!function_exists('ensureEmpStructure')) {
     function ensureEmpStructure(mysqli $conn): void
@@ -84,6 +83,9 @@ if (!function_exists('ensureEmpStructure')) {
         }
         if (!admin_column_exists($conn, 'emp_login', 'CreatedAt')) {
             mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER IsSuperAdmin");
+        }
+        if (!admin_column_exists($conn, 'emp_login', 'AvatarPath')) {
+            mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN AvatarPath VARCHAR(255) NULL AFTER CreatedAt");
         }
 
         $allPermissions = json_encode(array_keys(admin_available_permissions()), JSON_UNESCAPED_UNICODE);
@@ -155,13 +157,13 @@ if (!function_exists('admin_refresh_session')) {
             return;
         }
 
-        $stmt = $conn->prepare("SELECT Emp_Email, FullName, Role, Permissions, IsSuperAdmin FROM emp_login WHERE Emp_Email = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT Emp_Email, FullName, Role, Permissions, IsSuperAdmin, AvatarPath FROM emp_login WHERE Emp_Email = ? LIMIT 1");
         if (!$stmt) {
             return;
         }
         $stmt->bind_param('s', $email);
         if ($stmt->execute()) {
-            $stmt->bind_result($empEmail, $fullName, $role, $permissionsJson, $isSuper);
+            $stmt->bind_result($empEmail, $fullName, $role, $permissionsJson, $isSuper, $avatarPath);
             if ($stmt->fetch()) {
                 $perms = [];
                 if ($permissionsJson) {
@@ -179,6 +181,7 @@ if (!function_exists('admin_refresh_session')) {
                 $_SESSION['admin_role'] = $role ?: '';
                 $_SESSION['admin_permissions'] = $perms;
                 $_SESSION['admin_is_super'] = (bool)$isSuper;
+                $_SESSION['admin_avatar'] = $avatarPath ?: '';
             }
         }
         $stmt->close();
@@ -216,9 +219,10 @@ if (!function_exists('admin_current_employee')) {
     function admin_current_employee(): array
     {
         return [
-            'email' => $_SESSION['adminmail'] ?? '',
-            'name'  => $_SESSION['admin_name'] ?? '',
-            'role'  => $_SESSION['admin_role'] ?? '',
+            'email'  => $_SESSION['adminmail'] ?? '',
+            'name'   => $_SESSION['admin_name'] ?? '',
+            'role'   => $_SESSION['admin_role'] ?? '',
+            'avatar' => $_SESSION['admin_avatar'] ?? '',
         ];
     }
 }
@@ -285,4 +289,4 @@ if (!function_exists('admin_first_records_view')) {
         return 'summary';
     }
 }
-}
+

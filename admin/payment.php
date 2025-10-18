@@ -93,16 +93,19 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
-                    <div>
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 mb-3">
+                    <div class="flex-grow-1">
                         <h2 class="h5 mb-1">Historial de pagos</h2>
                         <p class="text-muted mb-0">Últimos movimientos registrados en el sistema.</p>
                     </div>
-                    <div class="ms-lg-auto">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input type="text" class="form-control" id="payments-search" placeholder="Buscar por nombre, habitación o correo" onkeyup="filterPayments()">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 ms-lg-auto w-100 w-lg-auto">
+                        <div class="flex-grow-1">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" class="form-control" id="payments-search" placeholder="Buscar por nombre, habitación o correo" onkeyup="filterPayments()">
+                            </div>
                         </div>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#paymentsReportModal"><i class="fa-solid fa-file-arrow-down"></i> Informe</button>
                     </div>
                 </div>
 
@@ -161,6 +164,54 @@
         </div>
     </div>
 
+    <div class="modal fade" id="paymentsReportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" method="post" action="report_export.php" id="paymentsReportForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Descargar informe de pagos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="module" value="pagos">
+                    <div class="mb-3">
+                        <label class="form-label">Rango de fechas</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="range_mode" id="payments-range-today" value="today" checked>
+                            <label class="form-check-label" for="payments-range-today">Hoy</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="range_mode" id="payments-range-day" value="day">
+                            <label class="form-check-label" for="payments-range-day">Seleccionar día específico</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="range_mode" id="payments-range-custom" value="range">
+                            <label class="form-check-label" for="payments-range-custom">Rango personalizado</label>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12" data-role="specific-date">
+                            <label for="payments-specific-date" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="payments-specific-date" name="specific_date" disabled>
+                        </div>
+                        <div class="col-md-6" data-role="start-date">
+                            <label for="payments-start-date" class="form-label">Desde</label>
+                            <input type="date" class="form-control" id="payments-start-date" name="start_date" disabled>
+                        </div>
+                        <div class="col-md-6" data-role="end-date">
+                            <label for="payments-end-date" class="form-label">Hasta</label>
+                            <input type="date" class="form-control" id="payments-end-date" name="end_date" disabled>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Descargar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script>
         const searchInput = document.getElementById('payments-search');
         function filterPayments() {
@@ -172,6 +223,49 @@
                 row.style.display = text.includes(filter) ? '' : 'none';
             });
         }
+        if (searchInput) {
+            searchInput.addEventListener('input', filterPayments);
+        }
+        function setupReportModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const form = modal.querySelector('form');
+            const radios = form.querySelectorAll('input[name="range_mode"]');
+            const specificDate = form.querySelector('[data-role="specific-date"] input');
+            const startDate = form.querySelector('[data-role="start-date"] input');
+            const endDate = form.querySelector('[data-role="end-date"] input');
+
+            const updateVisibility = () => {
+                const selected = form.querySelector('input[name="range_mode"]:checked');
+                const mode = selected ? selected.value : 'today';
+                if (specificDate) {
+                    specificDate.disabled = mode !== 'day';
+                    specificDate.required = mode === 'day';
+                    if (mode !== 'day') specificDate.value = '';
+                }
+                if (startDate && endDate) {
+                    const isRange = mode === 'range';
+                    startDate.disabled = !isRange;
+                    endDate.disabled = !isRange;
+                    startDate.required = isRange;
+                    endDate.required = isRange;
+                    if (!isRange) {
+                        startDate.value = '';
+                        endDate.value = '';
+                    }
+                }
+            };
+
+            radios.forEach((radio) => radio.addEventListener('change', updateVisibility));
+            modal.addEventListener('shown.bs.modal', updateVisibility);
+            modal.addEventListener('hidden.bs.modal', () => {
+                form.reset();
+                updateVisibility();
+            });
+            updateVisibility();
+        }
+
+        setupReportModal('paymentsReportModal');
     </script>
 </body>
 </html>
