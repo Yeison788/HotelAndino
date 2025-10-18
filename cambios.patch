@@ -1,0 +1,2177 @@
+
+
+
+[B[A[B[A[A[A[A[B (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/admin/admin.php b/admin/admin.php
+index cbc5b0f4c5c8ba4de8d6c43c4ffacecc2da5fb18..b34a6e70bd163258d92fa8db05fb639d71ce9f92 100644
+--- a/admin/admin.php
++++ b/admin/admin.php
+@@ -29,49 +29,59 @@ if (!$adminmail) {
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" 
+           integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" 
+           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+ </head>
+ 
+ <body>
+     <!-- mobile view -->
+     <div id="mobileview">
+         <h5>El panel de administración no está disponible en dispositivos móviles</h5>
+     </div>
+   
+     <!-- nav bar -->
+     <nav class="uppernav">
+         <div class="logo">
+             <img class="HotelAndino" src="../image/LogoAndino.png" alt="logo">
+             <p>Hotel Andino</p>
+         </div>
+         <div class="logout">
+             <a href="../logout.php"><button class="btn btn-primary">Cerrar sesión</button></a>
+         </div>
+     </nav>
+ 
+     <!-- side nav -->
+     <nav class="sidenav">
+         <ul>
+-            <li class="pagebtn active"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Panel</li>
+-            <li class="pagebtn"><i class="fa-solid fa-bed"></i>&nbsp;&nbsp; Reservas</li>
+-            <li class="pagebtn"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
+-            <li class="pagebtn"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
+-            <li class="pagebtn"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
+-            <li class="pagebtn"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</li>
+-            <li class="pagebtn"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Ver</li>
++            <li class="pagebtn active" data-frame="0" data-src="./dashboard.php"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Panel</li>
++            <li class="pagebtn" data-frame="1" data-src="./roombook.php"><i class="fa-solid fa-bed"></i>&nbsp;&nbsp; Reservas</li>
++            <li class="pagebtn" data-frame="2" data-src="./payment.php"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
++            <li class="pagebtn" data-frame="3" data-src="./room.php"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
++            <li class="pagebtn" data-frame="4" data-src="./staff.php"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
++            <li class="has-submenu">
++                <div class="submenu-trigger" tabindex="0"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</div>
++                <ul class="submenu">
++                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=rooms"><i class="fa-solid fa-door-open"></i>&nbsp;&nbsp; Registrar habitación</li>
++                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=room-types"><i class="fa-solid fa-layer-group"></i>&nbsp;&nbsp; Registrar tipo de habitación</li>
++                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=users"><i class="fa-solid fa-user-plus"></i>&nbsp;&nbsp; Registrar usuario</li>
++                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=products"><i class="fa-solid fa-box"></i>&nbsp;&nbsp; Registrar producto</li>
++                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=sales"><i class="fa-solid fa-cash-register"></i>&nbsp;&nbsp; Registrar venta</li>
++                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=summary"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Resumen rápido</li>
++                </ul>
++            </li>
++            <li class="pagebtn" data-frame="6" data-src="./room-status.php"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Ver</li>
+         </ul>
+     </nav>
+ 
+     <!-- main section -->
+     <div class="mainscreen">
+         <iframe class="frames frame1 active" src="./dashboard.php" frameborder="0"></iframe>
+         <iframe class="frames frame2" src="./roombook.php" frameborder="0"></iframe>
+         <iframe class="frames frame3" src="./payment.php" frameborder="0"></iframe>
+         <iframe class="frames frame4" src="./room.php" frameborder="0"></iframe>
+         <iframe class="frames frame5" src="./staff.php" frameborder="0"></iframe>
+-        <iframe class="frames frame6" src="./records.php" frameborder="0"></iframe>
++        <iframe class="frames frame6" src="./records.php?view=summary" frameborder="0"></iframe>
+         <iframe class="frames frame7" src="./room-status.php" frameborder="0"></iframe>
+     </div>
+ 
+     <script src="./javascript/script.js"></script>
+ </body>
+ </html>
+diff --git a/admin/css/admin.css b/admin/css/admin.css
+index 5d042c529b385d0938cdecc4018e1c03c97d83fd..fbc1f96f5afb2435c8f29f86c303a2788a15df09 100644
+--- a/admin/css/admin.css
++++ b/admin/css/admin.css
+@@ -138,50 +138,105 @@ body{
+   padding: 0;
+ }
+ 
+ .sidenav ul li{
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   height: 50px;
+   padding: 0 14px;
+   cursor: pointer;
+   font-weight: 500;
+   user-select: none;
+   transition: background-color .18s ease, color .18s ease;
+ }
+ 
+ .sidenav ul li:hover{
+   background: var(--sidebar-hover);
+ }
+ 
+ .sidenav ul li.active{
+   background: var(--sidebar-active);
+   border-left: 4px solid var(--sidebar-accent);
+   padding-left: 10px; /* compensa el borde izquierdo */
+ }
+ 
++.sidenav ul li.has-submenu{
++  display: block;
++  padding: 0;
++  height: auto;
++}
++
++.sidenav ul li.has-submenu .submenu-trigger{
++  display: flex;
++  align-items: center;
++  gap: 10px;
++  height: 50px;
++  padding: 0 14px;
++  cursor: pointer;
++  font-weight: 500;
++  user-select: none;
++  transition: background-color .18s ease, color .18s ease;
++}
++
++.sidenav ul li.has-submenu .submenu-trigger:hover,
++.sidenav ul li.has-submenu .submenu-trigger.active{
++  background: var(--sidebar-active);
++  border-left: 4px solid var(--sidebar-accent);
++  padding-left: 10px;
++}
++
++.sidenav ul li.has-submenu .submenu{
++  display: none;
++  list-style: none;
++  margin: 0;
++  padding: 0;
++  background: rgba(255, 255, 255, 0.03);
++  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
++}
++
++.sidenav ul li.has-submenu:hover .submenu,
++.sidenav ul li.has-submenu:focus-within .submenu,
++.sidenav ul li.has-submenu .submenu-trigger.active + .submenu{
++  display: block;
++}
++
++.sidenav ul li.has-submenu .submenu .pagebtn{
++  display: flex;
++  align-items: center;
++  gap: 10px;
++  height: 44px;
++  padding: 0 14px 0 48px;
++  font-size: 0.92rem;
++}
++
++.sidenav ul li.has-submenu .submenu .pagebtn.active{
++  background: var(--sidebar-active);
++  border-left: 4px solid var(--sidebar-accent);
++  padding-left: 44px;
++}
++
+ .sidenav img{
+   height: 23px;
+   width: 23px;
+   display: block;
+ }
+ 
+ .sidenav ul li i{
+   font-size: 18px;
+   width: 23px;
+   text-align: center;
+ }
+ /* =========================================================
+    Área principal (iframes)
+    ========================================================= */
+ .mainscreen{
+   /* deja espacio para la barra superior y el menú lateral */
+   margin-left: var(--sidenav-w);
+   margin-top: var(--topbar-h);  
+   height: calc(100vh - var(--topbar-h));
+   background: transparent;
+ }
+ 
+ .frames{
+   display: none;
+   width: 100%;
+diff --git a/admin/dashboard.php b/admin/dashboard.php
+index ef4a342d887eb1cb9e37c5049d8f09a2374a73d7..1045af3149caa0ab871f3257b8fdd9cf5f6ba723 100644
+--- a/admin/dashboard.php
++++ b/admin/dashboard.php
+@@ -1,58 +1,58 @@
+ <?php
+     session_start();
+     include '../config.php';
+ 
+     // roombook
+     $roombooksql ="Select * from roombook";
+     $roombookre = mysqli_query($conn, $roombooksql);
+     $roombookrow = mysqli_num_rows($roombookre);
+ 
+     // staff
+     $staffsql ="Select * from staff";
+     $staffre = mysqli_query($conn, $staffsql);
+     $staffrow = mysqli_num_rows($staffre);
+ 
+     // room
+     $roomsql ="Select * from room";
+     $roomre = mysqli_query($conn, $roomsql);
+     $roomrow = mysqli_num_rows($roomre);
+ 
+     //roombook roomtype
+-    $chartroom1 = "SELECT * FROM roombook WHERE RoomType='Superior Room'";
++    $chartroom1 = "SELECT * FROM roombook WHERE RoomType='Habitación Doble'";
+     $chartroom1re = mysqli_query($conn, $chartroom1);
+     $chartroom1row = mysqli_num_rows($chartroom1re);
+ 
+-    $chartroom2 = "SELECT * FROM roombook WHERE RoomType='Deluxe Room'";
++    $chartroom2 = "SELECT * FROM roombook WHERE RoomType='Habitación Suite'";
+     $chartroom2re = mysqli_query($conn, $chartroom2);
+     $chartroom2row = mysqli_num_rows($chartroom2re);
+ 
+-    $chartroom3 = "SELECT * FROM roombook WHERE RoomType='Guest House'";
++    $chartroom3 = "SELECT * FROM roombook WHERE RoomType='Habitación Múltiple'";
+     $chartroom3re = mysqli_query($conn, $chartroom3);
+     $chartroom3row = mysqli_num_rows($chartroom3re);
+ 
+-    $chartroom4 = "SELECT * FROM roombook WHERE RoomType='Single Room'";
++    $chartroom4 = "SELECT * FROM roombook WHERE RoomType='Habitación Sencilla'";
+     $chartroom4re = mysqli_query($conn, $chartroom4);
+     $chartroom4row = mysqli_num_rows($chartroom4re);
+ ?>
+ <!-- moriss profit -->
+ <?php 	
+ 					$query = "SELECT * FROM payment";
+ 					$result = mysqli_query($conn, $query);
+ 					$chart_data = '';
+ 					$tot = 0;
+ 					while($row = mysqli_fetch_array($result))
+ 					{
+               $chart_data .= "{ date:'".$row["cout"]."', profit:".$row["finaltotal"]*10/100 ."}, ";
+               $tot = $tot + $row["finaltotal"]*10/100;
+ 					}
+ 
+ 					$chart_data = substr($chart_data, 0, -2);
+ 				
+ ?>
+ 
+ <!DOCTYPE html>
+ <html lang="es">
+ <head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@@ -64,73 +64,73 @@
+     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+     <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+     <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+ 
+     <title>Hotel Andino - Admin </title>
+ </head>
+ <body>
+    <div class="databox">
+         <div class="box roombookbox">
+           <h2>Habitaciones reservadas</h1>  
+           <h1><?php echo $roombookrow ?> / <?php echo $roomrow ?></h1>
+         </div>
+         <div class="box guestbox">
+         <h2>Total de personal</h1> 
+           <h1><?php echo $staffrow ?></h1>
+         </div>
+         <div class="box profitbox">
+   <h2>Ganancias</h2>
+   <h1>COL$ <?php echo number_format($tot, 0, ',', '.'); ?></h1>
+ </div>
+     </div>
+     <div class="chartbox">
+         <div class="bookroomchart">
+             <canvas id="bookroomchart"></canvas>
+-            <h3 style="text-align: center;margin:10px 0;">Booked Room</h3>
++            <h3 style="text-align: center;margin:10px 0;">Habitaciones reservadas por tipo</h3>
+         </div>
+         <div class="profitchart" >
+             <div id="profitchart"></div>
+-            <h3 style="text-align: center;margin:10px 0;">Profit</h3>
++            <h3 style="text-align: center;margin:10px 0;">Ganancias</h3>
+         </div>
+     </div>
+ </body>
+ 
+ 
+ 
+ <script>
+         const labels = [
+-          'Superior Room',
+-          'Deluxe Room',
+-          'Guest House',
+-          'Single Room',
++          'Habitación Doble',
++          'Habitación Suite',
++          'Habitación Múltiple',
++          'Habitación Sencilla',
+         ];
+       
+         const data = {
+           labels: labels,
+           datasets: [{
+-            label: 'My First dataset',
++            label: 'Reservas registradas',
+             backgroundColor: [
+                 'rgba(255, 99, 132, 1)',
+                 'rgba(255, 159, 64, 1)',
+                 'rgba(54, 162, 235, 1)',
+                 'rgba(153, 102, 255, 1)',
+             ],
+             borderColor: 'black',
+             data: [<?php echo $chartroom1row ?>,<?php echo $chartroom2row ?>,<?php echo $chartroom3row ?>,<?php echo $chartroom4row ?>],
+           }]
+         };
+   
+         const doughnutchart = {
+           type: 'doughnut',
+           data: data,
+           options: {}
+         };
+         
+       const myChart = new Chart(
+       document.getElementById('bookroomchart'),
+       doughnutchart);
+ </script>
+ 
+ <script>
+ Morris.Bar({
+   element : 'profitchart',
+diff --git a/admin/invoiceprint.php b/admin/invoiceprint.php
+index 34e57233d9aaf95dd4e5785556f8051fd2741ef9..272f4f2ac05521d1a2c58a0946699c98c061c455 100644
+--- a/admin/invoiceprint.php
++++ b/admin/invoiceprint.php
+@@ -401,72 +401,72 @@
+ 	
+ 	ob_start();
+ 	include '../config.php';
+ 
+ 	$id = $_GET['id'];
+ 
+ 	$sql = "select * from payment where id = '$id' ";
+ 	$re = mysqli_query($conn, $sql);
+ 	while ($row = mysqli_fetch_array($re)) {
+ 		$id = $row['id'];
+ 		$Name = $row['Name'];
+ 		$troom = $row['RoomType'];
+ 		$bed = $row['Bed'];
+ 		$nroom = $row['NoofRoom'];
+ 		$cin = $row['cin'];
+ 		$cout = $row['cout'];
+ 		$meal = $row['meal'];
+ 		$ttot = $row['roomtotal'];
+ 		$mepr = $row['mealtotal'];
+ 		$btot = $row['bedtotal'];
+ 		$fintot = $row['finaltotal'];
+ 		$days = $row['noofdays'];
+ 	}
+ 
+ 	$type_of_room = 0;
+-	if ($troom == "Superior Room") {
+-		$type_of_room = 3000;
+-	} else if ($troom == "Deluxe Room") {
+-		$type_of_room = 2000;
+-	} else if ($troom == "Guest House") {
+-		$type_of_room = 1500;
+-	} else if ($troom == "Single Room") {
+-		$type_of_room = 1000;
+-	}
+-
+-	$ttot = $days * $type_of_room;
+-	if ($bed == "Single") {
+-		$type_of_bed = $type_of_room * 1 / 100;
+-	} else if ($bed == "Double") {
+-		$type_of_bed = $type_of_room * 2 / 100;
+-	} else if ($bed == "Triple") {
+-		$type_of_bed = $type_of_room * 3 / 100;
+-	} else if ($bed == "Quad") {
+-		$type_of_bed = $type_of_room * 4 / 100;
+-	} else if ($bed == "None") {
+-		$type_of_bed = $type_of_room * 0 / 100;
+-	}
++        if ($troom == "Habitación Doble") {
++                $type_of_room = 3000;
++        } else if ($troom == "Habitación Suite") {
++                $type_of_room = 2000;
++        } else if ($troom == "Habitación Múltiple") {
++                $type_of_room = 1500;
++        } else if ($troom == "Habitación Sencilla") {
++                $type_of_room = 1000;
++        }
++
++        $ttot = $days * $type_of_room;
++        if ($bed == "1 cliente") {
++                $type_of_bed = $type_of_room * 1 / 100;
++        } else if ($bed == "2 clientes") {
++                $type_of_bed = $type_of_room * 2 / 100;
++        } else if ($bed == "3 clientes") {
++                $type_of_bed = $type_of_room * 3 / 100;
++        } else if ($bed == "4 clientes") {
++                $type_of_bed = $type_of_room * 4 / 100;
++        } else if ($bed == "None") {
++                $type_of_bed = $type_of_room * 0 / 100;
++        }
+ 	$btot=$days*$type_of_bed;
+ 
+ 	if ($meal == "Room only") {
+ 		$type_of_meal = $type_of_bed * 0;
+ 	} else if ($meal == "Breakfast") {
+ 		$type_of_meal = $type_of_bed * 2;
+ 	} else if ($meal == "Half Board") {
+ 		$type_of_meal = $type_of_bed * 3;
+ 	} else if ($meal == "Full Board") {
+ 		$type_of_meal = $type_of_bed * 4;
+ 	}
+ 	$mepr=$days*$type_of_meal;
+ 	$fintot=$ttot+$btot+$mepr;
+ 	?>
+ 	<header>
+ 		<h1>Factura</h1>
+ 		<address>
+ 			<p>HOTEL ANDINO,</p>
+ 			<p>(+57) 3206850961</p>
+ 		</address>
+ 		<span><img alt="" src="../image/LogoAndino.png"></span>
+ 	</header>
+ 	<article>
+ 		<h1>Destinatario</h1>
+ 		<address>
+@@ -479,52 +479,52 @@
+ 			</tr>
+ 			<tr>
+ 				<th><span>Fecha</span></th>
+ 				<td><span><?php echo $cout; ?> </span></td>
+ 			</tr>
+ 
+ 		</table>
+ 		<table class="inventory">
+ 			<thead>
+ 				<tr>
+ 					<th><span>Artículo</span></th>
+ 					<th><span>Número de días</span></th>
+ 					<th><span>Tarifa</span></th>
+ 					<th><span>Cantidad</span></th>
+ 					<th><span>Precio</span></th>
+ 				</tr>
+ 			</thead>
+ 			<tbody>
+ 				<tr>
+ 					<td><span><?php echo $troom; ?></span></td>
+ 					<td><span><?php echo $days; ?> </span></td>
+ 					<td><span data-prefix>$</span><span><?php echo $type_of_room; ?></span></td>
+ 					<td><span><?php echo $nroom; ?> </span></td>
+ 					<td><span data-prefix>$</span><span><?php echo $ttot; ?></span></td>
+ 				</tr>
+-				<tr>
+-					<td><span><?php echo $bed; ?> Bed </span></td>
++                                <tr>
++                                        <td><span>Capacidad <?php echo $bed; ?></span></td>
+ 					<td><span><?php echo $days; ?></span></td>
+ 					<td><span data-prefix>$</span><span><?php echo $type_of_bed; ?></span></td>
+ 					<td><span><?php echo $nroom; ?> </span></td>
+ 					<td><span data-prefix>$</span><span><?php echo $btot; ?></span></td>
+ 				</tr>
+ 				<tr>
+ 					<td><span><?php echo $meal; ?> </span></td>
+ 					<td><span><?php echo $days; ?></span></td>
+ 					<td><span data-prefix>$</span><span><?php echo $type_of_meal ?></span></td>
+ 					<td><span><?php echo $nroom; ?> </span></td>
+ 					<td><span data-prefix>$</span><span><?php echo $mepr; ?></span></td>
+ 				</tr>
+ 			</tbody>
+ 		</table>
+ 		<table class="balance">
+ 			<tr>
+ 				<th><span>Total</span></th>
+ 				<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
+ 			</tr>
+ 			<tr>
+ 				<th><span>Amount Paid</span></th>
+ 				<td><span data-prefix>$</span><span>0.00</span></td>
+ 			</tr>
+ 			<tr>
+ 				<th><span>Balance Due</span></th>
+diff --git a/admin/javascript/script.js b/admin/javascript/script.js
+index a037cc776115cc7fd243fb63dd42bbd8022bc07a..6716c0da71ad15ef16be5305376475ba47e7a5d1 100644
+--- a/admin/javascript/script.js
++++ b/admin/javascript/script.js
+@@ -1,21 +1,47 @@
+-//employee-user login
+-const btns = document.querySelectorAll('.pagebtn');
+-const frames = document.querySelectorAll('.frames');
++const navButtons = document.querySelectorAll('.sidenav .pagebtn');
++const frames = Array.from(document.querySelectorAll('.frames'));
++const submenuTriggers = document.querySelectorAll('.submenu-trigger');
+ 
+-var frameActive = function (manual) {
+-  btns.forEach((btn) => {
+-    btn.classList.remove('active');
+-  });
+-  frames.forEach((slide) => {
+-    slide.classList.remove('active');
+-  });
++function activateButton(button) {
++  const frameIndex = parseInt(button.dataset.frame, 10);
++
++  if (Number.isNaN(frameIndex) || !frames[frameIndex]) {
++    return;
++  }
++
++  navButtons.forEach((btn) => btn.classList.remove('active'));
++  submenuTriggers.forEach((trigger) => trigger.classList.remove('active'));
+ 
+-  btns[manual].classList.add('active');
+-  frames[manual].classList.add('active');
+-};
++  button.classList.add('active');
+ 
+-btns.forEach((btn, i) => {
+-  btn.addEventListener('click', () => {
+-    frameActive(i);
++  frames.forEach((frame, index) => {
++    frame.classList.toggle('active', index === frameIndex);
+   });
+-});
+\ No newline at end of file
++
++  const desiredSrc = button.dataset.src;
++  if (desiredSrc) {
++    const frame = frames[frameIndex];
++    if (frame.getAttribute('src') !== desiredSrc) {
++      frame.setAttribute('src', desiredSrc);
++    }
++  }
++
++  const parentSubmenu = button.closest('.has-submenu');
++  if (parentSubmenu) {
++    const trigger = parentSubmenu.querySelector('.submenu-trigger');
++    if (trigger) {
++      trigger.classList.add('active');
++    }
++  }
++}
++
++navButtons.forEach((button) => {
++  button.addEventListener('click', () => activateButton(button));
++});
++
++document.addEventListener('DOMContentLoaded', () => {
++  const initialButton = Array.from(navButtons).find((btn) => btn.classList.contains('active'));
++  if (initialButton) {
++    activateButton(initialButton);
++  }
++});
+diff --git a/admin/records.php b/admin/records.php
+index 2e6f6e721b7bfca66fd5e8a4f1eb230d85d74c2c..35500b8b9c7d3131915fcfbd1a2c9c3faa88a645 100644
+--- a/admin/records.php
++++ b/admin/records.php
+@@ -1,66 +1,94 @@
+ <?php
+ session_start();
+ include '../config.php';
+ 
+ if (!isset($_SESSION['adminmail'])) {
+     header('Location: ../index.php');
+     exit;
+ }
+ 
+ $adminEmail = $_SESSION['adminmail'];
+ 
+-// Asegurar estructuras necesarias
++// Garantizar que existan las estructuras requeridas
+ mysqli_query($conn, "ALTER TABLE room MODIFY status ENUM('Disponible','Reservada','Limpieza','Ocupada') NOT NULL DEFAULT 'Disponible'");
+ 
+ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS room_types (
+     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     name VARCHAR(80) NOT NULL UNIQUE,
+     description TEXT NULL,
+     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+ 
+ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS products (
+     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     name VARCHAR(120) NOT NULL UNIQUE,
+     price DECIMAL(10,2) NOT NULL DEFAULT 0,
+     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+ 
+ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS sales (
+     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     product_id INT NULL,
+     details VARCHAR(190) NULL,
+     quantity INT NOT NULL DEFAULT 1,
+     total DECIMAL(10,2) NOT NULL DEFAULT 0,
+     sold_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT fk_sales_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL ON UPDATE CASCADE
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+ 
++$views = [
++    'rooms'      => 'Registrar habitación',
++    'room-types' => 'Registrar tipo de habitación',
++    'users'      => 'Registrar usuario',
++    'products'   => 'Registrar producto',
++    'sales'      => 'Registrar venta',
++    'summary'    => 'Resumen rápido',
++];
++
++$viewDescriptions = [
++    'rooms'      => 'Crea nuevas habitaciones indicando piso, estado y tipo disponible.',
++    'room-types' => 'Añade los tipos de habitación que ofrece el hotel.',
++    'users'      => 'Registra cuentas administrativas adicionales para el sistema.',
++    'products'   => 'Controla los productos y servicios disponibles para ventas internas.',
++    'sales'      => 'Registra ventas puntuales asociadas a productos y servicios.',
++    'summary'    => 'Consulta los últimos movimientos registrados en habitaciones, tipos, usuarios y ventas.',
++];
++
++$view = $_GET['view'] ?? 'summary';
++if (!array_key_exists($view, $views)) {
++    $view = 'summary';
++}
++
+ $messages = [];
+ 
+ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
++    $postedView = $_POST['view'] ?? $view;
++    if (array_key_exists($postedView, $views)) {
++        $view = $postedView;
++    }
++
+     $action = $_POST['action'] ?? '';
+ 
+     if ($action === 'create_room') {
+         $floor = intval($_POST['floor'] ?? 1);
+         $number = trim($_POST['room_number'] ?? '');
+         $type = trim($_POST['room_type'] ?? '');
+         $bedding = trim($_POST['bedding'] ?? '');
+         $status = trim($_POST['status'] ?? 'Disponible');
+ 
+         if ($number === '' || $type === '' || $bedding === '') {
+             $messages[] = ['type' => 'danger', 'text' => 'Completa todos los campos para registrar una habitación.'];
+         } else {
+             $stmt = $conn->prepare('INSERT INTO room (floor, room_number, type, bedding, status) VALUES (?, ?, ?, ?, ?)');
+             if ($stmt) {
+                 $stmt->bind_param('issss', $floor, $number, $type, $bedding, $status);
+                 if ($stmt->execute()) {
+                     $messages[] = ['type' => 'success', 'text' => 'Habitación registrada correctamente.'];
+                 } else {
+                     $messages[] = ['type' => 'danger', 'text' => 'No se pudo registrar la habitación: ' . htmlspecialchars($stmt->error)];
+                 }
+                 $stmt->close();
+             }
+         }
+     }
+ 
+@@ -143,302 +171,339 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+ 
+             if ($productId === null) {
+                 $stmt = $conn->prepare('INSERT INTO sales (product_id, details, quantity, total) VALUES (NULL, ?, ?, ?)');
+                 if ($stmt) {
+                     $stmt->bind_param('sid', $details, $quantity, $total);
+                 }
+             } else {
+                 $stmt = $conn->prepare('INSERT INTO sales (product_id, details, quantity, total) VALUES (?, ?, ?, ?)');
+                 if ($stmt) {
+                     $stmt->bind_param('isid', $productId, $details, $quantity, $total);
+                 }
+             }
+ 
+             if (isset($stmt) && $stmt) {
+                 if ($stmt->execute()) {
+                     $messages[] = ['type' => 'success', 'text' => 'Venta registrada correctamente.'];
+                 } else {
+                     $messages[] = ['type' => 'danger', 'text' => 'No se pudo registrar la venta: ' . htmlspecialchars($stmt->error)];
+                 }
+                 $stmt->close();
+             }
+         }
+     }
+ }
+ 
+-// Datos para selects y listados
+ $roomTypes = [];
+ if ($result = mysqli_query($conn, 'SELECT id, name FROM room_types ORDER BY name')) {
+     while ($row = mysqli_fetch_assoc($result)) {
+         $roomTypes[] = $row;
+     }
+     mysqli_free_result($result);
+ }
+ 
+ $products = [];
+ if ($result = mysqli_query($conn, 'SELECT id, name, price FROM products ORDER BY name')) {
+     while ($row = mysqli_fetch_assoc($result)) {
+         $products[] = $row;
+     }
+     mysqli_free_result($result);
+ }
+ 
+-$recentRooms = mysqli_query($conn, 'SELECT room_number, type, status, floor FROM room ORDER BY id DESC LIMIT 8');
+-$recentTypes = mysqli_query($conn, 'SELECT name, created_at FROM room_types ORDER BY created_at DESC LIMIT 8');
+-$recentUsers = mysqli_query($conn, 'SELECT Username, Email, CreatedAt FROM signup ORDER BY CreatedAt DESC LIMIT 8');
+-$recentSales = mysqli_query($conn, 'SELECT s.id, s.details, s.quantity, s.total, s.sold_at, p.name AS product_name FROM sales s LEFT JOIN products p ON p.id = s.product_id ORDER BY s.sold_at DESC LIMIT 10');
++$recentRooms = $recentTypes = $recentUsers = $recentSales = null;
++if ($view === 'summary') {
++    $recentRooms = mysqli_query($conn, 'SELECT room_number, type, status, floor FROM room ORDER BY id DESC LIMIT 8');
++    $recentTypes = mysqli_query($conn, 'SELECT name, created_at FROM room_types ORDER BY created_at DESC LIMIT 8');
++    $recentUsers = mysqli_query($conn, 'SELECT Username, Email, CreatedAt FROM signup ORDER BY CreatedAt DESC LIMIT 8');
++    $recentSales = mysqli_query($conn, 'SELECT s.id, s.details, s.quantity, s.total, s.sold_at, p.name AS product_name FROM sales s LEFT JOIN products p ON p.id = s.product_id ORDER BY s.sold_at DESC LIMIT 10');
++}
+ ?>
+ <!DOCTYPE html>
+ <html lang="es">
+ <head>
+     <meta charset="UTF-8">
+     <title>Hotel Andino - Registros</title>
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+     <link rel="stylesheet" href="css/records.css">
+ </head>
+ <body class="bg-light">
+     <div class="container py-4">
+-        <div class="d-flex justify-content-between align-items-center mb-4">
++        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+             <div>
+-                <h2 class="mb-1">Registros administrativos</h2>
+-                <p class="text-muted mb-0">Gestiona habitaciones, tipos, usuarios, productos y ventas desde un solo lugar.</p>
++                <h2 class="mb-1"><?php echo $views[$view]; ?></h2>
++                <p class="text-muted mb-0"><?php echo $viewDescriptions[$view]; ?></p>
+             </div>
+             <span class="badge bg-dark">Sesión: <?php echo htmlspecialchars($adminEmail); ?></span>
+         </div>
+ 
++        <div class="mb-4">
++            <div class="d-flex flex-wrap gap-2">
++                <?php foreach ($views as $key => $label): ?>
++                    <a class="btn btn-sm <?php echo $key === $view ? 'btn-primary' : 'btn-outline-primary'; ?>" href="?view=<?php echo $key; ?>">
++                        <?php echo $label; ?>
++                    </a>
++                <?php endforeach; ?>
++            </div>
++        </div>
++
+         <?php foreach ($messages as $message): ?>
+             <div class="alert alert-<?php echo $message['type']; ?> alert-dismissible fade show" role="alert">
+                 <?php echo $message['text']; ?>
+-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
++                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+             </div>
+         <?php endforeach; ?>
+ 
+-        <div class="row g-4 mb-4">
+-            <div class="col-lg-6">
+-                <div class="card shadow-sm h-100">
+-                    <div class="card-body">
+-                        <h5 class="card-title">Registrar habitación</h5>
+-                        <form method="post" class="row g-3">
+-                            <input type="hidden" name="action" value="create_room">
+-                            <div class="col-md-4">
+-                                <label for="room_floor" class="form-label">Piso</label>
+-                                <select id="room_floor" name="floor" class="form-select">
+-                                    <?php for ($i = 1; $i <= 6; $i++): ?>
+-                                        <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+-                                    <?php endfor; ?>
+-                                </select>
+-                            </div>
+-                            <div class="col-md-4">
+-                                <label for="room_number" class="form-label">Número</label>
+-                                <input type="text" name="room_number" id="room_number" class="form-control" placeholder="301" required>
+-                            </div>
+-                            <div class="col-md-4">
+-                                <label for="room_status" class="form-label">Estado</label>
+-                                <select name="status" id="room_status" class="form-select">
+-                                    <option value="Disponible">Disponible</option>
+-                                    <option value="Reservada">Reservada</option>
+-                                    <option value="Limpieza">Limpieza</option>
+-                                    <option value="Ocupada">Ocupada</option>
+-                                </select>
+-                            </div>
+-                            <div class="col-md-6">
+-                                <label for="room_type" class="form-label">Tipo de habitación</label>
+-                                <input list="room_type_list" name="room_type" id="room_type" class="form-control" placeholder="Deluxe Room" required>
+-                                <datalist id="room_type_list">
+-                                    <?php foreach ($roomTypes as $type): ?>
+-                                        <option value="<?php echo htmlspecialchars($type['name']); ?>"></option>
+-                                    <?php endforeach; ?>
+-                                </datalist>
+-                            </div>
+-                            <div class="col-md-6">
+-                                <label for="room_bedding" class="form-label">Tipo de cama</label>
+-                                <input type="text" name="bedding" id="room_bedding" class="form-control" placeholder="Queen" required>
+-                            </div>
+-                            <div class="col-12">
+-                                <button type="submit" class="btn btn-primary">Guardar habitación</button>
+-                            </div>
+-                        </form>
++        <?php if ($view === 'rooms'): ?>
++            <div class="row justify-content-center">
++                <div class="col-lg-8 col-xl-6">
++                    <div class="card shadow-sm">
++                        <div class="card-body">
++                            <h5 class="card-title">Registrar habitación</h5>
++                            <form method="post" class="row g-3">
++                                <input type="hidden" name="action" value="create_room">
++                                <input type="hidden" name="view" value="rooms">
++                                <div class="col-md-4">
++                                    <label for="room_floor" class="form-label">Piso</label>
++                                    <select id="room_floor" name="floor" class="form-select">
++                                        <?php for ($i = 1; $i <= 6; $i++): ?>
++                                            <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
++                                        <?php endfor; ?>
++                                    </select>
++                                </div>
++                                <div class="col-md-4">
++                                    <label for="room_number" class="form-label">Número</label>
++                                    <input type="text" name="room_number" id="room_number" class="form-control" placeholder="301" required>
++                                </div>
++                                <div class="col-md-4">
++                                    <label for="room_status" class="form-label">Estado</label>
++                                    <select name="status" id="room_status" class="form-select">
++                                        <option value="Disponible">Disponible</option>
++                                        <option value="Reservada">Reservada</option>
++                                        <option value="Limpieza">Limpieza</option>
++                                        <option value="Ocupada">Ocupada</option>
++                                    </select>
++                                </div>
++                                <div class="col-md-6">
++                                    <label for="room_type" class="form-label">Tipo de habitación</label>
++                                    <input list="room_type_list" name="room_type" id="room_type" class="form-control" placeholder="Habitación Suite" required>
++                                    <datalist id="room_type_list">
++                                        <?php foreach ($roomTypes as $type): ?>
++                                            <option value="<?php echo htmlspecialchars($type['name']); ?>"></option>
++                                        <?php endforeach; ?>
++                                    </datalist>
++                                </div>
++                                <div class="col-md-6">
++                                    <label for="room_bedding" class="form-label">Capacidad</label>
++                                    <select name="bedding" id="room_bedding" class="form-select" required>
++                                        <option value="">Selecciona una opción</option>
++                                        <option value="1 cliente">1 cliente</option>
++                                        <option value="2 clientes">2 clientes</option>
++                                        <option value="3 clientes">3 clientes</option>
++                                        <option value="4 clientes">4 clientes</option>
++                                    </select>
++                                </div>
++                                <div class="col-12">
++                                    <button type="submit" class="btn btn-primary">Guardar habitación</button>
++                                </div>
++                            </form>
++                        </div>
+                     </div>
+                 </div>
+             </div>
+-            <div class="col-lg-6">
+-                <div class="card shadow-sm h-100">
+-                    <div class="card-body">
+-                        <h5 class="card-title">Registrar tipo de habitación</h5>
+-                        <form method="post" class="row g-3">
+-                            <input type="hidden" name="action" value="create_room_type">
+-                            <div class="col-12">
+-                                <label for="type_name" class="form-label">Nombre</label>
+-                                <input type="text" name="type_name" id="type_name" class="form-control" placeholder="Suite Presidencial" required>
+-                            </div>
+-                            <div class="col-12">
+-                                <label for="type_description" class="form-label">Descripción</label>
+-                                <textarea name="type_description" id="type_description" rows="3" class="form-control" placeholder="Incluye balcón privado, sala y vista panorámica"></textarea>
+-                            </div>
+-                            <div class="col-12">
+-                                <button type="submit" class="btn btn-outline-primary">Guardar tipo</button>
+-                            </div>
+-                        </form>
++        <?php elseif ($view === 'room-types'): ?>
++            <div class="row justify-content-center">
++                <div class="col-lg-8 col-xl-6">
++                    <div class="card shadow-sm">
++                        <div class="card-body">
++                            <h5 class="card-title">Registrar tipo de habitación</h5>
++                            <form method="post" class="row g-3">
++                                <input type="hidden" name="action" value="create_room_type">
++                                <input type="hidden" name="view" value="room-types">
++                                <div class="col-12">
++                                    <label for="type_name" class="form-label">Nombre</label>
++                                    <input type="text" name="type_name" id="type_name" class="form-control" placeholder="Habitación Suite" required>
++                                </div>
++                                <div class="col-12">
++                                    <label for="type_description" class="form-label">Descripción</label>
++                                    <textarea name="type_description" id="type_description" rows="3" class="form-control" placeholder="Incluye balcón privado, sala y vista panorámica"></textarea>
++                                </div>
++                                <div class="col-12">
++                                    <button type="submit" class="btn btn-outline-primary">Guardar tipo</button>
++                                </div>
++                            </form>
++                        </div>
+                     </div>
+                 </div>
+             </div>
+-        </div>
+-
+-        <div class="row g-4 mb-4">
+-            <div class="col-lg-6">
+-                <div class="card shadow-sm h-100">
+-                    <div class="card-body">
+-                        <h5 class="card-title">Registrar usuario</h5>
+-                        <form method="post" class="row g-3">
+-                            <input type="hidden" name="action" value="create_user">
+-                            <div class="col-md-6">
+-                                <label for="user_name" class="form-label">Nombre</label>
+-                                <input type="text" id="user_name" name="user_name" class="form-control" required>
+-                            </div>
+-                            <div class="col-md-6">
+-                                <label for="user_email" class="form-label">Correo</label>
+-                                <input type="email" id="user_email" name="user_email" class="form-control" required>
+-                            </div>
+-                            <div class="col-12">
+-                                <label for="user_password" class="form-label">Contraseña</label>
+-                                <input type="password" id="user_password" name="user_password" class="form-control" required>
+-                            </div>
+-                            <div class="col-12">
+-                                <button type="submit" class="btn btn-primary">Registrar usuario</button>
+-                            </div>
+-                        </form>
++        <?php elseif ($view === 'users'): ?>
++            <div class="row justify-content-center">
++                <div class="col-lg-8 col-xl-6">
++                    <div class="card shadow-sm">
++                        <div class="card-body">
++                            <h5 class="card-title">Registrar usuario</h5>
++                            <form method="post" class="row g-3">
++                                <input type="hidden" name="action" value="create_user">
++                                <input type="hidden" name="view" value="users">
++                                <div class="col-md-6">
++                                    <label for="user_name" class="form-label">Nombre</label>
++                                    <input type="text" id="user_name" name="user_name" class="form-control" required>
++                                </div>
++                                <div class="col-md-6">
++                                    <label for="user_email" class="form-label">Correo</label>
++                                    <input type="email" id="user_email" name="user_email" class="form-control" required>
++                                </div>
++                                <div class="col-12">
++                                    <label for="user_password" class="form-label">Contraseña</label>
++                                    <input type="password" id="user_password" name="user_password" class="form-control" required>
++                                </div>
++                                <div class="col-12">
++                                    <button type="submit" class="btn btn-primary">Registrar usuario</button>
++                                </div>
++                            </form>
++                        </div>
+                     </div>
+                 </div>
+             </div>
+-            <div class="col-lg-6">
+-                <div class="card shadow-sm h-100">
+-                    <div class="card-body">
+-                        <h5 class="card-title">Registrar producto</h5>
+-                        <form method="post" class="row g-3">
+-                            <input type="hidden" name="action" value="create_product">
+-                            <div class="col-md-8">
+-                                <label for="product_name" class="form-label">Nombre</label>
+-                                <input type="text" id="product_name" name="product_name" class="form-control" required>
+-                            </div>
+-                            <div class="col-md-4">
+-                                <label for="product_price" class="form-label">Precio</label>
+-                                <input type="number" id="product_price" name="product_price" min="0" step="0.01" class="form-control" required>
+-                            </div>
+-                            <div class="col-12">
+-                                <button type="submit" class="btn btn-outline-primary">Guardar producto</button>
+-                            </div>
+-                        </form>
++        <?php elseif ($view === 'products'): ?>
++            <div class="row justify-content-center">
++                <div class="col-lg-8 col-xl-6">
++                    <div class="card shadow-sm">
++                        <div class="card-body">
++                            <h5 class="card-title">Registrar producto</h5>
++                            <form method="post" class="row g-3">
++                                <input type="hidden" name="action" value="create_product">
++                                <input type="hidden" name="view" value="products">
++                                <div class="col-md-8">
++                                    <label for="product_name" class="form-label">Nombre</label>
++                                    <input type="text" id="product_name" name="product_name" class="form-control" required>
++                                </div>
++                                <div class="col-md-4">
++                                    <label for="product_price" class="form-label">Precio (COP)</label>
++                                    <input type="number" id="product_price" name="product_price" min="0" step="0.01" class="form-control" required>
++                                </div>
++                                <div class="col-12">
++                                    <button type="submit" class="btn btn-outline-primary">Guardar producto</button>
++                                </div>
++                            </form>
++                        </div>
+                     </div>
+                 </div>
+             </div>
+-        </div>
+-
+-        <div class="row g-4">
+-            <div class="col-lg-6">
+-                <div class="card shadow-sm h-100">
+-                    <div class="card-body">
+-                        <h5 class="card-title">Registrar venta</h5>
+-                        <form method="post" class="row g-3">
+-                            <input type="hidden" name="action" value="create_sale">
+-                            <div class="col-md-6">
+-                                <label for="sale_product" class="form-label">Producto</label>
+-                                <select id="sale_product" name="sale_product" class="form-select">
+-                                    <option value="">-- Selecciona --</option>
+-                                    <?php foreach ($products as $product): ?>
+-                                        <option value="<?php echo $product['id']; ?>">
+-                                            <?php echo htmlspecialchars($product['name']); ?> (<?php echo number_format($product['price'], 0, ',', '.'); ?>)
+-                                        </option>
+-                                    <?php endforeach; ?>
+-                                </select>
+-                            </div>
+-                            <div class="col-md-6">
+-                                <label for="sale_quantity" class="form-label">Cantidad</label>
+-                                <input type="number" id="sale_quantity" name="sale_quantity" min="1" class="form-control" value="1">
+-                            </div>
+-                            <div class="col-12">
+-                                <label for="sale_details" class="form-label">Descripción / Cliente</label>
+-                                <input type="text" id="sale_details" name="sale_details" class="form-control" placeholder="Ej. Minibar Hab. 204">
+-                            </div>
+-                            <div class="col-12">
+-                                <label for="sale_total" class="form-label">Total (COP)</label>
+-                                <input type="number" id="sale_total" name="sale_total" step="0.01" min="0" class="form-control" required>
+-                            </div>
+-                            <div class="col-12">
+-                                <button type="submit" class="btn btn-success">Guardar venta</button>
+-                            </div>
+-                        </form>
++        <?php elseif ($view === 'sales'): ?>
++            <div class="row justify-content-center">
++                <div class="col-lg-10 col-xl-8">
++                    <div class="card shadow-sm">
++                        <div class="card-body">
++                            <h5 class="card-title">Registrar venta</h5>
++                            <form method="post" class="row g-3">
++                                <input type="hidden" name="action" value="create_sale">
++                                <input type="hidden" name="view" value="sales">
++                                <div class="col-md-6">
++                                    <label for="sale_product" class="form-label">Producto</label>
++                                    <select id="sale_product" name="sale_product" class="form-select">
++                                        <option value="">-- Selecciona --</option>
++                                        <?php foreach ($products as $product): ?>
++                                            <option value="<?php echo $product['id']; ?>">
++                                                <?php echo htmlspecialchars($product['name']); ?> (<?php echo number_format($product['price'], 0, ',', '.'); ?>)
++                                            </option>
++                                        <?php endforeach; ?>
++                                        <option value="0">Otro / sin producto registrado</option>
++                                    </select>
++                                </div>
++                                <div class="col-md-3">
++                                    <label for="sale_quantity" class="form-label">Cantidad</label>
++                                    <input type="number" id="sale_quantity" name="sale_quantity" min="1" class="form-control" value="1">
++                                </div>
++                                <div class="col-md-3">
++                                    <label for="sale_total" class="form-label">Total (COP)</label>
++                                    <input type="number" id="sale_total" name="sale_total" step="0.01" min="0" class="form-control" required>
++                                </div>
++                                <div class="col-12">
++                                    <label for="sale_details" class="form-label">Descripción / Cliente</label>
++                                    <input type="text" id="sale_details" name="sale_details" class="form-control" placeholder="Ej. Consumo minibar habitación 204">
++                                </div>
++                                <div class="col-12">
++                                    <button type="submit" class="btn btn-success">Guardar venta</button>
++                                </div>
++                            </form>
++                        </div>
+                     </div>
+                 </div>
+             </div>
+-            <div class="col-lg-6">
+-                <div class="card shadow-sm h-100">
+-                    <div class="card-body">
+-                        <h5 class="card-title">Resumen rápido</h5>
+-                        <div class="mb-3">
+-                            <h6 class="text-muted">Últimas habitaciones</h6>
+-                            <ul class="list-group list-group-flush">
+-                                <?php if ($recentRooms && mysqli_num_rows($recentRooms) > 0): ?>
+-                                    <?php while ($room = mysqli_fetch_assoc($recentRooms)): ?>
+-                                        <li class="list-group-item">
+-                                            Hab. <?php echo htmlspecialchars($room['room_number']); ?> · <?php echo htmlspecialchars($room['type']); ?> · Piso <?php echo (int)$room['floor']; ?> · <?php echo htmlspecialchars($room['status']); ?>
+-                                        </li>
+-                                    <?php endwhile; ?>
+-                                <?php else: ?>
+-                                    <li class="list-group-item text-muted">Sin registros recientes.</li>
+-                                <?php endif; ?>
+-                            </ul>
+-                        </div>
+-                        <div class="mb-3">
+-                            <h6 class="text-muted">Tipos registrados</h6>
+-                            <ul class="list-group list-group-flush">
+-                                <?php if ($recentTypes && mysqli_num_rows($recentTypes) > 0): ?>
+-                                    <?php while ($type = mysqli_fetch_assoc($recentTypes)): ?>
+-                                        <li class="list-group-item d-flex justify-content-between">
+-                                            <span><?php echo htmlspecialchars($type['name']); ?></span>
+-                                            <small class="text-muted"><?php echo date('d/m/Y', strtotime($type['created_at'])); ?></small>
+-                                        </li>
+-                                    <?php endwhile; ?>
+-                                <?php else: ?>
+-                                    <li class="list-group-item text-muted">Añade tu primer tipo.</li>
+-                                <?php endif; ?>
+-                            </ul>
+-                        </div>
+-                        <div class="mb-3">
+-                            <h6 class="text-muted">Usuarios recientes</h6>
+-                            <ul class="list-group list-group-flush">
+-                                <?php if ($recentUsers && mysqli_num_rows($recentUsers) > 0): ?>
+-                                    <?php while ($user = mysqli_fetch_assoc($recentUsers)): ?>
+-                                        <li class="list-group-item d-flex justify-content-between">
+-                                            <span><?php echo htmlspecialchars($user['Username']); ?></span>
+-                                            <small class="text-muted"><?php echo htmlspecialchars($user['Email']); ?></small>
+-                                        </li>
+-                                    <?php endwhile; ?>
+-                                <?php else: ?>
+-                                    <li class="list-group-item text-muted">Aún no hay usuarios nuevos.</li>
+-                                <?php endif; ?>
+-                            </ul>
+-                        </div>
+-                        <div>
+-                            <h6 class="text-muted">Últimas ventas</h6>
+-                            <ul class="list-group list-group-flush">
+-                                <?php if ($recentSales && mysqli_num_rows($recentSales) > 0): ?>
+-                                    <?php while ($sale = mysqli_fetch_assoc($recentSales)): ?>
+-                                        <li class="list-group-item">
+-                                            <strong>COP <?php echo number_format($sale['total'], 0, ',', '.'); ?></strong> · <?php echo htmlspecialchars($sale['details'] ?: 'Sin detalle'); ?>
+-                                            <br>
+-                                            <small class="text-muted"><?php echo $sale['product_name'] ? htmlspecialchars($sale['product_name']) . ' · ' : ''; ?><?php echo date('d/m/Y H:i', strtotime($sale['sold_at'])); ?></small>
+-                                        </li>
+-                                    <?php endwhile; ?>
+-                                <?php else: ?>
+-                                    <li class="list-group-item text-muted">Sin ventas registradas.</li>
+-                                <?php endif; ?>
+-                            </ul>
++        <?php else: ?>
++            <div class="row justify-content-center">
++                <div class="col-lg-10 col-xl-8">
++                    <div class="card shadow-sm">
++                        <div class="card-body">
++                            <h5 class="card-title">Resumen rápido</h5>
++                            <div class="row g-4">
++                                <div class="col-md-6">
++                                    <h6 class="text-muted">Últimas habitaciones</h6>
++                                    <ul class="list-group list-group-flush">
++                                        <?php if ($recentRooms && mysqli_num_rows($recentRooms) > 0): ?>
++                                            <?php while ($room = mysqli_fetch_assoc($recentRooms)): ?>
++                                                <li class="list-group-item">
++                                                    Hab. <?php echo htmlspecialchars($room['room_number']); ?> · <?php echo htmlspecialchars($room['type']); ?> · Piso <?php echo (int)$room['floor']; ?> · <?php echo htmlspecialchars($room['status']); ?>
++                                                </li>
++                                            <?php endwhile; ?>
++                                        <?php else: ?>
++                                            <li class="list-group-item text-muted">Sin registros recientes.</li>
++                                        <?php endif; ?>
++                                    </ul>
++                                </div>
++                                <div class="col-md-6">
++                                    <h6 class="text-muted">Tipos registrados</h6>
++                                    <ul class="list-group list-group-flush">
++                                        <?php if ($recentTypes && mysqli_num_rows($recentTypes) > 0): ?>
++                                            <?php while ($type = mysqli_fetch_assoc($recentTypes)): ?>
++                                                <li class="list-group-item d-flex justify-content-between">
++                                                    <span><?php echo htmlspecialchars($type['name']); ?></span>
++                                                    <small class="text-muted"><?php echo date('d/m/Y', strtotime($type['created_at'])); ?></small>
++                                                </li>
++                                            <?php endwhile; ?>
++                                        <?php else: ?>
++                                            <li class="list-group-item text-muted">Añade tu primer tipo.</li>
++                                        <?php endif; ?>
++                                    </ul>
++                                </div>
++                                <div class="col-md-6">
++                                    <h6 class="text-muted">Usuarios recientes</h6>
++                                    <ul class="list-group list-group-flush">
++                                        <?php if ($recentUsers && mysqli_num_rows($recentUsers) > 0): ?>
++                                            <?php while ($user = mysqli_fetch_assoc($recentUsers)): ?>
++                                                <li class="list-group-item d-flex justify-content-between">
++                                                    <span><?php echo htmlspecialchars($user['Username']); ?></span>
++                                                    <small class="text-muted"><?php echo htmlspecialchars($user['Email']); ?></small>
++                                                </li>
++                                            <?php endwhile; ?>
++                                        <?php else: ?>
++                                            <li class="list-group-item text-muted">Aún no hay usuarios nuevos.</li>
++                                        <?php endif; ?>
++                                    </ul>
++                                </div>
++                                <div class="col-md-6">
++                                    <h6 class="text-muted">Últimas ventas</h6>
++                                    <ul class="list-group list-group-flush">
++                                        <?php if ($recentSales && mysqli_num_rows($recentSales) > 0): ?>
++                                            <?php while ($sale = mysqli_fetch_assoc($recentSales)): ?>
++                                                <li class="list-group-item">
++                                                    <strong>COP <?php echo number_format($sale['total'], 0, ',', '.'); ?></strong> · <?php echo htmlspecialchars($sale['details'] ?: 'Sin detalle'); ?>
++                                                    <br>
++                                                    <small class="text-muted"><?php echo $sale['product_name'] ? htmlspecialchars($sale['product_name']) . ' · ' : ''; ?><?php echo date('d/m/Y H:i', strtotime($sale['sold_at'])); ?></small>
++                                                </li>
++                                            <?php endwhile; ?>
++                                        <?php else: ?>
++                                            <li class="list-group-item text-muted">Sin ventas registradas.</li>
++                                        <?php endif; ?>
++                                    </ul>
++                                </div>
++                            </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+-        </div>
++        <?php endif; ?>
+     </div>
+ 
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+diff --git a/admin/room.php b/admin/room.php
+index d8eb979f8ed2e6997610e188b8195d4790de89c3..061daf99097083eeba152f65a1181d26a93e4882 100644
+--- a/admin/room.php
++++ b/admin/room.php
+@@ -178,62 +178,62 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
+                     <p class="mb-1">Nombre: <strong><?php echo htmlspecialchars($stay['guest_name']); ?></strong></p>
+                     <p class="mb-1 text-muted">Nacionalidad: <?php echo htmlspecialchars($stay['nationality']); ?></p>
+                     <p class="mb-1 text-muted">Ingreso: <?php echo date('d/m/Y', strtotime($stay['check_in_date'])); ?> · <?php echo substr($stay['check_in_time'], 0, 5); ?></p>
+                     <p class="mb-0 text-muted">Salida: <?php echo date('d/m/Y', strtotime($stay['check_out_date'])); ?></p>
+                     <p class="mb-0 text-muted">Precio: COP <?php echo number_format($stay['price'], 0, ',', '.'); ?></p>
+                   <?php else: ?>
+                     <p class="text-muted mb-0">Sin datos del huésped.</p>
+                   <?php endif; ?>
+                 </div>
+ 
+                 <form method="POST" class="d-flex flex-wrap justify-content-center gap-1 mb-3 js-status-form" data-room="<?php echo $row['id']; ?>">
+                   <input type="hidden" name="room_id" value="<?php echo $row['id']; ?>">
+                   <input type="hidden" name="change_status" value="1">
+                   <button type="submit" name="status" value="Disponible" class="btn btn-sm btn-outline-success">Disponible</button>
+                   <button type="submit" name="status" value="Reservada" class="btn btn-sm btn-outline-warning">Reservada</button>
+                   <button type="submit" name="status" value="Limpieza" class="btn btn-sm btn-outline-info">Limpieza</button>
+                   <button type="submit" name="status" value="Ocupada" class="btn btn-sm btn-outline-danger">Ocupada</button>
+                 </form>
+ 
+                 <form method="POST" class="mb-3">
+                   <input type="hidden" name="room_id" value="<?php echo $row['id']; ?>">
+                   <input type="hidden" name="edit_room" value="1">
+                   <div class="row g-2">
+                     <div class="col-6">
+                       <select name="type" class="form-select form-select-sm">
+-                        <option value="Superior Room" <?php echo $row['type'] === 'Superior Room' ? 'selected' : ''; ?>>Superior Room</option>
+-                        <option value="Deluxe Room" <?php echo $row['type'] === 'Deluxe Room' ? 'selected' : ''; ?>>Deluxe Room</option>
+-                        <option value="Guest House" <?php echo $row['type'] === 'Guest House' ? 'selected' : ''; ?>>Guest House</option>
+-                        <option value="Single Room" <?php echo $row['type'] === 'Single Room' ? 'selected' : ''; ?>>Single Room</option>
++                        <option value="Habitación Doble" <?php echo $row['type'] === 'Habitación Doble' ? 'selected' : ''; ?>>Habitación Doble</option>
++                        <option value="Habitación Suite" <?php echo $row['type'] === 'Habitación Suite' ? 'selected' : ''; ?>>Habitación Suite</option>
++                        <option value="Habitación Múltiple" <?php echo $row['type'] === 'Habitación Múltiple' ? 'selected' : ''; ?>>Habitación Múltiple</option>
++                        <option value="Habitación Sencilla" <?php echo $row['type'] === 'Habitación Sencilla' ? 'selected' : ''; ?>>Habitación Sencilla</option>
+                       </select>
+                     </div>
+                     <div class="col-6">
+                       <select name="bedding" class="form-select form-select-sm">
+-                        <option value="Single" <?php echo $row['bedding'] === 'Single' ? 'selected' : ''; ?>>Single</option>
+-                        <option value="Double" <?php echo $row['bedding'] === 'Double' ? 'selected' : ''; ?>>Double</option>
+-                        <option value="Triple" <?php echo $row['bedding'] === 'Triple' ? 'selected' : ''; ?>>Triple</option>
+-                        <option value="Quad" <?php echo $row['bedding'] === 'Quad' ? 'selected' : ''; ?>>Quad</option>
++                        <option value="1 cliente" <?php echo $row['bedding'] === '1 cliente' ? 'selected' : ''; ?>>1 cliente</option>
++                        <option value="2 clientes" <?php echo $row['bedding'] === '2 clientes' ? 'selected' : ''; ?>>2 clientes</option>
++                        <option value="3 clientes" <?php echo $row['bedding'] === '3 clientes' ? 'selected' : ''; ?>>3 clientes</option>
++                        <option value="4 clientes" <?php echo $row['bedding'] === '4 clientes' ? 'selected' : ''; ?>>4 clientes</option>
+                       </select>
+                     </div>
+                   </div>
+                   <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">Guardar cambios</button>
+                 </form>
+                 <button class="btn btn-outline-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#stayModal-<?php echo $row['id']; ?>">
+                   Gestionar huésped
+                 </button>
+               </div>
+             </div>
+             </div>
+ 
+           <!-- Modal -->
+           <div class="modal fade" id="stayModal-<?php echo $row['id']; ?>" tabindex="-1" aria-hidden="true">
+             <div class="modal-dialog modal-lg modal-dialog-centered">
+               <div class="modal-content">
+                 <form method="POST">
+                   <div class="modal-header">
+                     <h5 class="modal-title">Huésped Hab. <?php echo htmlspecialchars($row['room_number']); ?></h5>
+                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                   </div>
+                   <div class="modal-body">
+                     <input type="hidden" name="room_id" value="<?php echo $row['id']; ?>">
+                     <input type="hidden" name="save_stay" value="1">
+                     <div class="row g-3">
+diff --git a/admin/roombook.php b/admin/roombook.php
+index fecdc5fd776e2568c48a9b4a6a29caa3352d7da3..3899c49aadcb485895d8c566a5b2249bca14adef 100644
+--- a/admin/roombook.php
++++ b/admin/roombook.php
+@@ -36,245 +36,245 @@ include '../config.php';
+                     <h4>Información del huésped</h4>
+                     <input type="text" name="Name" placeholder="Nombre completo" required>
+                     <input type="email" name="Email" placeholder="Correo electrónico" required>
+ 
+                     <?php
+                     $countries = array("Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia (Hrvatska)", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands (Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "France Metropolitan", "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard and Mc Donald Islands", "Holy See (Vatican City State)", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, Democratic People's Republic of", "Korea, Republic of", "Kuwait", "Kyrgyzstan", "Lao, People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libyan Arab Jamahiriya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, The Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia (Slovak Republic)", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "Spain", "Sri Lanka", "St. Helena", "St. Pierre and Miquelon", "Sudan", "Suriname", "Svalbard and Jan Mayen Islands", "Swaziland", "Sweden", "Switzerland", "Syrian Arab Republic", "Taiwan, Province of China", "Tajikistan", "Tanzania, United Republic of", "Thailand", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands (British)", "Virgin Islands (U.S.)", "Wallis and Futuna Islands", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe");
+                     ?>
+ 
+                     <select name="Country" class="selectinput" required>
+ 						<option value selected >Selecciona tu país</option>
+                         <?php
+ 							foreach($countries as $key => $value):
+ 							echo '<option value="'.$value.'">'.$value.'</option>';
+                             //close your tags!!
+ 							endforeach;
+ 						?>
+                     </select>
+                     <input type="text" name="Phone" placeholder="Número de teléfono" required>
+                 </div>
+ 
+                 <div class="line"></div>
+ 
+                 <div class="reservationinfo">
+                     <h4>Información de la reserva</h4>
+                     <select name="RoomType" class="selectinput">
+-						<option value selected >Tipo de habitación</option>
+-                        <option value="Superior Room">HABITACIÓN SUPERIOR</option>
+-                        <option value="Deluxe Room">HABITACIÓN DELUXE</option>
+-						<option value="Guest House">CASA DE HUÉSPEDES</option>
+-						<option value="Single Room">HABITACIÓN INDIVIDUAL</option>
++                                                <option value selected >Tipo de habitación</option>
++                        <option value="Habitación Doble">HABITACIÓN DOBLE</option>
++                        <option value="Habitación Suite">HABITACIÓN SUITE</option>
++                                                <option value="Habitación Múltiple">HABITACIÓN MÚLTIPLE</option>
++                                                <option value="Habitación Sencilla">HABITACIÓN SENCILLA</option>
+                     </select>
+                     <select name="Bed" class="selectinput">
+-						<option value selected >Tipo de cama</option>
+-                        <option value="Single">Individual</option>
+-                        <option value="Double">Doble</option>
+-						<option value="Triple">Triple</option>
+-                        <option value="Quad">Cuádruple</option>
+-						<option value="None">Ninguna</option>
++                                                <option value selected >Tipo de cama</option>
++                        <option value="1 cliente">1 cliente</option>
++                        <option value="2 clientes">2 clientes</option>
++                                                <option value="3 clientes">3 clientes</option>
++                        <option value="4 clientes">4 clientes</option>
++                                                <option value="None">Ninguna</option>
+                     </select>
+                     <select name="NoofRoom" class="selectinput">
+ 						<option value selected >Número de habitaciones</option>
+                         <option value="1">1</option>
+                         <!-- <option value="1">2</option>
+                         <option value="1">3</option> -->
+                     </select>
+                     <select name="Comidas" class="selectinput">
+ 						<option value selected >Comida</option>
+                         <option value="Solo habitación">Room only</option>
+                         <option value="Desayuno">Breakfast</option>
+ 						<option value="Media pensión">Half Board</option>
+ 						<option value="Pensión completa">Full Board</option>
+ 					</select>
+                     <div class="datesection">
+                         <span>
+                             <label for="cin"> Llegada</label>
+                             <input name="cin" type ="date">
+                         </span>
+                         <span>
+                             <label for="cin"> Salida</label>
+                             <input name="cout" type ="date">
+                         </span>
+                     </div>
+                 </div>
+             </div>
+             <div class="footer">
+                 <button class="btn btn-success" name="guestdetailsubmit">Enviar</button>
+             </div>
+         </form>
+ 
+         <?php       
+         // <!-- room availablity start-->
+ 
+         $rsql ="select * from room";
+         $rre= mysqli_query($conn,$rsql);
+         $r = 0;
+         $sc = 0;
+         $gh = 0;
+         $sr = 0;
+         $dr = 0;
+ 
+         while($rrow=mysqli_fetch_array($rre))
+         {
+             $r = $r + 1;
+             $s = $rrow['type'];
+-            if($s=="Superior Room")
++            if($s=="Habitación Doble")
+             {
+                 $sc = $sc+ 1;
+             }
+-            if($s=="Guest House")
++            if($s=="Habitación Múltiple")
+             {
+                 $gh = $gh + 1;
+             }
+-            if($s=="Single Room" )
++            if($s=="Habitación Sencilla" )
+             {
+                 $sr = $sr + 1;
+             }
+-            if($s=="Deluxe Room" )
++            if($s=="Habitación Suite" )
+             {
+                 $dr = $dr + 1;
+             }
+         }
+ 
+         $csql ="select * from payment";
+         $cre= mysqli_query($conn,$csql);
+         $cr =0 ;
+         $csc =0;
+         $cgh = 0;
+         $csr = 0;
+         $cdr = 0;
+         while($crow=mysqli_fetch_array($cre))
+         {
+             $cr = $cr + 1;
+             $cs = $crow['RoomType'];
+                         
+-            if($cs=="Superior Room")
++            if($cs=="Habitación Doble")
+             {
+                 $csc = $csc + 1;
+             }
+-                        
+-            if($cs=="Guest House" )
++
++            if($cs=="Habitación Múltiple" )
+             {
+                 $cgh = $cgh + 1;
+             }
+-            if($cs=="Single Room")
++            if($cs=="Habitación Sencilla")
+             {
+                 $csr = $csr + 1;
+             }
+-            if($cs=="Deluxe Room")
++            if($cs=="Habitación Suite")
+             {
+                 $cdr = $cdr + 1;
+             }
+         }
+         // room availablity
+-        // Superior Room =>
++        // Habitación Doble =>
+         $f1 =$sc - $csc;
+         if($f1 <=0 )
+-        {	
++        {
+             $f1 = "NO";
+         }
+-        // Guest House =>
++        // Habitación Múltiple =>
+         $f2 =  $gh -$cgh;
+         if($f2 <=0 )
+-        {	
++        {
+             $f2 = "NO";
+         }
+-        // Single Room =>
++        // Habitación Sencilla =>
+         $f3 =$sr - $csr;
+         if($f3 <=0 )
+-        {	
++        {
+             $f3 = "NO";
+         }
+-        // Deluxe Room =>
+-        $f4 =$dr - $cdr; 
++        // Habitación Suite =>
++        $f4 =$dr - $cdr;
+         if($f4 <=0 )
+         {	
+             $f4 = "NO";
+         }
+         //total available room =>
+         $f5 =$r-$cr; 
+         if($f5 <=0 )
+         {
+             $f5 = "NO";
+         }
+         ?>
+         <!-- room availablity end-->
+ 
+         <!-- ==== room book php ====-->
+         <?php       
+             if (isset($_POST['guestdetailsubmit'])) {
+                 $Name = $_POST['Name'];
+                 $Email = $_POST['Email'];
+                 $Country = $_POST['Country'];
+                 $Phone = $_POST['Phone'];
+                 $RoomType = $_POST['RoomType'];
+                 $Bed = $_POST['Bed'];
+                 $NoofRoom = $_POST['NoofRoom'];
+                 $Meal = $_POST['Meal'];
+                 $cin = $_POST['cin'];
+                 $cout = $_POST['cout'];
+ 
+                 if($Name == "" || $Email == "" || $Country == ""){
+                     echo "<script>swal({
+                         title: 'Fill the proper details',
+                         icon: 'error',
+                     });
+                     </script>";
+                 }
+                 else{
+                     $sta = "NotConfirm";
+                     $sql = "INSERT INTO roombook(Name,Email,Country,Phone,RoomType,Bed,NoofRoom,Meal,cin,cout,stat,nodays) VALUES ('$Name','$Email','$Country','$Phone','$RoomType','$Bed','$NoofRoom','$Meal','$cin','$cout','$sta',datediff('$cout','$cin'))";
+                     $result = mysqli_query($conn, $sql);
+ 
+                     // if($f1=="NO")
+                     // {
+                     //     echo "<script>swal({
+-                    //         title: 'Superior Room is not available',
++                    //         title: 'Habitación Doble no está disponible',
+                     //         icon: 'error',
+                     //     });
+                     //     </script>";
+                     // }
+                     // else if($f2=="NO")
+                     // {
+                     //     echo "<script>swal({
+-                    //         title: 'Guest House is not available',
++                    //         title: 'Habitación Múltiple no está disponible',
+                     //         icon: 'error',
+                     //     });
+                     //     </script>";
+                     // }
+                     // else if($f3 == "NO")
+                     // {
+                     //     echo "<script>swal({
+-                    //         title: 'Si Room is not available',
++                    //         title: 'Habitación Sencilla no está disponible',
+                     //         icon: 'error',
+                     //     });
+                     //     </script>";
+                     // }
+                     // else if($f4 == "NO")
+                     // {
+                     //     echo "<script>swal({
+-                    //         title: 'Deluxe Room is not available',
++                    //         title: 'Habitación Suite no está disponible',
+                     //         icon: 'error',
+                     //     });
+                     //     </script>";
+                     // }
+                     // else if($result = mysqli_query($conn, $sql))
+                     // {
+                         if ($result) {
+                             echo "<script>swal({
+                                 title: 'Reservation successful',
+                                 icon: 'success',
+                             });
+                         </script>";
+                         } else {
+                             echo "<script>swal({
+                                     title: 'Something went wrong',
+                                     icon: 'error',
+                                 });
+                         </script>";
+                         }
+                     // }
+                 }
+             }
+         ?>
+     </div>
+ 
+diff --git a/admin/roombookedit.php b/admin/roombookedit.php
+index b94a70a8e738b8da2a0adf4e895351a7cc5adee9..160748883a91f1211bd9aa66b0bca7547d3ea187 100644
+--- a/admin/roombookedit.php
++++ b/admin/roombookedit.php
+@@ -14,81 +14,81 @@ while($row=mysqli_fetch_array($re))
+     $Country = $row['Country'];
+     $Phone = $row['Phone'];
+     $cin = $row['cin'];
+     $cout = $row['cout'];
+     $noofday = $row['nodays'];
+     $stat = $row['stat'];
+ }
+ 
+ if (isset($_POST['guestdetailedit'])) {
+     $EditName = $_POST['Name'];
+     $EditEmail = $_POST['Email'];
+     $EditCountry = $_POST['Country'];
+     $EditPhone = $_POST['Phone'];
+     $EditRoomType = $_POST['RoomType'];
+     $EditBed = $_POST['Bed'];
+     $EditNoofRoom = $_POST['NoofRoom'];
+     $EditMeal = $_POST['Meal'];
+     $Editcin = $_POST['cin'];
+     $Editcout = $_POST['cout'];
+ 
+     $sql = "UPDATE roombook SET Name = '$EditName',Email = '$EditEmail',Country='$EditCountry',Phone='$EditPhone',RoomType='$EditRoomType',Bed='$EditBed',NoofRoom='$EditNoofRoom',Meal='$EditMeal',cin='$Editcin',cout='$Editcout',nodays = datediff('$Editcout','$Editcin') WHERE id = '$id'";
+ 
+     $result = mysqli_query($conn, $sql);
+ 
+     $type_of_room = 0;
+-    if($EditRoomType=="Superior Room")
++    if($EditRoomType=="Habitación Doble")
+     {
+         $type_of_room = 3000;
+     }
+-    else if($EditRoomType=="Deluxe Room")
++    else if($EditRoomType=="Habitación Suite")
+     {
+         $type_of_room = 2000;
+     }
+-    else if($EditRoomType=="Guest House")
++    else if($EditRoomType=="Habitación Múltiple")
+     {
+         $type_of_room = 1500;
+     }
+-    else if($EditRoomType=="Single Room")
++    else if($EditRoomType=="Habitación Sencilla")
+     {
+         $type_of_room = 1000;
+     }
+-    
+-    
+-    if($EditBed=="Single")
++
++
++    if($EditBed=="1 cliente")
+     {
+         $type_of_bed = $type_of_room * 1/100;
+     }
+-    else if($EditBed=="Double")
++    else if($EditBed=="2 clientes")
+     {
+         $type_of_bed = $type_of_room * 2/100;
+     }
+-    else if($EditBed=="Triple")
++    else if($EditBed=="3 clientes")
+     {
+         $type_of_bed = $type_of_room * 3/100;
+     }
+-    else if($EditBed=="Quad")
++    else if($EditBed=="4 clientes")
+     {
+         $type_of_bed = $type_of_room * 4/100;
+     }
+     else if($EditBed=="None")
+     {
+         $type_of_bed = $type_of_room * 0/100;
+     }
+ 
+     if($EditMeal=="Room only")
+     {
+         $type_of_meal=$type_of_bed * 0;
+     }
+     else if($EditMeal=="Breakfast")
+     {
+         $type_of_meal=$type_of_bed * 2;
+     }
+     else if($EditMeal=="Half Board")
+     {
+         $type_of_meal=$type_of_bed * 3;
+     }
+     else if($EditMeal=="Full Board")
+     {
+         $type_of_meal=$type_of_bed * 4;
+     }
+     
+@@ -167,63 +167,63 @@ if (isset($_POST['guestdetailedit'])) {
+                     <h4>Guest information</h4>
+                     <input type="text" name="Name" placeholder="Enter Full name" value="<?php echo $Name ?>">
+                     <input type="email" name="Email" placeholder="Enter Email" value="<?php echo $Email ?>">
+ 
+                     <?php
+                     $countries = array("Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia (Hrvatska)", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands (Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "France Metropolitan", "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard and Mc Donald Islands", "Holy See (Vatican City State)", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, Democratic People's Republic of", "Korea, Republic of", "Kuwait", "Kyrgyzstan", "Lao, People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libyan Arab Jamahiriya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, The Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia (Slovak Republic)", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "Spain", "Sri Lanka", "St. Helena", "St. Pierre and Miquelon", "Sudan", "Suriname", "Svalbard and Jan Mayen Islands", "Swaziland", "Sweden", "Switzerland", "Syrian Arab Republic", "Taiwan, Province of China", "Tajikistan", "Tanzania, United Republic of", "Thailand", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands (British)", "Virgin Islands (U.S.)", "Wallis and Futuna Islands", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe");
+                     ?>
+ 
+                     <select name="Country" class="selectinput">
+ 						<option value selected >Select your country</option>
+                         <?php
+ 							foreach($countries as $key => $value):
+ 							echo '<option value="'.$value.'">'.$value.'</option>';
+                             //close your tags!!
+ 							endforeach;
+ 						?>
+                     </select>
+                     <input type="text" name="Phone" placeholder="Enter Phoneno"  value="<?php echo $Phone ?>">
+                 </div>
+ 
+                 <div class="line"></div>
+ 
+                 <div class="reservationinfo">
+                     <h4>Reservation information</h4>
+                     <select name="RoomType" class="selectinput">
+-						<option value selected >Type Of Room</option>
+-                        <option value="Superior Room">SUPERIOR ROOM</option>
+-                        <option value="Deluxe Room">DELUXE ROOM</option>
+-						<option value="Guest House">GUEST HOUSE</option>
+-						<option value="Single Room">SINGLE ROOM</option>
++                                                <option value selected >Tipo de habitación</option>
++                        <option value="Habitación Doble">HABITACIÓN DOBLE</option>
++                        <option value="Habitación Suite">HABITACIÓN SUITE</option>
++                                                <option value="Habitación Múltiple">HABITACIÓN MÚLTIPLE</option>
++                                                <option value="Habitación Sencilla">HABITACIÓN SENCILLA</option>
+                     </select>
+                     <select name="Bed" class="selectinput">
+-						<option value selected >Bedding Type</option>
+-                        <option value="Single">Single</option>
+-                        <option value="Double">Double</option>
+-						<option value="Triple">Triple</option>
+-                        <option value="Quad">Quad</option>
+-						<option value="None">None</option>
++                                                <option value selected >Capacidad</option>
++                        <option value="1 cliente">1 cliente</option>
++                        <option value="2 clientes">2 clientes</option>
++                                                <option value="3 clientes">3 clientes</option>
++                        <option value="4 clientes">4 clientes</option>
++                                                <option value="None">Sin adicional</option>
+                     </select>
+                     <select name="NoofRoom" class="selectinput">
+ 						<option value selected >No of Room</option>
+                         <option value="1">1</option>
+                         <!-- <option value="1">2</option>
+                         <option value="1">3</option> -->
+                     </select>
+                     <select name="Meal" class="selectinput">
+ 						<option value selected >Meal</option>
+                         <option value="Room only">Room only</option>
+                         <option value="Breakfast">Breakfast</option>
+ 						<option value="Half Board">Half Board</option>
+ 						<option value="Full Board">Full Board</option>
+ 					</select>
+                     <div class="datesection">
+                         <span>
+                             <label for="cin"> Check-In</label>
+                             <input name="cin" type ="date" value="<?php echo $cin ?>">
+                         </span>
+                         <span>
+                             <label for="cin"> Check-Out</label>
+                             <input name="cout" type ="date" value="<?php echo $cout ?>">
+                         </span>
+                     </div>
+                 </div>
+diff --git a/admin/roomconfirm.php b/admin/roomconfirm.php
+index 8915ab59e873c906246bf7d26efbd33434ea8a2c..4ab55a9d8dc5797d443c095b23e1e4d726084e2f 100644
+--- a/admin/roomconfirm.php
++++ b/admin/roomconfirm.php
+@@ -11,81 +11,81 @@ while($row=mysqli_fetch_array($re))
+ 	$Name = $row['Name'];
+     $Email = $row['Email'];
+     $Country = $row['Country'];
+     $Phone = $row['Phone'];
+     $RoomType = $row['RoomType'];
+     $Bed = $row['Bed'];
+     $NoofRoom = $row['NoofRoom'];
+     $Meal = $row['Meal'];
+     $cin = $row['cin'];
+     $cout = $row['cout'];
+     $noofday = $row['nodays'];
+     $stat = $row['stat'];
+ }
+ 
+ 
+ if($stat == "NotConfirm")
+ {
+     $st = "Confirm";
+ 
+     $sql = "UPDATE roombook SET stat = '$st' WHERE id = '$id'";
+     $result = mysqli_query($conn,$sql);
+ 
+     if($result){
+ 
+         $type_of_room = 0;      
+-        if($RoomType=="Superior Room")
++        if($RoomType=="Habitación Doble")
+         {
+             $type_of_room = 3000;
+         }
+-        else if($RoomType=="Deluxe Room")
++        else if($RoomType=="Habitación Suite")
+         {
+             $type_of_room = 2000;
+         }
+-        else if($RoomType=="Guest House")
++        else if($RoomType=="Habitación Múltiple")
+         {
+             $type_of_room = 1500;
+         }
+-        else if($RoomType=="Single Room")
++        else if($RoomType=="Habitación Sencilla")
+         {
+             $type_of_room = 1000;
+         }
+-        
+-        
+-        if($Bed=="Single")
++
++
++        if($Bed=="1 cliente")
+         {
+             $type_of_bed = $type_of_room * 1/100;
+         }
+-        else if($Bed=="Double")
++        else if($Bed=="2 clientes")
+         {
+             $type_of_bed = $type_of_room * 2/100;
+         }
+-        else if($Bed=="Triple")
++        else if($Bed=="3 clientes")
+         {
+             $type_of_bed = $type_of_room * 3/100;
+         }
+-        else if($Bed=="Quad")
++        else if($Bed=="4 clientes")
+         {
+             $type_of_bed = $type_of_room * 4/100;
+         }
+             else if($Bed=="None")
+         {
+             $type_of_bed = $type_of_room * 0/100;
+         }
+ 
+         if($Meal=="Room only")
+         {
+             $type_of_meal=$type_of_bed * 0;
+         }
+         else if($Meal=="Breakfast")
+         {
+             $type_of_meal=$type_of_bed * 2;
+         }
+         else if($Meal=="Half Board")
+         {
+             $type_of_meal=$type_of_bed * 3;
+         }
+         else if($Meal=="Full Board")
+         {
+             $type_of_meal=$type_of_bed * 4;
+         }
+                                                             
+diff --git a/home.php b/home.php
+index 87e6e12e189c69ec85cd85f6acb8d4a87c2c53f2..62be81773d1dd89dafe1598bb7d8f66cb0099ba9 100644
+--- a/home.php
++++ b/home.php
+@@ -175,62 +175,62 @@ $usermail = $_SESSION['usermail'];
+                     <h4 class="card-title"><i class="fa-solid fa-user"></i> Información del huésped</h4>
+                     <input type="text" name="Name" placeholder="Nombre completo" required>
+                     <input type="email" name="Email" placeholder="Correo electrónico" required>
+ 
+                     <?php
+                     $countries = array("Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia (Hrvatska)", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands (Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "France Metropolitan", "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard and Mc Donald Islands", "Holy See (Vatican City State)", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, Democratic People's Republic of", "Korea, Republic of", "Kuwait", "Kyrgyzstan", "Lao, People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libyan Arab Jamahiriya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, The Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia (Slovak Republic)", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "Spain", "Sri Lanka", "St. Helena", "St. Pierre and Miquelon", "Sudan", "Suriname", "Svalbard and Jan Mayen Islands", "Swaziland", "Sweden", "Switzerland", "Syrian Arab Republic", "Taiwan, Province of China", "Tajikistan", "Tanzania, United Republic of", "Thailand", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands (British)", "Virgin Islands (U.S.)", "Wallis and Futuna Islands", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe");
+                     ?>
+ 
+                     <select name="Country" class="selectinput" required>
+                         <option value="" selected disabled hidden>Selecciona tu país</option>
+                         <?php foreach($countries as $value): ?>
+                           <option value="<?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>">
+                             <?php echo htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); ?>
+                           </option>
+                         <?php endforeach; ?>
+                     </select>
+                     <input type="text" name="Phone" placeholder="Número de teléfono">
+                 </div>
+ 
+                 <div class="line"></div>
+ 
+                 <div class="reservationinfo">
+                     <h4 class="card-title"><i class="fa-solid fa-bed"></i> Información de la reserva</h4>
+                     <select name="RoomType" class="selectinput" required>
+                         <option value="" selected disabled hidden>Tipo de habitación</option>
+-                        <option value="Superior Room">Habitación Superior</option>
+-                        <option value="Deluxe Room">Habitación Deluxe</option>
+-                        <option value="Guest House">Casa De Huésdepes</option>
+-                        <option value="Single Room">Habitación Individual</option>
++                        <option value="Habitación Doble">Habitación Doble</option>
++                        <option value="Habitación Suite">Habitación Suite</option>
++                        <option value="Habitación Múltiple">Habitación Múltiple</option>
++                        <option value="Habitación Sencilla">Habitación Sencilla</option>
+                     </select>
+                     <select name="Bed" class="selectinput" required>
+-                        <option value="" selected disabled hidden>Tipo de cama</option>
+-                        <option value="Single">Individual</option>
+-                        <option value="Double">Doble</option>
+-                        <option value="Triple">Triple</option>
+-                        <option value="Quad">Cuádruple</option>
+-                        <option value="None">Ninguna</option>
++                        <option value="" selected disabled hidden>Capacidad</option>
++                        <option value="1 cliente">1 cliente</option>
++                        <option value="2 clientes">2 clientes</option>
++                        <option value="3 clientes">3 clientes</option>
++                        <option value="4 clientes">4 clientes</option>
++                        <option value="None">Sin adicional</option>
+                     </select>
+                     <select name="NoofRoom" class="selectinput" required>
+                         <option value="" selected disabled hidden>Número de habitaciones</option>
+                         <option value="1">1</option>
+                     </select>
+                     <select name="Meal" class="selectinput" required>
+                         <option value="" selected disabled hidden>Comidas</option>
+                         <option value="Room only">Solo habitación</option>
+                         <option value="Breakfast">Desayuno</option>
+                         <option value="Half Board">Desayuno y Cena</option>
+                         <option value="Full Board">Comidas Completas</option>
+                     </select>
+                     <div class="datesection">
+                         <span>
+                             <label for="cin">Llegada</label>
+                             <input id="cin" name="cin" type="date" required>
+                         </span>
+                         <span>
+                             <label for="cout">Salida</label>
+                             <input id="cout" name="cout" type="date" required>
+                         </span>
+                     </div>
+                 </div>
+             </div>
+             <div class="footer">
+@@ -281,90 +281,90 @@ $usermail = $_SESSION['usermail'];
+                                     swal({ title: 'Reserva exitosa', icon: 'success' });
+                                 </script>";
+                             } else {
+                                 echo "<script>swal({ title: 'Algo salió mal al guardar', icon: 'error' });</script>";
+                             }
+                         } else {
+                             echo "<script>swal({ title: 'Error preparando consulta', icon: 'error' });</script>";
+                         }
+                     }
+                 }
+             }
+             ?>
+           </div>
+ 
+     </div>
+   </section>
+ 
+   <section id="secondsection">
+     <img src="./image/homeanimatebg.svg" alt="Decoración">
+     <div class="ourroom">
+       <h1 class="head">≼ Nuestras habitaciones ≽</h1>
+       <div class="roomselect">
+         <div class="roombox">
+           <div class="hotelphoto h1"></div>
+           <div class="roomdata">
+-            <h2>Habitación Superior</h2>
++            <h2>Habitación Doble</h2>
+             <div class="services">
+               <i class="fa-solid fa-wifi"></i>
+               <i class="fa-solid fa-burger"></i>
+               <i class="fa-solid fa-spa"></i>
+               <i class="fa-solid fa-dumbbell"></i>
+               <i class="fa-solid fa-person-swimming"></i>
+             </div>
+             <button class="btn btn-primary bookbtn" onclick="openbookbox()">Reservar</button>
+           </div>
+         </div>
+         <div class="roombox">
+           <div class="hotelphoto h2"></div>
+           <div class="roomdata">
+-            <h2>Habitación Deluxe</h2>
++            <h2>Habitación Suite</h2>
+             <div class="services">
+               <i class="fa-solid fa-wifi"></i>
+               <i class="fa-solid fa-burger"></i>
+               <i class="fa-solid fa-spa"></i>
+               <i class="fa-solid fa-dumbbell"></i>
+             </div>
+             <button class="btn btn-primary bookbtn" onclick="openbookbox()">Reservar</button>
+           </div>
+         </div>
+         <div class="roombox">
+           <div class="hotelphoto h3"></div>
+           <div class="roomdata">
+-            <h2>Habitación de Huéspedes</h2>
++            <h2>Habitación Múltiple</h2>
+             <div class="services">
+               <i class="fa-solid fa-wifi"></i>
+               <i class="fa-solid fa-burger"></i>
+               <i class="fa-solid fa-spa"></i>
+             </div>
+             <button class="btn btn-primary bookbtn" onclick="openbookbox()">Reservar</button>
+           </div>
+         </div>
+         <div class="roombox">
+           <div class="hotelphoto h4"></div>
+           <div class="roomdata">
+-            <h2>Habitación Individual</h2>
++            <h2>Habitación Sencilla</h2>
+             <div class="services">
+               <i class="fa-solid fa-wifi"></i>
+               <i class="fa-solid fa-burger"></i>
+             </div>
+             <button class="btn btn-primary bookbtn" onclick="openbookbox()">Reservar</button>
+           </div>
+         </div>
+       </div>
+     </div>
+   </section>
+ 
+   <section id="thirdsection">
+     <h1 class="head">≼ Servicios ≽</h1>
+     <div class="facility">
+       <div class="box">
+         <h2>Piscina</h2>
+       </div>
+       <div class="box">
+         <h2>Spa</h2>
+       </div>
+       <div class="box">
+         <h2>Restaurantes 24/7</h2>
+       </div>
+       <div class="box">
+         <h2>Gimnasio 24/7</h2>
+diff --git a/hotelandino.sql b/hotelandino.sql
+index 3f8ec56b716d14ef9edc5c4446444b8d4e572d08..2f1fc7aa7520f12e0b42dcd21fb8e64902b8a6b7 100644
+--- a/hotelandino.sql
++++ b/hotelandino.sql
+@@ -47,105 +47,105 @@ CREATE TABLE `emp_login` (
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ 
+ -- 🔐 Admin por defecto (como lo tenías)
+ INSERT INTO `emp_login` (`Emp_Email`, `Emp_Password`) VALUES
+ ('admin@hotelandino.com', '1234');
+ 
+ -- ======================================================
+ -- Tabla: room (habitaciones)
+ -- ======================================================
+ CREATE TABLE `room` (
+   `id` INT NOT NULL AUTO_INCREMENT,
+   `floor` TINYINT NOT NULL,                 -- 1..4
+   `room_number` VARCHAR(10) NOT NULL,       -- 101..113 / 201..213 / etc.
+   `type` VARCHAR(50) NOT NULL,
+   `bedding` VARCHAR(50) NOT NULL,
+   `status` ENUM('Disponible','Reservada','Limpieza','Ocupada') NOT NULL DEFAULT 'Disponible',
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uniq_room_number` (`room_number`),
+   KEY `idx_room_floor` (`floor`),
+   KEY `idx_room_status` (`status`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ 
+ -- ✅ Seed de habitaciones (Pisos 1–4, 13 por piso)
+ INSERT INTO `room` (`floor`, `room_number`, `type`, `bedding`, `status`) VALUES
+ -- Piso 1 (101–113)
+-(1, '101', 'Superior Room', 'Single', 'Disponible'),
+-(1, '102', 'Superior Room', 'Double', 'Disponible'),
+-(1, '103', 'Superior Room', 'Triple', 'Disponible'),
+-(1, '104', 'Deluxe Room',   'Single', 'Disponible'),
+-(1, '105', 'Deluxe Room',   'Double', 'Disponible'),
+-(1, '106', 'Deluxe Room',   'Triple', 'Disponible'),
+-(1, '107', 'Guest House',   'Single', 'Disponible'),
+-(1, '108', 'Guest House',   'Double', 'Disponible'),
+-(1, '109', 'Guest House',   'Triple', 'Disponible'),
+-(1, '110', 'Single Room',   'Single', 'Disponible'),
+-(1, '111', 'Superior Room', 'Quad',   'Disponible'),
+-(1, '112', 'Deluxe Room',   'Quad',   'Disponible'),
+-(1, '113', 'Guest House',   'Quad',   'Disponible'),
++(1, '101', 'Habitación Doble', '1 cliente', 'Disponible'),
++(1, '102', 'Habitación Doble', '2 clientes', 'Disponible'),
++(1, '103', 'Habitación Doble', '3 clientes', 'Disponible'),
++(1, '104', 'Habitación Suite',   '1 cliente', 'Disponible'),
++(1, '105', 'Habitación Suite',   '2 clientes', 'Disponible'),
++(1, '106', 'Habitación Suite',   '3 clientes', 'Disponible'),
++(1, '107', 'Habitación Múltiple',   '1 cliente', 'Disponible'),
++(1, '108', 'Habitación Múltiple',   '2 clientes', 'Disponible'),
++(1, '109', 'Habitación Múltiple',   '3 clientes', 'Disponible'),
++(1, '110', 'Habitación Sencilla',   '1 cliente', 'Disponible'),
++(1, '111', 'Habitación Doble', '4 clientes',   'Disponible'),
++(1, '112', 'Habitación Suite',   '4 clientes',   'Disponible'),
++(1, '113', 'Habitación Múltiple',   '4 clientes',   'Disponible'),
+ -- Piso 2 (201–213)
+-(2, '201', 'Superior Room', 'Single', 'Disponible'),
+-(2, '202', 'Superior Room', 'Double', 'Disponible'),
+-(2, '203', 'Superior Room', 'Triple', 'Disponible'),
+-(2, '204', 'Deluxe Room',   'Single', 'Disponible'),
+-(2, '205', 'Deluxe Room',   'Double', 'Disponible'),
+-(2, '206', 'Deluxe Room',   'Triple', 'Disponible'),
+-(2, '207', 'Guest House',   'Single', 'Disponible'),
+-(2, '208', 'Guest House',   'Double', 'Disponible'),
+-(2, '209', 'Guest House',   'Triple', 'Disponible'),
+-(2, '210', 'Single Room',   'Single', 'Disponible'),
+-(2, '211', 'Superior Room', 'Quad',   'Disponible'),
+-(2, '212', 'Deluxe Room',   'Quad',   'Disponible'),
+-(2, '213', 'Guest House',   'Quad',   'Disponible'),
++(2, '201', 'Habitación Doble', '1 cliente', 'Disponible'),
++(2, '202', 'Habitación Doble', '2 clientes', 'Disponible'),
++(2, '203', 'Habitación Doble', '3 clientes', 'Disponible'),
++(2, '204', 'Habitación Suite',   '1 cliente', 'Disponible'),
++(2, '205', 'Habitación Suite',   '2 clientes', 'Disponible'),
++(2, '206', 'Habitación Suite',   '3 clientes', 'Disponible'),
++(2, '207', 'Habitación Múltiple',   '1 cliente', 'Disponible'),
++(2, '208', 'Habitación Múltiple',   '2 clientes', 'Disponible'),
++(2, '209', 'Habitación Múltiple',   '3 clientes', 'Disponible'),
++(2, '210', 'Habitación Sencilla',   '1 cliente', 'Disponible'),
++(2, '211', 'Habitación Doble', '4 clientes',   'Disponible'),
++(2, '212', 'Habitación Suite',   '4 clientes',   'Disponible'),
++(2, '213', 'Habitación Múltiple',   '4 clientes',   'Disponible'),
+ -- Piso 3 (301–313)
+-(3, '301', 'Superior Room', 'Single', 'Disponible'),
+-(3, '302', 'Superior Room', 'Double', 'Disponible'),
+-(3, '303', 'Superior Room', 'Triple', 'Disponible'),
+-(3, '304', 'Deluxe Room',   'Single', 'Disponible'),
+-(3, '305', 'Deluxe Room',   'Double', 'Disponible'),
+-(3, '306', 'Deluxe Room',   'Triple', 'Disponible'),
+-(3, '307', 'Guest House',   'Single', 'Disponible'),
+-(3, '308', 'Guest House',   'Double', 'Disponible'),
+-(3, '309', 'Guest House',   'Triple', 'Disponible'),
+-(3, '310', 'Single Room',   'Single', 'Disponible'),
+-(3, '311', 'Superior Room', 'Quad',   'Disponible'),
+-(3, '312', 'Deluxe Room',   'Quad',   'Disponible'),
+-(3, '313', 'Guest House',   'Quad',   'Disponible'),
++(3, '301', 'Habitación Doble', '1 cliente', 'Disponible'),
++(3, '302', 'Habitación Doble', '2 clientes', 'Disponible'),
++(3, '303', 'Habitación Doble', '3 clientes', 'Disponible'),
++(3, '304', 'Habitación Suite',   '1 cliente', 'Disponible'),
++(3, '305', 'Habitación Suite',   '2 clientes', 'Disponible'),
++(3, '306', 'Habitación Suite',   '3 clientes', 'Disponible'),
++(3, '307', 'Habitación Múltiple',   '1 cliente', 'Disponible'),
++(3, '308', 'Habitación Múltiple',   '2 clientes', 'Disponible'),
++(3, '309', 'Habitación Múltiple',   '3 clientes', 'Disponible'),
++(3, '310', 'Habitación Sencilla',   '1 cliente', 'Disponible'),
++(3, '311', 'Habitación Doble', '4 clientes',   'Disponible'),
++(3, '312', 'Habitación Suite',   '4 clientes',   'Disponible'),
++(3, '313', 'Habitación Múltiple',   '4 clientes',   'Disponible'),
+ -- Piso 4 (401–413)
+-(4, '401', 'Superior Room', 'Single', 'Disponible'),
+-(4, '402', 'Superior Room', 'Double', 'Disponible'),
+-(4, '403', 'Superior Room', 'Triple', 'Disponible'),
+-(4, '404', 'Deluxe Room',   'Single', 'Disponible'),
+-(4, '405', 'Deluxe Room',   'Double', 'Disponible'),
+-(4, '406', 'Deluxe Room',   'Triple', 'Disponible'),
+-(4, '407', 'Guest House',   'Single', 'Disponible'),
+-(4, '408', 'Guest House',   'Double', 'Disponible'),
+-(4, '409', 'Guest House',   'Triple', 'Disponible'),
+-(4, '410', 'Single Room',   'Single', 'Disponible'),
+-(4, '411', 'Superior Room', 'Quad',   'Disponible'),
+-(4, '412', 'Deluxe Room',   'Quad',   'Disponible'),
+-(4, '413', 'Guest House',   'Quad',   'Disponible');
++(4, '401', 'Habitación Doble', '1 cliente', 'Disponible'),
++(4, '402', 'Habitación Doble', '2 clientes', 'Disponible'),
++(4, '403', 'Habitación Doble', '3 clientes', 'Disponible'),
++(4, '404', 'Habitación Suite',   '1 cliente', 'Disponible'),
++(4, '405', 'Habitación Suite',   '2 clientes', 'Disponible'),
++(4, '406', 'Habitación Suite',   '3 clientes', 'Disponible'),
++(4, '407', 'Habitación Múltiple',   '1 cliente', 'Disponible'),
++(4, '408', 'Habitación Múltiple',   '2 clientes', 'Disponible'),
++(4, '409', 'Habitación Múltiple',   '3 clientes', 'Disponible'),
++(4, '410', 'Habitación Sencilla',   '1 cliente', 'Disponible'),
++(4, '411', 'Habitación Doble', '4 clientes',   'Disponible'),
++(4, '412', 'Habitación Suite',   '4 clientes',   'Disponible'),
++(4, '413', 'Habitación Múltiple',   '4 clientes',   'Disponible');
+ 
+ -- ======================================================
+ -- Tabla: room_types (catálogo editable desde admin)
+ -- ======================================================
+ CREATE TABLE `room_types` (
+   `id` INT NOT NULL AUTO_INCREMENT,
+   `name` VARCHAR(80) NOT NULL,
+   `description` TEXT DEFAULT NULL,
+   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uniq_room_types_name` (`name`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ 
+ -- ======================================================
+ -- Tabla: products (inventario simple para ventas)
+ -- ======================================================
+ CREATE TABLE `products` (
+   `id` INT NOT NULL AUTO_INCREMENT,
+   `name` VARCHAR(120) NOT NULL,
+   `price` DECIMAL(10,2) NOT NULL DEFAULT 0,
+   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uniq_products_name` (`name`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ 
+ 
+EOF
+)
+

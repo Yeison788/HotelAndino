@@ -58,19 +58,19 @@ include '../config.php';
                 <div class="reservationinfo">
                     <h4>Información de la reserva</h4>
                     <select name="RoomType" class="selectinput">
-						<option value selected >Tipo de habitación</option>
-                        <option value="Superior Room">HABITACIÓN SUPERIOR</option>
-                        <option value="Deluxe Room">HABITACIÓN DELUXE</option>
-						<option value="Guest House">CASA DE HUÉSPEDES</option>
-						<option value="Single Room">HABITACIÓN INDIVIDUAL</option>
+                                                <option value selected >Tipo de habitación</option>
+                        <option value="Habitación Doble">HABITACIÓN DOBLE</option>
+                        <option value="Habitación Suite">HABITACIÓN SUITE</option>
+                                                <option value="Habitación Múltiple">HABITACIÓN MÚLTIPLE</option>
+                                                <option value="Habitación Sencilla">HABITACIÓN SENCILLA</option>
                     </select>
                     <select name="Bed" class="selectinput">
-						<option value selected >Tipo de cama</option>
-                        <option value="Single">Individual</option>
-                        <option value="Double">Doble</option>
-						<option value="Triple">Triple</option>
-                        <option value="Quad">Cuádruple</option>
-						<option value="None">Ninguna</option>
+                                                <option value selected >Tipo de cama</option>
+                        <option value="1 cliente">1 cliente</option>
+                        <option value="2 clientes">2 clientes</option>
+                                                <option value="3 clientes">3 clientes</option>
+                        <option value="4 clientes">4 clientes</option>
+                                                <option value="None">Ninguna</option>
                     </select>
                     <select name="NoofRoom" class="selectinput">
 						<option value selected >Número de habitaciones</option>
@@ -117,19 +117,19 @@ include '../config.php';
         {
             $r = $r + 1;
             $s = $rrow['type'];
-            if($s=="Superior Room")
+            if($s=="Habitación Doble")
             {
                 $sc = $sc+ 1;
             }
-            if($s=="Guest House")
+            if($s=="Habitación Múltiple")
             {
                 $gh = $gh + 1;
             }
-            if($s=="Single Room" )
+            if($s=="Habitación Sencilla" )
             {
                 $sr = $sr + 1;
             }
-            if($s=="Deluxe Room" )
+            if($s=="Habitación Suite" )
             {
                 $dr = $dr + 1;
             }
@@ -147,45 +147,45 @@ include '../config.php';
             $cr = $cr + 1;
             $cs = $crow['RoomType'];
                         
-            if($cs=="Superior Room")
+            if($cs=="Habitación Doble")
             {
                 $csc = $csc + 1;
             }
-                        
-            if($cs=="Guest House" )
+
+            if($cs=="Habitación Múltiple" )
             {
                 $cgh = $cgh + 1;
             }
-            if($cs=="Single Room")
+            if($cs=="Habitación Sencilla")
             {
                 $csr = $csr + 1;
             }
-            if($cs=="Deluxe Room")
+            if($cs=="Habitación Suite")
             {
                 $cdr = $cdr + 1;
             }
         }
         // room availablity
-        // Superior Room =>
+        // Habitación Doble =>
         $f1 =$sc - $csc;
         if($f1 <=0 )
-        {	
+        {
             $f1 = "NO";
         }
-        // Guest House =>
+        // Habitación Múltiple =>
         $f2 =  $gh -$cgh;
         if($f2 <=0 )
-        {	
+        {
             $f2 = "NO";
         }
-        // Single Room =>
+        // Habitación Sencilla =>
         $f3 =$sr - $csr;
         if($f3 <=0 )
-        {	
+        {
             $f3 = "NO";
         }
-        // Deluxe Room =>
-        $f4 =$dr - $cdr; 
+        // Habitación Suite =>
+        $f4 =$dr - $cdr;
         if($f4 <=0 )
         {	
             $f4 = "NO";
@@ -228,7 +228,7 @@ include '../config.php';
                     // if($f1=="NO")
                     // {
                     //     echo "<script>swal({
-                    //         title: 'Superior Room is not available',
+                    //         title: 'Habitación Doble no está disponible',
                     //         icon: 'error',
                     //     });
                     //     </script>";
@@ -236,7 +236,7 @@ include '../config.php';
                     // else if($f2=="NO")
                     // {
                     //     echo "<script>swal({
-                    //         title: 'Guest House is not available',
+                    //         title: 'Habitación Múltiple no está disponible',
                     //         icon: 'error',
                     //     });
                     //     </script>";
@@ -244,7 +244,7 @@ include '../config.php';
                     // else if($f3 == "NO")
                     // {
                     //     echo "<script>swal({
-                    //         title: 'Si Room is not available',
+                    //         title: 'Habitación Sencilla no está disponible',
                     //         icon: 'error',
                     //     });
                     //     </script>";
@@ -252,7 +252,7 @@ include '../config.php';
                     // else if($f4 == "NO")
                     // {
                     //     echo "<script>swal({
-                    //         title: 'Deluxe Room is not available',
+                    //         title: 'Habitación Suite no está disponible',
                     //         icon: 'error',
                     //     });
                     //     </script>";

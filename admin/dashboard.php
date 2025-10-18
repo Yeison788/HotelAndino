@@ -18,19 +18,19 @@
     $roomrow = mysqli_num_rows($roomre);
 
     //roombook roomtype
-    $chartroom1 = "SELECT * FROM roombook WHERE RoomType='Superior Room'";
+    $chartroom1 = "SELECT * FROM roombook WHERE RoomType='Habitación Doble'";
     $chartroom1re = mysqli_query($conn, $chartroom1);
     $chartroom1row = mysqli_num_rows($chartroom1re);
 
-    $chartroom2 = "SELECT * FROM roombook WHERE RoomType='Deluxe Room'";
+    $chartroom2 = "SELECT * FROM roombook WHERE RoomType='Habitación Suite'";
     $chartroom2re = mysqli_query($conn, $chartroom2);
     $chartroom2row = mysqli_num_rows($chartroom2re);
 
-    $chartroom3 = "SELECT * FROM roombook WHERE RoomType='Guest House'";
+    $chartroom3 = "SELECT * FROM roombook WHERE RoomType='Habitación Múltiple'";
     $chartroom3re = mysqli_query($conn, $chartroom3);
     $chartroom3row = mysqli_num_rows($chartroom3re);
 
-    $chartroom4 = "SELECT * FROM roombook WHERE RoomType='Single Room'";
+    $chartroom4 = "SELECT * FROM roombook WHERE RoomType='Habitación Sencilla'";
     $chartroom4re = mysqli_query($conn, $chartroom4);
     $chartroom4row = mysqli_num_rows($chartroom4re);
 ?>
@@ -86,11 +86,11 @@
     <div class="chartbox">
         <div class="bookroomchart">
             <canvas id="bookroomchart"></canvas>
-            <h3 style="text-align: center;margin:10px 0;">Booked Room</h3>
+            <h3 style="text-align: center;margin:10px 0;">Habitaciones reservadas por tipo</h3>
         </div>
         <div class="profitchart" >
             <div id="profitchart"></div>
-            <h3 style="text-align: center;margin:10px 0;">Profit</h3>
+            <h3 style="text-align: center;margin:10px 0;">Ganancias</h3>
         </div>
     </div>
 </body>
@@ -99,16 +99,16 @@
 
 <script>
         const labels = [
-          'Superior Room',
-          'Deluxe Room',
-          'Guest House',
-          'Single Room',
+          'Habitación Doble',
+          'Habitación Suite',
+          'Habitación Múltiple',
+          'Habitación Sencilla',
         ];
       
         const data = {
           labels: labels,
           datasets: [{
-            label: 'My First dataset',
+            label: 'Reservas registradas',
             backgroundColor: [
                 'rgba(255, 99, 132, 1)',
                 'rgba(255, 159, 64, 1)',

@@ -200,18 +200,18 @@ if ($result = mysqli_query($conn, 'SELECT * FROM room_stays')) {
                   <div class="row g-2">
                     <div class="col-6">
                       <select name="type" class="form-select form-select-sm">
-                        <option value="Superior Room" <?php echo $row['type'] === 'Superior Room' ? 'selected' : ''; ?>>Superior Room</option>
-                        <option value="Deluxe Room" <?php echo $row['type'] === 'Deluxe Room' ? 'selected' : ''; ?>>Deluxe Room</option>
-                        <option value="Guest House" <?php echo $row['type'] === 'Guest House' ? 'selected' : ''; ?>>Guest House</option>
-                        <option value="Single Room" <?php echo $row['type'] === 'Single Room' ? 'selected' : ''; ?>>Single Room</option>
+                        <option value="Habitación Doble" <?php echo $row['type'] === 'Habitación Doble' ? 'selected' : ''; ?>>Habitación Doble</option>
+                        <option value="Habitación Suite" <?php echo $row['type'] === 'Habitación Suite' ? 'selected' : ''; ?>>Habitación Suite</option>
+                        <option value="Habitación Múltiple" <?php echo $row['type'] === 'Habitación Múltiple' ? 'selected' : ''; ?>>Habitación Múltiple</option>
+                        <option value="Habitación Sencilla" <?php echo $row['type'] === 'Habitación Sencilla' ? 'selected' : ''; ?>>Habitación Sencilla</option>
                       </select>
                     </div>
                     <div class="col-6">
                       <select name="bedding" class="form-select form-select-sm">
-                        <option value="Single" <?php echo $row['bedding'] === 'Single' ? 'selected' : ''; ?>>Single</option>
-                        <option value="Double" <?php echo $row['bedding'] === 'Double' ? 'selected' : ''; ?>>Double</option>
-                        <option value="Triple" <?php echo $row['bedding'] === 'Triple' ? 'selected' : ''; ?>>Triple</option>
-                        <option value="Quad" <?php echo $row['bedding'] === 'Quad' ? 'selected' : ''; ?>>Quad</option>
+                        <option value="1 cliente" <?php echo $row['bedding'] === '1 cliente' ? 'selected' : ''; ?>>1 cliente</option>
+                        <option value="2 clientes" <?php echo $row['bedding'] === '2 clientes' ? 'selected' : ''; ?>>2 clientes</option>
+                        <option value="3 clientes" <?php echo $row['bedding'] === '3 clientes' ? 'selected' : ''; ?>>3 clientes</option>
+                        <option value="4 clientes" <?php echo $row['bedding'] === '4 clientes' ? 'selected' : ''; ?>>4 clientes</option>
                       </select>
                     </div>
                   </div>

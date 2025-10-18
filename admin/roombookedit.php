@@ -36,37 +36,37 @@ if (isset($_POST['guestdetailedit'])) {
     $result = mysqli_query($conn, $sql);
 
     $type_of_room = 0;
-    if($EditRoomType=="Superior Room")
+    if($EditRoomType=="Habitación Doble")
     {
         $type_of_room = 3000;
     }
-    else if($EditRoomType=="Deluxe Room")
+    else if($EditRoomType=="Habitación Suite")
     {
         $type_of_room = 2000;
     }
-    else if($EditRoomType=="Guest House")
+    else if($EditRoomType=="Habitación Múltiple")
     {
         $type_of_room = 1500;
     }
-    else if($EditRoomType=="Single Room")
+    else if($EditRoomType=="Habitación Sencilla")
     {
         $type_of_room = 1000;
     }
-    
-    
-    if($EditBed=="Single")
+
+
+    if($EditBed=="1 cliente")
     {
         $type_of_bed = $type_of_room * 1/100;
     }
-    else if($EditBed=="Double")
+    else if($EditBed=="2 clientes")
     {
         $type_of_bed = $type_of_room * 2/100;
     }
-    else if($EditBed=="Triple")
+    else if($EditBed=="3 clientes")
     {
         $type_of_bed = $type_of_room * 3/100;
     }
-    else if($EditBed=="Quad")
+    else if($EditBed=="4 clientes")
     {
         $type_of_bed = $type_of_room * 4/100;
     }
@@ -189,19 +189,19 @@ if (isset($_POST['guestdetailedit'])) {
                 <div class="reservationinfo">
                     <h4>Reservation information</h4>
                     <select name="RoomType" class="selectinput">
-						<option value selected >Type Of Room</option>
-                        <option value="Superior Room">SUPERIOR ROOM</option>
-                        <option value="Deluxe Room">DELUXE ROOM</option>
-						<option value="Guest House">GUEST HOUSE</option>
-						<option value="Single Room">SINGLE ROOM</option>
+                                                <option value selected >Tipo de habitación</option>
+                        <option value="Habitación Doble">HABITACIÓN DOBLE</option>
+                        <option value="Habitación Suite">HABITACIÓN SUITE</option>
+                                                <option value="Habitación Múltiple">HABITACIÓN MÚLTIPLE</option>
+                                                <option value="Habitación Sencilla">HABITACIÓN SENCILLA</option>
                     </select>
                     <select name="Bed" class="selectinput">
-						<option value selected >Bedding Type</option>
-                        <option value="Single">Single</option>
-                        <option value="Double">Double</option>
-						<option value="Triple">Triple</option>
-                        <option value="Quad">Quad</option>
-						<option value="None">None</option>
+                                                <option value selected >Capacidad</option>
+                        <option value="1 cliente">1 cliente</option>
+                        <option value="2 clientes">2 clientes</option>
+                                                <option value="3 clientes">3 clientes</option>
+                        <option value="4 clientes">4 clientes</option>
+                                                <option value="None">Sin adicional</option>
                     </select>
                     <select name="NoofRoom" class="selectinput">
 						<option value selected >No of Room</option>

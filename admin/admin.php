@@ -51,13 +51,23 @@ if (!$adminmail) {
     <!-- side nav -->
     <nav class="sidenav">
         <ul>
-            <li class="pagebtn active"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Panel</li>
-            <li class="pagebtn"><i class="fa-solid fa-bed"></i>&nbsp;&nbsp; Reservas</li>
-            <li class="pagebtn"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
-            <li class="pagebtn"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
-            <li class="pagebtn"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
-            <li class="pagebtn"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</li>
-            <li class="pagebtn"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Ver</li>
+            <li class="pagebtn active" data-frame="0" data-src="./dashboard.php"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Panel</li>
+            <li class="pagebtn" data-frame="1" data-src="./roombook.php"><i class="fa-solid fa-bed"></i>&nbsp;&nbsp; Reservas</li>
+            <li class="pagebtn" data-frame="2" data-src="./payment.php"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
+            <li class="pagebtn" data-frame="3" data-src="./room.php"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
+            <li class="pagebtn" data-frame="4" data-src="./staff.php"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
+            <li class="has-submenu">
+                <div class="submenu-trigger" tabindex="0"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</div>
+                <ul class="submenu">
+                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=rooms"><i class="fa-solid fa-door-open"></i>&nbsp;&nbsp; Registrar habitación</li>
+                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=room-types"><i class="fa-solid fa-layer-group"></i>&nbsp;&nbsp; Registrar tipo de habitación</li>
+                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=users"><i class="fa-solid fa-user-plus"></i>&nbsp;&nbsp; Registrar usuario</li>
+                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=products"><i class="fa-solid fa-box"></i>&nbsp;&nbsp; Registrar producto</li>
+                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=sales"><i class="fa-solid fa-cash-register"></i>&nbsp;&nbsp; Registrar venta</li>
+                    <li class="pagebtn" data-frame="5" data-src="./records.php?view=summary"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Resumen rápido</li>
+                </ul>
+            </li>
+            <li class="pagebtn" data-frame="6" data-src="./room-status.php"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Ver</li>
         </ul>
     </nav>
 
@@ -68,7 +78,7 @@ if (!$adminmail) {
         <iframe class="frames frame3" src="./payment.php" frameborder="0"></iframe>
         <iframe class="frames frame4" src="./room.php" frameborder="0"></iframe>
         <iframe class="frames frame5" src="./staff.php" frameborder="0"></iframe>
-        <iframe class="frames frame6" src="./records.php" frameborder="0"></iframe>
+        <iframe class="frames frame6" src="./records.php?view=summary" frameborder="0"></iframe>
         <iframe class="frames frame7" src="./room-status.php" frameborder="0"></iframe>
     </div>
 

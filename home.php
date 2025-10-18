@@ -197,18 +197,18 @@ $usermail = $_SESSION['usermail'];
                     <h4 class="card-title"><i class="fa-solid fa-bed"></i> Información de la reserva</h4>
                     <select name="RoomType" class="selectinput" required>
                         <option value="" selected disabled hidden>Tipo de habitación</option>
-                        <option value="Superior Room">Habitación Superior</option>
-                        <option value="Deluxe Room">Habitación Deluxe</option>
-                        <option value="Guest House">Casa De Huésdepes</option>
-                        <option value="Single Room">Habitación Individual</option>
+                        <option value="Habitación Doble">Habitación Doble</option>
+                        <option value="Habitación Suite">Habitación Suite</option>
+                        <option value="Habitación Múltiple">Habitación Múltiple</option>
+                        <option value="Habitación Sencilla">Habitación Sencilla</option>
                     </select>
                     <select name="Bed" class="selectinput" required>
-                        <option value="" selected disabled hidden>Tipo de cama</option>
-                        <option value="Single">Individual</option>
-                        <option value="Double">Doble</option>
-                        <option value="Triple">Triple</option>
-                        <option value="Quad">Cuádruple</option>
-                        <option value="None">Ninguna</option>
+                        <option value="" selected disabled hidden>Capacidad</option>
+                        <option value="1 cliente">1 cliente</option>
+                        <option value="2 clientes">2 clientes</option>
+                        <option value="3 clientes">3 clientes</option>
+                        <option value="4 clientes">4 clientes</option>
+                        <option value="None">Sin adicional</option>
                     </select>
                     <select name="NoofRoom" class="selectinput" required>
                         <option value="" selected disabled hidden>Número de habitaciones</option>
@@ -303,7 +303,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h1"></div>
           <div class="roomdata">
-            <h2>Habitación Superior</h2>
+            <h2>Habitación Doble</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>
@@ -317,7 +317,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h2"></div>
           <div class="roomdata">
-            <h2>Habitación Deluxe</h2>
+            <h2>Habitación Suite</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>
@@ -330,7 +330,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h3"></div>
           <div class="roomdata">
-            <h2>Habitación de Huéspedes</h2>
+            <h2>Habitación Múltiple</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>
@@ -342,7 +342,7 @@ $usermail = $_SESSION['usermail'];
         <div class="roombox">
           <div class="hotelphoto h4"></div>
           <div class="roomdata">
-            <h2>Habitación Individual</h2>
+            <h2>Habitación Sencilla</h2>
             <div class="services">
               <i class="fa-solid fa-wifi"></i>
               <i class="fa-solid fa-burger"></i>

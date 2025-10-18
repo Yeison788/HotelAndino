@@ -33,37 +33,37 @@ if($stat == "NotConfirm")
     if($result){
 
         $type_of_room = 0;      
-        if($RoomType=="Superior Room")
+        if($RoomType=="Habitación Doble")
         {
             $type_of_room = 3000;
         }
-        else if($RoomType=="Deluxe Room")
+        else if($RoomType=="Habitación Suite")
         {
             $type_of_room = 2000;
         }
-        else if($RoomType=="Guest House")
+        else if($RoomType=="Habitación Múltiple")
         {
             $type_of_room = 1500;
         }
-        else if($RoomType=="Single Room")
+        else if($RoomType=="Habitación Sencilla")
         {
             $type_of_room = 1000;
         }
-        
-        
-        if($Bed=="Single")
+
+
+        if($Bed=="1 cliente")
         {
             $type_of_bed = $type_of_room * 1/100;
         }
-        else if($Bed=="Double")
+        else if($Bed=="2 clientes")
         {
             $type_of_bed = $type_of_room * 2/100;
         }
-        else if($Bed=="Triple")
+        else if($Bed=="3 clientes")
         {
             $type_of_bed = $type_of_room * 3/100;
         }
-        else if($Bed=="Quad")
+        else if($Bed=="4 clientes")
         {
             $type_of_bed = $type_of_room * 4/100;
         }

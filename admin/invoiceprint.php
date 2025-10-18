@@ -423,28 +423,28 @@
 	}
 
 	$type_of_room = 0;
-	if ($troom == "Superior Room") {
-		$type_of_room = 3000;
-	} else if ($troom == "Deluxe Room") {
-		$type_of_room = 2000;
-	} else if ($troom == "Guest House") {
-		$type_of_room = 1500;
-	} else if ($troom == "Single Room") {
-		$type_of_room = 1000;
-	}
+        if ($troom == "Habitación Doble") {
+                $type_of_room = 3000;
+        } else if ($troom == "Habitación Suite") {
+                $type_of_room = 2000;
+        } else if ($troom == "Habitación Múltiple") {
+                $type_of_room = 1500;
+        } else if ($troom == "Habitación Sencilla") {
+                $type_of_room = 1000;
+        }
 
-	$ttot = $days * $type_of_room;
-	if ($bed == "Single") {
-		$type_of_bed = $type_of_room * 1 / 100;
-	} else if ($bed == "Double") {
-		$type_of_bed = $type_of_room * 2 / 100;
-	} else if ($bed == "Triple") {
-		$type_of_bed = $type_of_room * 3 / 100;
-	} else if ($bed == "Quad") {
-		$type_of_bed = $type_of_room * 4 / 100;
-	} else if ($bed == "None") {
-		$type_of_bed = $type_of_room * 0 / 100;
-	}
+        $ttot = $days * $type_of_room;
+        if ($bed == "1 cliente") {
+                $type_of_bed = $type_of_room * 1 / 100;
+        } else if ($bed == "2 clientes") {
+                $type_of_bed = $type_of_room * 2 / 100;
+        } else if ($bed == "3 clientes") {
+                $type_of_bed = $type_of_room * 3 / 100;
+        } else if ($bed == "4 clientes") {
+                $type_of_bed = $type_of_room * 4 / 100;
+        } else if ($bed == "None") {
+                $type_of_bed = $type_of_room * 0 / 100;
+        }
 	$btot=$days*$type_of_bed;
 
 	if ($meal == "Room only") {
@@ -501,8 +501,8 @@
 					<td><span><?php echo $nroom; ?> </span></td>
 					<td><span data-prefix>$</span><span><?php echo $ttot; ?></span></td>
 				</tr>
-				<tr>
-					<td><span><?php echo $bed; ?> Bed </span></td>
+                                <tr>
+                                        <td><span>Capacidad <?php echo $bed; ?></span></td>
 					<td><span><?php echo $days; ?></span></td>
 					<td><span data-prefix>$</span><span><?php echo $type_of_bed; ?></span></td>
 					<td><span><?php echo $nroom; ?> </span></td>

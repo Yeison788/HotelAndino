@@ -160,6 +160,61 @@ body{
   padding-left: 10px; /* compensa el borde izquierdo */
 }
 
+.sidenav ul li.has-submenu{
+  display: block;
+  padding: 0;
+  height: auto;
+}
+
+.sidenav ul li.has-submenu .submenu-trigger{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 50px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+  transition: background-color .18s ease, color .18s ease;
+}
+
+.sidenav ul li.has-submenu .submenu-trigger:hover,
+.sidenav ul li.has-submenu .submenu-trigger.active{
+  background: var(--sidebar-active);
+  border-left: 4px solid var(--sidebar-accent);
+  padding-left: 10px;
+}
+
+.sidenav ul li.has-submenu .submenu{
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sidenav ul li.has-submenu:hover .submenu,
+.sidenav ul li.has-submenu:focus-within .submenu,
+.sidenav ul li.has-submenu .submenu-trigger.active + .submenu{
+  display: block;
+}
+
+.sidenav ul li.has-submenu .submenu .pagebtn{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px 0 48px;
+  font-size: 0.92rem;
+}
+
+.sidenav ul li.has-submenu .submenu .pagebtn.active{
+  background: var(--sidebar-active);
+  border-left: 4px solid var(--sidebar-accent);
+  padding-left: 44px;
+}
+
 .sidenav img{
   height: 23px;
   width: 23px;
