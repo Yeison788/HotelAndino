@@ -189,6 +189,7 @@ if (!function_exists('guest_portal_request_types')) {
     function guest_portal_request_types(): array
     {
         return [
+            'room_service' => 'Servicio a la habitación',
             'toalla'      => 'Toalla adicional',
             'jabon'       => 'Jabón / amenities',
             'asistencia'  => 'Asistencia de recepción',

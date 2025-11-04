@@ -1,1038 +1,625 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/.gitignore b/.gitignore
-new file mode 100644
-index 0000000000000000000000000000000000000000..26ee7fed1ef9124973422a95953167507e5442b2
---- /dev/null
-+++ b/.gitignore
-@@ -0,0 +1,6 @@
-+node_modules/
-+vendor/
-+.DS_Store
-+.env
-+.idea/
-+*.log
-diff --git a/admin/admin.php b/admin/admin.php
-index 65ec111b6101088b4cd80aadcbde157c7199d87c..16ce71bf2ca2f58a35e34bbe7ca8c26c5f09e083 100644
---- a/admin/admin.php
-+++ b/admin/admin.php
-@@ -1,55 +1,56 @@
- <?php
- include '../config.php';
- session_start();
- 
- require_once __DIR__ . '/includes/admin_bootstrap.php';
- 
- // Verificación de sesión admin
- $adminmail = $_SESSION['adminmail'] ?? '';
- if (!$adminmail) {
-   header("location: ../index.php");
-   exit;
+diff --git a/chatbot.css b/chatbot.css
+index 6f339def22d095df847b0da34e357983dc1166c7..8b3883c904b6b55eda9fbc9d9d5d91b5f23fc4d2 100644
+--- a/chatbot.css
++++ b/chatbot.css
+@@ -64,162 +64,192 @@ body {
+     100%{ box-shadow: 0 0 0 0 rgba(16,135,255,0); }
  }
  
- ensureEmpStructure($conn);
- ensureRoomRates($conn);
- admin_refresh_session($conn, $adminmail);
+ /* ===== Botón antiguo (ya no se usa, puedes borrarlo del HTML) ===== */
+ #chatbot-toggle-btn {
+     display:none; /* oculto para evitar duplicidad */
+     position: fixed;
+     bottom: 20px;
+     right: 20px;
+     padding: 12px 15px;
+     border: none;
+     background-color: #1087FF;
+     color: #fff;
+     border-radius: 30px;
+     font-size: 16px;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     z-index: 1001;
+ }
+ #chatbot-toggle-btn:hover { background-color: #0074CC; }
  
- $employee = admin_current_employee();
- $avatarPath = !empty($employee['avatar']) ? '../' . ltrim($employee['avatar'], '/') : '../image/Profile.png';
- $hasRecords = admin_has_records_access();
- $recordsDefaultView = admin_first_records_view();
+ /* ===== Popup del chatbot ===== */
+ .chatbot-popup {
+     display: none;
+     position: fixed;
+-    /* Deja espacio al FAB a la derecha */
+     right: calc(92px + env(safe-area-inset-right));
+     bottom: calc(20px + env(safe-area-inset-bottom));
+     background-color: #fff;
+-    border-radius: 15px;
++    border-radius: 16px;
++    border: 1px solid rgba(16,135,255,.18);
+     box-shadow: 0 18px 48px rgba(0,0,0,.22), 0 10px 24px rgba(0,0,0,.12);
+     width: 350px;
+     max-width: 92vw;
+     max-height: 70vh;
+     z-index: 1001;
+     overflow: hidden;
+ }
  
- $framesPermissions = [
-   0 => admin_user_can('dashboard'),
-   1 => admin_user_can('reservas'),
--  2 => admin_user_can('pagos'),
--  3 => admin_user_can('habitaciones'),
--  4 => admin_user_can('personal'),
--  5 => $hasRecords,
--  6 => admin_user_can('estado_habitaciones'),
-+  2 => admin_user_can('reservas'),
-+  3 => admin_user_can('pagos'),
-+  4 => admin_user_can('habitaciones'),
-+  5 => admin_user_can('personal'),
-+  6 => $hasRecords,
-+  7 => admin_user_can('estado_habitaciones'),
- ];
+ .chat-header {
+     background-color: #1087FF;
+     color: #fff;
+     padding: 15px 20px;
+     border-top-left-radius: 15px;
+     border-top-right-radius: 15px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+ }
  
- $initialFrame = 0;
- foreach ($framesPermissions as $idx => $allowed) {
-   if ($allowed) {
-     $initialFrame = $idx;
-     break;
+ #close-btn {
+     background-color: transparent;
+     border: none;
+     color: #fff;
+     font-size: 20px;
+     cursor: pointer;
+ }
+ 
+ .chat-box {
+     max-height: 340px;
+     overflow-y: auto;
+-    padding: 15px 20px;
+-    background: #fafafa;
+-    /* que las burbujas puedan alinearse a izq/der con márgenes */
++    padding: 18px 20px;
++    background: #f8f4ec;
+     display: block;
+ }
+ 
+ .chat-input {
+     display: flex;
+     align-items: center;
+-    padding: 10px 20px;
+-    border-top: 1px solid #ddd;
++    gap: 12px;
++    padding: 12px 20px;
++    border-top: 1px solid rgba(16,135,255,.12);
+     background:#fff;
+ }
+ 
+ #user-input {
+     font-family: "Poppins";
+     flex: 1;
+-    padding: 10px;
+-    border: 1px solid #ddd;
++    padding: 12px;
++    border: 1px solid #d5d2c6;
+     border-radius: 12px;
+     outline: none;
++    background:#fdfbf5;
++    transition: border-color .2s ease, box-shadow .2s ease;
++}
++#user-input:focus {
++    border-color: #1087FF;
++    box-shadow: 0 0 0 2px rgba(16,135,255,.18);
++    background:#fff;
+ }
+ 
+ #send-btn {
+     font-family: "Poppins", sans-serif;
+-    padding: 10px 20px;
++    padding: 10px 18px;
+     border: none;
+     background-color: #1087FF;
+     color: #fff;
+     border-radius: 12px;
+-    margin-left: 10px;
+     cursor: pointer;
+-    transition: background-color 0.3s ease;
++    transition: background-color 0.3s ease, transform .2s ease;
++}
++#send-btn:hover {
++    background-color: #0a6cd6;
++    transform: translateY(-1px);
++}
++#send-btn:disabled {
++    opacity: .6;
++    cursor: not-allowed;
++    transform: none;
+ }
+-#send-btn:hover { background-color: #0074CC; }
+ 
+ /* ===== Burbujas ===== */
+ .user-message, .bot-message{
+-    max-width: 80%;
+-    padding: 12px 14px;
++    max-width: 82%;
++    padding: 12px 15px;
+     border-radius: 15px;
+     margin-top: 12px;
+     position: relative;
+     word-break: break-word;
++    line-height: 1.35;
+ }
+ 
+ /* Usuario: a la derecha, gris */
+ .user-message {
+     background-color: #f3f3f3;
+     color: #333;
+     margin-left: auto;   /* empuja a la derecha */
+     margin-right: 10px;
+     border-top-right-radius: 4px;
+ }
+ /* Bot: a la izquierda, azul */
+ .bot-message {
+-    background-color: #1087FF;
+-    color: #fff;
++    background-color: #e5f0ff;
++    color: #0d2242;
+     margin-right: auto;  /* empuja a la izquierda */
+     margin-left: 10px;
+     border-top-left-radius: 4px;
++    box-shadow: inset 0 0 0 1px rgba(16,135,255,.25);
+ }
+ 
+ /* Avatares (emoji) */
+-.user-message::before {
+-    content: "\1F468";
+-    position: absolute;
+-    bottom: -17px;
+-    right: -20px;
+-    margin-bottom: 7px;
+-    font-size: 20px;
+-    background-color: #1087FF;
+-    color: #fff;
+-    border-radius: 50%;
+-    width: 30px; height: 30px;
+-    display: flex; justify-content: center; align-items: center;
+-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
++#user-input:disabled {
++    opacity:.7;
++}
++
++.chat-options{
++    display:flex;
++    flex-wrap:wrap;
++    gap:8px;
++    margin:8px 0 0;
++}
++.chat-options--disabled{ opacity:.55; }
++.chat-option-btn{
++    background:#ecf4ff;
++    border:1px solid rgba(16,135,255,.45);
++    border-radius:999px;
++    padding:6px 12px;
++    font-size:12px;
++    cursor:pointer;
++    transition:background .2s ease, border-color .2s ease, transform .2s ease;
++}
++.chat-option-btn:hover{
++    background:#dbe9ff;
++    border-color:#1087FF;
++    transform: translateY(-1px);
++}
++.chat-options--disabled .chat-option-btn{
++    cursor:default;
+ }
+ .bot-message::before {
+     content: "\1F916";
+     position: absolute;
+     bottom: -17px;
+     left: -14px;
+     margin-bottom: 4px;
+     font-size: 20px;
+     background-color: #1087FF;
+     color: #fff;
+     border-radius: 50%;
+     width: 30px; height: 30px;
+     display: flex; justify-content: center; align-items: center;
+     box-shadow: 0 0 5px rgba(0,0,0,0.3);
+ }
+ 
+ /* Botones sugeridos dentro del mensaje del bot (si los usas) */
+ .button-container {
+     display: flex;
+     justify-content: space-around;
+     margin-top: 10px;
+ }
+ .button-container button {
+     padding: 10px 50px;
+     border: none;
+diff --git a/chatbot.js b/chatbot.js
+index c4126f14c114c6b2e8d14932d40cb34b5df2f3da..8503ff2a66b7f9041e1701d5b4af3a05e371f307 100644
+--- a/chatbot.js
++++ b/chatbot.js
+@@ -1,107 +1,217 @@
+-// ===== Chatbot: abrir/cerrar desde FAB, saludo, persistencia, envío a Groq =====
++// ===== Chatbot: abrir/cerrar desde FAB, saludo, persistencia, envío al responder interno =====
++
++const DEFAULT_SUGGESTIONS = [
++  { label: 'Reservar habitación', value: 'Reservar habitación' },
++  { label: 'Solicitar servicio a la habitación', value: 'Solicitar servicio a la habitación' },
++  { label: 'Ver estado de mi reserva', value: 'Estado de mi reserva' },
++  { label: 'Ver servicios del hotel', value: 'Servicios del hotel' },
++];
++
++const DEFAULT_META = {
++  inputType: 'text',
++  placeholder: 'Escribe tu mensaje o elige una opción',
++};
++
++let activeSuggestionContainers = [];
++let isSending = false;
+ 
+ // Toggle del popup. Si pasas true, fuerza cerrar.
+ function toggleChatbot(forceClose) {
+   const chatbotPopup = document.getElementById('chatbot-popup');
+   const fab = document.getElementById('chat-fab');
+   if (!chatbotPopup) return;
+ 
+   const isHidden = chatbotPopup.style.display === 'none' || chatbotPopup.style.display === '';
+   const shouldOpen = (typeof forceClose === 'boolean') ? !forceClose : isHidden;
+ 
+-  // visibilidad base (compatibilidad con tu lógica previa)
+   chatbotPopup.style.display = shouldOpen ? 'block' : 'none';
+-  // clase para animación y estados
+   chatbotPopup.classList.toggle('open', shouldOpen);
+ 
+-  // FAB visual
+   if (fab) {
+     fab.setAttribute('data-open', String(shouldOpen));
+     fab.setAttribute('aria-label', shouldOpen ? 'Cerrar chat' : 'Abrir chat');
+     fab.title = shouldOpen ? 'Cerrar chat' : 'Chatear';
+   }
+ 
+-  // Mensaje de bienvenida
+   if (shouldOpen && document.getElementById('chat-box')?.children.length === 0) {
+-    appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. ¿En qué puedo ayudarte hoy?");
++    appendMessage('bot', '👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel, ayudarte a reservar o solicitar algo a tu habitación. ¿Qué necesitas hoy?', DEFAULT_SUGGESTIONS);
++    applyInputMeta(DEFAULT_META);
+   }
+ 
+-  // Focus al abrir y persistencia
+   if (shouldOpen) setTimeout(() => document.getElementById('user-input')?.focus(), 0);
+-  try { localStorage.setItem('chatOpen', String(shouldOpen)); } catch(e) {}
++  try { localStorage.setItem('chatOpen', String(shouldOpen)); } catch (e) {}
+ }
+ 
+-// Enviar mensaje (👉 usa Groq)
+-async function sendMessage() {
++async function sendMessage(forcedText) {
+   const inputField = document.getElementById('user-input');
+-  if (!inputField) return;
+-  const userInput = inputField.value.trim();
++  if (!inputField || isSending) return;
++
++  const raw = typeof forcedText === 'string' ? forcedText : inputField.value;
++  const userInput = raw.trim();
+   if (userInput === '') return;
+ 
++  if (typeof forcedText !== 'string') {
++    inputField.value = '';
++  }
++
++  clearPendingSuggestions();
+   appendMessage('user', userInput);
+-  inputField.value = '';
++
++  await dispatchMessage(userInput);
++}
++
++async function dispatchMessage(message) {
++  const inputField = document.getElementById('user-input');
++  const sendBtn = document.getElementById('send-btn');
++
++  setSendingState(true, inputField, sendBtn);
+ 
+   try {
+-    const r = await fetch('send_to_groq.php', {
++    const response = await fetch('send_to_groq.php', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+-      body: JSON.stringify({ message: userInput })
++      body: JSON.stringify({ message }),
+     });
+ 
+-    if (r.ok) {
+-      const d = await r.json();
+-      appendMessage('bot', d.reply);
+-    } else {
++    if (!response.ok) {
+       appendMessage('bot', '⚠️ Error en el servidor, intenta más tarde.');
++      applyInputMeta(DEFAULT_META);
++      return;
+     }
+-  } catch (e) {
+-    console.error(e);
+-    appendMessage('bot', '⚠️ Error de conexión.');
++
++    const data = await response.json();
++    const payload = data?.reply ?? {};
++    const replyText = typeof payload.message === 'string' && payload.message.trim() !== ''
++      ? payload.message
++      : 'Aquí estoy para ayudarte con información del Hotel Andino.';
++    const suggestions = Array.isArray(payload.suggestions) ? payload.suggestions : [];
++    appendMessage('bot', replyText, suggestions);
++    applyInputMeta(payload.meta);
++  } catch (err) {
++    console.error(err);
++    appendMessage('bot', '⚠️ Error de conexión. Por favor revisa tu red.');
++    applyInputMeta(DEFAULT_META);
++  } finally {
++    setSendingState(false, inputField, sendBtn);
    }
  }
- ?>
  
+-// Agrega un mensaje al chat
+-function appendMessage(sender, message) {
++function appendMessage(sender, message, suggestions = []) {
+   const chatBox = document.getElementById('chat-box');
+   if (!chatBox) return;
  
- <!DOCTYPE html>
- <html lang="es">
- <head>
-     <meta charset="UTF-8">
-     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Hotel Andino - Admin</title>
- 
-     <!-- admin.css (ya con paleta dorada) -->
-     <link rel="stylesheet" href="./css/admin.css">
- 
-     <!-- loading bar -->
-     <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
-@@ -82,83 +83,85 @@ foreach ($framesPermissions as $idx => $allowed) {
-                     <div class="profile-text">
-                         <div class="profile-name"><?php echo htmlspecialchars($employee['name'] ?: 'Administrador'); ?></div>
-                         <?php if (!empty($employee['role'])): ?>
-                             <div class="profile-role"><?php echo htmlspecialchars($employee['role']); ?></div>
-                         <?php endif; ?>
-                         <div class="profile-email"><?php echo htmlspecialchars($employee['email']); ?></div>
-                     </div>
-                 </div>
-                 <div class="profile-actions">
-                     <a class="dropdown-item" href="./profile.php"><i class="fa-solid fa-user-pen"></i> Editar perfil</a>
-                     <div class="dropdown-divider"></div>
-                     <a class="dropdown-item text-danger" href="../logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
-                 </div>
-             </div>
-         </div>
-     </nav>
- 
-     <!-- side nav -->
-     <nav class="sidenav">
-         <ul>
-             <?php if (admin_user_can('dashboard')): ?>
-                 <li class="pagebtn <?php echo $initialFrame === 0 ? 'active' : ''; ?>" data-frame="0" data-src="./dashboard.php"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Panel</li>
-             <?php endif; ?>
-             <?php if (admin_user_can('reservas')): ?>
-                 <li class="pagebtn <?php echo $initialFrame === 1 ? 'active' : ''; ?>" data-frame="1" data-src="./roombook.php"><i class="fa-solid fa-bed"></i>&nbsp;&nbsp; Reservas</li>
-+                <li class="pagebtn <?php echo $initialFrame === 2 ? 'active' : ''; ?>" data-frame="2" data-src="./guest-requests.php"><i class="fa-solid fa-bell-concierge"></i>&nbsp;&nbsp; Solicitudes</li>
-             <?php endif; ?>
-             <?php if (admin_user_can('pagos')): ?>
--                <li class="pagebtn <?php echo $initialFrame === 2 ? 'active' : ''; ?>" data-frame="2" data-src="./payment.php"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
-+                <li class="pagebtn <?php echo $initialFrame === 3 ? 'active' : ''; ?>" data-frame="3" data-src="./payment.php"><i class="fa-solid fa-money-bill-wave"></i>&nbsp;&nbsp; Pagos</li>
-             <?php endif; ?>
-             <?php if (admin_user_can('habitaciones')): ?>
--                <li class="pagebtn <?php echo $initialFrame === 3 ? 'active' : ''; ?>" data-frame="3" data-src="./room.php"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
-+                <li class="pagebtn <?php echo $initialFrame === 4 ? 'active' : ''; ?>" data-frame="4" data-src="./room.php"><i class="fa-solid fa-house"></i>&nbsp;&nbsp; Habitaciones</li>
-             <?php endif; ?>
-             <?php if (admin_user_can('personal')): ?>
--                <li class="pagebtn <?php echo $initialFrame === 4 ? 'active' : ''; ?>" data-frame="4" data-src="./staff.php"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
-+                <li class="pagebtn <?php echo $initialFrame === 5 ? 'active' : ''; ?>" data-frame="5" data-src="./staff.php"><i class="fa-solid fa-user-group"></i>&nbsp;&nbsp; Personal</li>
-             <?php endif; ?>
-             <?php if ($hasRecords): ?>
-                 <li class="has-submenu">
--                    <div class="submenu-trigger <?php echo $initialFrame === 5 ? 'active' : ''; ?>" tabindex="0"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</div>
-+                    <div class="submenu-trigger <?php echo $initialFrame === 6 ? 'active' : ''; ?>" tabindex="0"><i class="fa-solid fa-clipboard-list"></i>&nbsp;&nbsp; Registros</div>
-                     <ul class="submenu">
-                         <?php if (admin_user_can('registros.summary')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'summary') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=summary"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Resumen rápido</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'summary') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=summary"><i class="fa-solid fa-chart-line"></i>&nbsp;&nbsp; Resumen rápido</li>
-                         <?php endif; ?>
-                         <?php if (admin_user_can('registros.rooms')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'rooms') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=rooms"><i class="fa-solid fa-door-open"></i>&nbsp;&nbsp; Registrar habitación</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'rooms') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=rooms"><i class="fa-solid fa-door-open"></i>&nbsp;&nbsp; Registrar habitación</li>
-                         <?php endif; ?>
-                         <?php if (admin_user_can('registros.room-types')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'room-types') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=room-types"><i class="fa-solid fa-layer-group"></i>&nbsp;&nbsp; Registrar tipo de habitación</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'room-types') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=room-types"><i class="fa-solid fa-layer-group"></i>&nbsp;&nbsp; Registrar tipo de habitación</li>
-                         <?php endif; ?>
-                         <?php if (admin_user_can('registros.admins')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'admin-staff') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=admin-staff"><i class="fa-solid fa-user-gear"></i>&nbsp;&nbsp; Registrar administrativos</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'admin-staff') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=admin-staff"><i class="fa-solid fa-user-gear"></i>&nbsp;&nbsp; Registrar administrativos</li>
-                         <?php endif; ?>
-                         <?php if (admin_user_can('registros.products')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'products') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=products"><i class="fa-solid fa-box"></i>&nbsp;&nbsp; Registrar producto</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'products') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=products"><i class="fa-solid fa-box"></i>&nbsp;&nbsp; Registrar producto</li>
-                         <?php endif; ?>
-                         <?php if (admin_user_can('registros.sales')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'sales') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=sales"><i class="fa-solid fa-cash-register"></i>&nbsp;&nbsp; Registrar venta</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'sales') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=sales"><i class="fa-solid fa-cash-register"></i>&nbsp;&nbsp; Registrar venta</li>
-                         <?php endif; ?>
-                         <?php if (admin_user_can('registros.pricing')): ?>
--                            <li class="pagebtn <?php echo ($initialFrame === 5 && $recordsDefaultView === 'pricing') ? 'active' : ''; ?>" data-frame="5" data-src="./records.php?view=pricing"><i class="fa-solid fa-tags"></i>&nbsp;&nbsp; Tarifas de habitaciones</li>
-+                            <li class="pagebtn <?php echo ($initialFrame === 6 && $recordsDefaultView === 'pricing') ? 'active' : ''; ?>" data-frame="6" data-src="./records.php?view=pricing"><i class="fa-solid fa-tags"></i>&nbsp;&nbsp; Tarifas de habitaciones</li>
-                         <?php endif; ?>
-                     </ul>
-                 </li>
-             <?php endif; ?>
-             <?php if (admin_user_can('estado_habitaciones')): ?>
--                <li class="pagebtn <?php echo $initialFrame === 6 ? 'active' : ''; ?>" data-frame="6" data-src="./room-status.php"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Estado</li>
-+                <li class="pagebtn <?php echo $initialFrame === 7 ? 'active' : ''; ?>" data-frame="7" data-src="./room-status.php"><i class="fa-solid fa-eye"></i>&nbsp;&nbsp; Estado</li>
-             <?php endif; ?>
-         </ul>
-     </nav>
- 
-     <!-- main section -->
-     <div class="mainscreen">
-         <iframe class="frames frame1 <?php echo $initialFrame === 0 ? 'active' : ''; ?>" src="<?php echo admin_user_can('dashboard') ? './dashboard.php' : './empty.html'; ?>" frameborder="0"></iframe>
-         <iframe class="frames frame2 <?php echo $initialFrame === 1 ? 'active' : ''; ?>" src="<?php echo admin_user_can('reservas') ? './roombook.php' : './empty.html'; ?>" frameborder="0"></iframe>
--        <iframe class="frames frame3 <?php echo $initialFrame === 2 ? 'active' : ''; ?>" src="<?php echo admin_user_can('pagos') ? './payment.php' : './empty.html'; ?>" frameborder="0"></iframe>
--        <iframe class="frames frame4 <?php echo $initialFrame === 3 ? 'active' : ''; ?>" src="<?php echo admin_user_can('habitaciones') ? './room.php' : './empty.html'; ?>" frameborder="0"></iframe>
--        <iframe class="frames frame5 <?php echo $initialFrame === 4 ? 'active' : ''; ?>" src="<?php echo admin_user_can('personal') ? './staff.php' : './empty.html'; ?>" frameborder="0"></iframe>
--        <iframe class="frames frame6 <?php echo $initialFrame === 5 ? 'active' : ''; ?>" src="<?php echo $hasRecords ? './records.php?view=' . urlencode($recordsDefaultView) : './empty.html'; ?>" frameborder="0"></iframe>
--        <iframe class="frames frame7 <?php echo $initialFrame === 6 ? 'active' : ''; ?>" src="<?php echo admin_user_can('estado_habitaciones') ? './room-status.php' : './empty.html'; ?>" frameborder="0"></iframe>
-+        <iframe class="frames frame3 <?php echo $initialFrame === 2 ? 'active' : ''; ?>" src="<?php echo admin_user_can('reservas') ? './guest-requests.php' : './empty.html'; ?>" frameborder="0"></iframe>
-+        <iframe class="frames frame4 <?php echo $initialFrame === 3 ? 'active' : ''; ?>" src="<?php echo admin_user_can('pagos') ? './payment.php' : './empty.html'; ?>" frameborder="0"></iframe>
-+        <iframe class="frames frame5 <?php echo $initialFrame === 4 ? 'active' : ''; ?>" src="<?php echo admin_user_can('habitaciones') ? './room.php' : './empty.html'; ?>" frameborder="0"></iframe>
-+        <iframe class="frames frame6 <?php echo $initialFrame === 5 ? 'active' : ''; ?>" src="<?php echo admin_user_can('personal') ? './staff.php' : './empty.html'; ?>" frameborder="0"></iframe>
-+        <iframe class="frames frame7 <?php echo $initialFrame === 6 ? 'active' : ''; ?>" src="<?php echo $hasRecords ? './records.php?view=' . urlencode($recordsDefaultView) : './empty.html'; ?>" frameborder="0"></iframe>
-+        <iframe class="frames frame8 <?php echo $initialFrame === 7 ? 'active' : ''; ?>" src="<?php echo admin_user_can('estado_habitaciones') ? './room-status.php' : './empty.html'; ?>" frameborder="0"></iframe>
-     </div>
- 
-     <script src="./javascript/script.js"></script>
- </body>
- </html>
-diff --git a/admin/guest-requests.php b/admin/guest-requests.php
-new file mode 100644
-index 0000000000000000000000000000000000000000..05bc2e59b47d1fb016578c4f2844b1be3e47c38c
---- /dev/null
-+++ b/admin/guest-requests.php
-@@ -0,0 +1,311 @@
-+<?php
-+session_start();
-+include '../config.php';
-+require_once __DIR__ . '/includes/admin_bootstrap.php';
+-  const div = document.createElement('div');
+-  div.className = sender === 'user' ? 'user-message' : 'bot-message';
+-  div.textContent = message;
+-  chatBox.appendChild(div);
++  const bubble = document.createElement('div');
++  bubble.className = sender === 'user' ? 'user-message' : 'bot-message';
++  bubble.innerHTML = formatMessage(message ?? '');
++  chatBox.appendChild(bubble);
 +
-+ensureEmpStructure($conn);
-+ensureRoomRates($conn);
-+admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
-+admin_require_permission('reservas');
-+admin_ensure_guest_portal($conn);
++  if (Array.isArray(suggestions) && suggestions.length > 0) {
++    const optionsWrap = document.createElement('div');
++    optionsWrap.className = 'chat-options';
 +
-+$employee = admin_current_employee();
-+$adminEmail = $employee['email'];
-+$adminRole = strtolower((string)($employee['role'] ?? ''));
-+$audience = (!empty($_SESSION['admin_is_super']) || $adminRole !== 'recepcionista') ? 'admin' : 'recepcion';
++    suggestions.forEach((opt) => {
++      const label = typeof opt.label === 'string' ? opt.label : '';
++      const value = typeof opt.value === 'string' ? opt.value : '';
++      if (!label || !value) return;
++      const btn = document.createElement('button');
++      btn.type = 'button';
++      btn.className = 'chat-option-btn';
++      btn.textContent = label;
++      btn.addEventListener('click', () => sendMessage(value));
++      optionsWrap.appendChild(btn);
++    });
 +
-+$allowedStatuses = ['pendiente','en_proceso','completado','cancelado'];
-+$statusFilter = $_GET['status'] ?? '';
-+if ($statusFilter !== '' && !in_array($statusFilter, $allowedStatuses, true)) {
-+    $statusFilter = '';
-+}
-+
-+$flashMessages = $_SESSION['guest_requests_flash'] ?? [];
-+unset($_SESSION['guest_requests_flash']);
-+
-+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-+    $messages = [];
-+
-+    if (isset($_POST['update_request'])) {
-+        $requestId = (int)($_POST['request_id'] ?? 0);
-+        $status = $_POST['status'] ?? '';
-+        $note = trim($_POST['response_note'] ?? '');
-+        $chargeRaw = trim($_POST['charge_amount'] ?? '');
-+        $charge = null;
-+        if ($chargeRaw !== '') {
-+            $normalized = str_replace(['.', ','], ['', '.'], $chargeRaw);
-+            if (is_numeric($normalized)) {
-+                $charge = (float)$normalized;
-+            }
-+        }
-+
-+        if ($requestId > 0 && in_array($status, $allowedStatuses, true)) {
-+            if (guest_portal_update_request($conn, $requestId, $status, $note, $adminEmail, $charge)) {
-+                $messages[] = ['type' => 'success', 'text' => 'Solicitud actualizada correctamente.'];
-+            } else {
-+                $messages[] = ['type' => 'error', 'text' => 'No se pudo actualizar la solicitud.'];
-+            }
-+        } else {
-+            $messages[] = ['type' => 'error', 'text' => 'Datos inválidos para actualizar la solicitud.'];
-+        }
-+    } elseif (isset($_POST['add_minibar'])) {
-+        $reservationId = (int)($_POST['reservation_id'] ?? 0);
-+        $concept = trim($_POST['concept'] ?? '');
-+        $amountRaw = trim($_POST['amount'] ?? '');
-+        $amountNormalized = str_replace(['.', ','], ['', '.'], $amountRaw);
-+        $amount = is_numeric($amountNormalized) ? (float)$amountNormalized : null;
-+
-+        if ($reservationId > 0 && $concept !== '' && $amount !== null) {
-+            $userId = null;
-+            if ($stmt = $conn->prepare('SELECT user_id FROM roombook WHERE id = ? LIMIT 1')) {
-+                $stmt->bind_param('i', $reservationId);
-+                if ($stmt->execute()) {
-+                    $stmt->bind_result($uid);
-+                    if ($stmt->fetch()) {
-+                        $userId = $uid ? (int)$uid : null;
-+                    }
-+                }
-+                $stmt->close();
-+            }
-+
-+            $requestId = guest_portal_create_request($conn, $reservationId, $userId, 'minibar', $concept, 'staff', $amount);
-+            if ($requestId) {
-+                $messages[] = ['type' => 'success', 'text' => 'Consumo de minibar registrado.'];
-+                $notifBody = sprintf('Se registró consumo de minibar (%s) por COP %s.', $concept, number_format($amount, 0, ',', '.'));
-+                guest_portal_record_notification($conn, 'admin', 'Consumo en minibar', $notifBody, 'admin/guest-requests.php', $reservationId, $requestId);
-+                guest_portal_record_notification($conn, 'recepcion', 'Consumo en minibar', $notifBody, 'admin/guest-requests.php', $reservationId, $requestId);
-+            } else {
-+                $messages[] = ['type' => 'error', 'text' => 'No fue posible registrar el consumo.'];
-+            }
-+        } else {
-+            $messages[] = ['type' => 'error', 'text' => 'Completa los datos para registrar el consumo.'];
-+        }
-+    } elseif (isset($_POST['mark_notifications'])) {
-+        $ids = array_map('intval', $_POST['notification_ids'] ?? []);
-+        guest_portal_mark_notifications($conn, $ids, true);
-+        $messages[] = ['type' => 'success', 'text' => 'Notificaciones marcadas como leídas.'];
++    if (optionsWrap.children.length > 0) {
++      chatBox.appendChild(optionsWrap);
++      activeSuggestionContainers.push(optionsWrap);
 +    }
++  }
 +
-+    $_SESSION['guest_requests_flash'] = $messages;
-+    $redirect = 'guest-requests.php';
-+    if ($statusFilter !== '') {
-+        $redirect .= '?status=' . urlencode($statusFilter);
+   chatBox.scrollTop = chatBox.scrollHeight;
+ }
+ 
++function clearPendingSuggestions() {
++  while (activeSuggestionContainers.length) {
++    const container = activeSuggestionContainers.pop();
++    if (!container) continue;
++    container.classList.add('chat-options--disabled');
++    container.querySelectorAll('button').forEach((btn) => {
++      btn.disabled = true;
++    });
++  }
++}
++
++function applyInputMeta(meta = {}) {
++  const inputField = document.getElementById('user-input');
++  if (!inputField) return;
++
++  const type = typeof meta.inputType === 'string' ? meta.inputType : DEFAULT_META.inputType;
++  try {
++    const previousType = inputField.getAttribute('data-last-type') || inputField.type;
++    inputField.type = type;
++    if (previousType !== type) {
++      inputField.value = '';
 +    }
-+    header('Location: ' . $redirect);
-+    exit;
++    inputField.setAttribute('data-last-type', type);
++  } catch (e) {
++    inputField.type = 'text';
++  }
++
++  const placeholder = typeof meta.placeholder === 'string' && meta.placeholder.trim() !== ''
++    ? meta.placeholder
++    : DEFAULT_META.placeholder;
++  inputField.placeholder = placeholder;
 +}
 +
-+$requests = guest_portal_requests_for_admin($conn, $statusFilter ?: null);
-+$notifications = guest_portal_notifications_for_audience($conn, $audience, 8, true);
-+$confirmedReservations = guest_portal_confirmed_reservations($conn);
-+$requestTypesCatalog = guest_portal_request_types();
-+
-+function guest_requests_status_badge(string $status): string
-+{
-+    $label = guest_portal_format_status($status);
-+    $class = 'status-' . preg_replace('/[^a-z_\-]/i', '', strtolower($status));
-+    return '<span class="badge bg-light text-dark status-badge ' . htmlspecialchars($class) . '">' . htmlspecialchars($label) . '</span>';
-+}
-+?>
-+<!DOCTYPE html>
-+<html lang="es">
-+<head>
-+    <meta charset="UTF-8">
-+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-+    <title>Solicitudes de huéspedes</title>
-+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-+    <style>
-+        body{ background:#f5f4f0; }
-+        .page-header{ display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
-+        .card-shadow{ border:none; border-radius:16px; box-shadow:0 16px 32px rgba(0,0,0,.08); }
-+        .requests-table th{ background:#f8f1d8; color:#5f4c1f; text-transform:uppercase; font-size:12px; letter-spacing:.04em; }
-+        .requests-table td{ vertical-align:middle; }
-+        .status-badge{ border-radius:999px; padding:4px 10px; font-size:12px; text-transform:capitalize; }
-+        .status-pendiente{ background:rgba(241,196,15,.18); color:#b9770e; }
-+        .status-en_proceso{ background:rgba(52,152,219,.18); color:#1f618d; }
-+        .status-completado{ background:rgba(39,174,96,.18); color:#1d8348; }
-+        .status-cancelado{ background:rgba(231,76,60,.18); color:#943126; }
-+        .filter-tabs .nav-link{ border-radius:999px; padding:6px 18px; font-weight:500; color:#5b4a2b; }
-+        .filter-tabs .nav-link.active{ background:#d4af37; color:#fff; }
-+        .minibar-form .form-control,.minibar-form .form-select{ border-radius:10px; }
-+    </style>
-+</head>
-+<body class="p-4">
-+    <div class="container-fluid">
-+        <div class="page-header">
-+            <div>
-+                <h1 class="h3 mb-1">Solicitudes de huéspedes</h1>
-+                <p class="text-muted mb-0">Gestiona peticiones en habitación, consumos y asistencia en tiempo real.</p>
-+            </div>
-+            <form class="d-flex align-items-center gap-2" method="get" action="">
-+                <select class="form-select" name="status" onchange="this.form.submit()">
-+                    <option value="" <?php echo $statusFilter === '' ? 'selected' : ''; ?>>Todas las solicitudes</option>
-+                    <option value="pendiente" <?php echo $statusFilter === 'pendiente' ? 'selected' : ''; ?>>Pendientes</option>
-+                    <option value="en_proceso" <?php echo $statusFilter === 'en_proceso' ? 'selected' : ''; ?>>En proceso</option>
-+                    <option value="completado" <?php echo $statusFilter === 'completado' ? 'selected' : ''; ?>>Completadas</option>
-+                    <option value="cancelado" <?php echo $statusFilter === 'cancelado' ? 'selected' : ''; ?>>Canceladas</option>
-+                </select>
-+                <?php if ($statusFilter !== ''): ?>
-+                    <a class="btn btn-outline-secondary" href="guest-requests.php">Limpiar</a>
-+                <?php endif; ?>
-+            </form>
-+        </div>
-+
-+        <?php if (!empty($flashMessages)): ?>
-+            <?php foreach ($flashMessages as $msg): ?>
-+                <div class="alert alert-<?php echo $msg['type'] === 'error' ? 'danger' : 'success'; ?> alert-dismissible fade show" role="alert">
-+                    <?php echo htmlspecialchars($msg['text']); ?>
-+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-+                </div>
-+            <?php endforeach; ?>
-+        <?php endif; ?>
-+
-+        <div class="row g-4">
-+            <div class="col-lg-8">
-+                <div class="card card-shadow">
-+                    <div class="card-body">
-+                        <div class="d-flex justify-content-between align-items-center mb-3">
-+                            <h2 class="h5 mb-0">Solicitudes activas</h2>
-+                            <span class="badge bg-light text-dark">Total: <?php echo count($requests); ?></span>
-+                        </div>
-+                        <div class="table-responsive">
-+                            <table class="table requests-table align-middle">
-+                                <thead>
-+                                    <tr>
-+                                        <th>ID</th>
-+                                        <th>Huésped</th>
-+                                        <th>Servicio</th>
-+                                        <th>Estado</th>
-+                                        <th>Actualizado</th>
-+                                        <th>Acciones</th>
-+                                    </tr>
-+                                </thead>
-+                                <tbody>
-+                                    <?php if (empty($requests)): ?>
-+                                        <tr>
-+                                            <td colspan="6" class="text-center text-muted py-4">No hay solicitudes para mostrar.</td>
-+                                        </tr>
-+                                    <?php else: ?>
-+                                        <?php foreach ($requests as $request): ?>
-+                                            <?php
-+                                                $guestName = $request['reservation_name'] ?? ($request['Username'] ?? 'Huésped');
-+                                                $guestEmail = $request['reservation_email'] ?? ($request['user_email'] ?? '');
-+                                                $typeLabel = $requestTypesCatalog[$request['request_type']] ?? ucfirst($request['request_type']);
-+                                                $updatedAt = $request['updated_at'] ?? $request['created_at'] ?? '';
-+                                                $updatedLabel = $updatedAt ? date('d/m/Y H:i', strtotime($updatedAt)) : '—';
-+                                                $roomNumber = $request['room_number'] ?? '';
-+                                                $reservationDates = '';
-+                                                if (!empty($request['cin']) && !empty($request['cout'])) {
-+                                                    $reservationDates = date('d/m', strtotime($request['cin'])) . ' - ' . date('d/m', strtotime($request['cout']));
-+                                                }
-+                                            ?>
-+                                            <tr>
-+                                                <td>#<?php echo (int)$request['id']; ?></td>
-+                                                <td>
-+                                                    <strong><?php echo htmlspecialchars($guestName); ?></strong><br>
-+                                                    <small class="text-muted"><?php echo htmlspecialchars($guestEmail); ?></small><br>
-+                                                    <?php if ($roomNumber): ?><span class="badge bg-secondary">Hab. <?php echo htmlspecialchars($roomNumber); ?></span><?php endif; ?>
-+                                                </td>
-+                                                <td>
-+                                                    <div class="fw-semibold"><?php echo htmlspecialchars($typeLabel); ?></div>
-+                                                    <div class="text-muted small">Reserva #<?php echo (int)($request['roombook_id'] ?? 0); ?><?php if ($reservationDates): ?> · <?php echo htmlspecialchars($reservationDates); ?><?php endif; ?></div>
-+                                                    <?php if (!empty($request['details'])): ?>
-+                                                        <div class="text-muted small mt-1"><?php echo nl2br(htmlspecialchars($request['details'])); ?></div>
-+                                                    <?php endif; ?>
-+                                                    <?php if ($request['charge_amount'] !== null): ?>
-+                                                        <div class="small text-success mt-1">Consumo: COP <?php echo number_format((float)$request['charge_amount'], 0, ',', '.'); ?></div>
-+                                                    <?php endif; ?>
-+                                                </td>
-+                                                <td><?php echo guest_requests_status_badge($request['status'] ?? 'pendiente'); ?></td>
-+                                                <td><?php echo htmlspecialchars($updatedLabel); ?></td>
-+                                                <td>
-+                                                    <form method="post" class="d-grid gap-2">
-+                                                        <input type="hidden" name="request_id" value="<?php echo (int)$request['id']; ?>">
-+                                                        <select name="status" class="form-select form-select-sm">
-+                                                            <?php foreach ($allowedStatuses as $statusKey): ?>
-+                                                                <option value="<?php echo $statusKey; ?>" <?php echo ($request['status'] === $statusKey) ? 'selected' : ''; ?>><?php echo guest_portal_format_status($statusKey); ?></option>
-+                                                            <?php endforeach; ?>
-+                                                        </select>
-+                                                        <textarea name="response_note" class="form-control form-control-sm" rows="2" placeholder="Nota interna (opcional)"><?php echo htmlspecialchars($request['response_note'] ?? ''); ?></textarea>
-+                                                        <input type="text" name="charge_amount" class="form-control form-control-sm" placeholder="COP" value="<?php echo $request['charge_amount'] !== null ? number_format((float)$request['charge_amount'], 2, '.', '') : ''; ?>">
-+                                                        <button class="btn btn-sm btn-primary" type="submit" name="update_request" value="1">Actualizar</button>
-+                                                    </form>
-+                                                </td>
-+                                            </tr>
-+                                        <?php endforeach; ?>
-+                                    <?php endif; ?>
-+                                </tbody>
-+                            </table>
-+                        </div>
-+                    </div>
-+                </div>
-+            </div>
-+            <div class="col-lg-4">
-+                <div class="card card-shadow mb-4">
-+                    <div class="card-body">
-+                        <h2 class="h6 mb-3">Registrar consumo de minibar</h2>
-+                        <form method="post" class="minibar-form d-grid gap-3">
-+                            <div>
-+                                <label for="reservation_id" class="form-label">Reserva</label>
-+                                <select class="form-select" name="reservation_id" id="reservation_id" required>
-+                                    <option value="" selected disabled>Selecciona una reserva</option>
-+                                    <?php foreach ($confirmedReservations as $reservation): ?>
-+                                        <option value="<?php echo (int)$reservation['id']; ?>">
-+                                            #<?php echo (int)$reservation['id']; ?> · <?php echo htmlspecialchars($reservation['Name'] ?? $reservation['Email'] ?? 'Huésped'); ?>
-+                                        </option>
-+                                    <?php endforeach; ?>
-+                                </select>
-+                            </div>
-+                            <div>
-+                                <label for="concept" class="form-label">Detalle</label>
-+                                <input type="text" class="form-control" id="concept" name="concept" placeholder="Ej. Bebida, snack" required>
-+                            </div>
-+                            <div>
-+                                <label for="amount" class="form-label">Monto (COP)</label>
-+                                <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount" required>
-+                            </div>
-+                            <button class="btn btn-success" type="submit" name="add_minibar" value="1"><i class="fa-solid fa-plus"></i> Registrar consumo</button>
-+                        </form>
-+                    </div>
-+                </div>
-+
-+                <div class="card card-shadow">
-+                    <div class="card-body">
-+                        <div class="d-flex justify-content-between align-items-center mb-2">
-+                            <h2 class="h6 mb-0">Notificaciones recientes</h2>
-+                            <?php if (!empty($notifications)): ?>
-+                            <form method="post" class="d-inline">
-+                                <?php foreach ($notifications as $notif): ?>
-+                                    <input type="hidden" name="notification_ids[]" value="<?php echo (int)$notif['id']; ?>">
-+                                <?php endforeach; ?>
-+                                <button class="btn btn-link btn-sm" type="submit" name="mark_notifications" value="1">Marcar como leídas</button>
-+                            </form>
-+                            <?php endif; ?>
-+                        </div>
-+                        <ul class="list-unstyled mb-0 d-grid gap-3">
-+                            <?php if (empty($notifications)): ?>
-+                                <li class="text-muted small">Sin notificaciones pendientes.</li>
-+                            <?php else: ?>
-+                                <?php foreach ($notifications as $notif): ?>
-+                                    <li>
-+                                        <div class="fw-semibold"><?php echo htmlspecialchars($notif['title']); ?></div>
-+                                        <div class="text-muted small mb-1"><?php echo htmlspecialchars($notif['message']); ?></div>
-+                                        <div class="text-muted small"><?php echo date('d/m/Y H:i', strtotime($notif['created_at'])); ?></div>
-+                                        <?php if (!empty($notif['link'])): ?>
-+                                            <a class="small" href="<?php echo htmlspecialchars($notif['link']); ?>" target="_top">Ver detalle</a>
-+                                        <?php endif; ?>
-+                                    </li>
-+                                <?php endforeach; ?>
-+                            <?php endif; ?>
-+                        </ul>
-+                    </div>
-+                </div>
-+            </div>
-+        </div>
-+    </div>
-+
-+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-+</body>
-+</html>
-diff --git a/admin/includes/admin_bootstrap.php b/admin/includes/admin_bootstrap.php
-index f944267d8c1f6c374722efe993028ee5c63a26ee..3cf101844730b5710f39e9d7ab6005497403a5fd 100644
---- a/admin/includes/admin_bootstrap.php
-+++ b/admin/includes/admin_bootstrap.php
-@@ -1,29 +1,31 @@
- <?php
- /**
-  * Utilidades comunes para el panel administrativo.
-  */
-+
-+require_once dirname(__DIR__, 2) . '/includes/guest_portal.php';
- if (!function_exists('admin_column_exists')) {
-     function admin_column_exists(mysqli $conn, string $table, string $column): bool
-     {
-         $sql = sprintf("SHOW COLUMNS FROM `%s` LIKE '%s'", $table, $conn->real_escape_string($column));
-         $result = mysqli_query($conn, $sql);
-         if ($result === false) {
-             return false;
-         }
-         $exists = mysqli_num_rows($result) > 0;
-         mysqli_free_result($result);
-         return $exists;
-     }
- }
- 
- if (!function_exists('admin_available_permissions')) {
-     function admin_available_permissions(): array
-     {
-         return [
-             'dashboard'             => 'Panel principal',
-             'reservas'              => 'Reservas',
-             'pagos'                 => 'Pagos y facturación',
-             'habitaciones'          => 'Habitaciones',
-             'personal'              => 'Gestión de personal',
-             'registros.summary'     => 'Resumen de registros',
-             'registros.rooms'       => 'Registrar habitación',
-@@ -77,50 +79,57 @@ if (!function_exists('ensureEmpStructure')) {
-             mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN Role VARCHAR(60) NULL AFTER FullName");
-         }
-         if (!admin_column_exists($conn, 'emp_login', 'Permissions')) {
-             mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN Permissions TEXT NULL AFTER Role");
-         }
-         if (!admin_column_exists($conn, 'emp_login', 'IsSuperAdmin')) {
-             mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN IsSuperAdmin TINYINT(1) NOT NULL DEFAULT 0 AFTER Permissions");
-         }
-         if (!admin_column_exists($conn, 'emp_login', 'CreatedAt')) {
-             mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER IsSuperAdmin");
-         }
-         if (!admin_column_exists($conn, 'emp_login', 'AvatarPath')) {
-             mysqli_query($conn, "ALTER TABLE emp_login ADD COLUMN AvatarPath VARCHAR(255) NULL AFTER CreatedAt");
-         }
- 
-         $allPermissions = json_encode(array_keys(admin_available_permissions()), JSON_UNESCAPED_UNICODE);
-         $stmt = $conn->prepare("UPDATE emp_login SET Permissions = ?, Role = 'Super Administrador', FullName = IF(FullName IS NULL OR FullName = '', 'Administrador General', FullName), IsSuperAdmin = 1 WHERE Emp_Email = 'admin@hotelandino.com'");
-         if ($stmt) {
-             $stmt->bind_param('s', $allPermissions);
-             $stmt->execute();
-             $stmt->close();
-         }
-     }
- }
- 
-+if (!function_exists('admin_ensure_guest_portal')) {
-+    function admin_ensure_guest_portal(mysqli $conn): void
-+    {
-+        guest_portal_ensure_schema($conn);
-+    }
++function setSendingState(state, inputField, sendBtn) {
++  isSending = state;
++  if (inputField) {
++    inputField.disabled = state;
++  }
++  if (sendBtn) {
++    sendBtn.disabled = state;
++  }
 +}
 +
- if (!function_exists('ensureRoomRates')) {
-     function ensureRoomRates(mysqli $conn): void
-     {
-         mysqli_query(
-             $conn,
-             "CREATE TABLE IF NOT EXISTS room_rates (" .
-             " room_type VARCHAR(80) NOT NULL PRIMARY KEY," .
-             " base_price DECIMAL(10,2) NOT NULL DEFAULT 0," .
-             " updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" .
-             ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-         );
- 
-         $defaults = admin_default_room_rates();
-         $stmt = $conn->prepare("INSERT INTO room_rates (room_type, base_price) VALUES (?, ?) ON DUPLICATE KEY UPDATE base_price = base_price");
-         if ($stmt) {
-             foreach ($defaults as $type => $price) {
-                 $stmt->bind_param('sd', $type, $price);
-                 $stmt->execute();
-             }
-             $stmt->close();
-         }
-     }
- }
- 
- if (!function_exists('ensureStaffStructure')) {
-@@ -301,27 +310,26 @@ if (!function_exists('admin_has_records_access')) {
-         }
-         return false;
-     }
- }
- 
- if (!function_exists('admin_first_records_view')) {
-     function admin_first_records_view(): string
-     {
-         $views = [
-             'summary'      => 'registros.summary',
-             'rooms'        => 'registros.rooms',
-             'room-types'   => 'registros.room-types',
-             'admin-staff'  => 'registros.admins',
-             'products'     => 'registros.products',
-             'sales'        => 'registros.sales',
-             'pricing'      => 'registros.pricing',
-         ];
-         foreach ($views as $view => $permission) {
-             if (admin_user_can($permission)) {
-                 return $view;
-             }
-         }
-         return 'summary';
-     }
- }
--}
- 
-diff --git a/admin/roombook.php b/admin/roombook.php
-index a7371deb03c93780e3f38169152fc7e3bd7d8bc0..e817447e4e0ca5cd463c5f0b49bee72902962c73 100644
---- a/admin/roombook.php
-+++ b/admin/roombook.php
-@@ -1,32 +1,33 @@
- <?php
- session_start();
- include '../config.php';
- require_once __DIR__ . '/includes/admin_bootstrap.php';
- 
- ensureEmpStructure($conn);
- ensureRoomRates($conn);
-+admin_ensure_guest_portal($conn);
- admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
- admin_require_permission('reservas');
- 
- if (isset($_POST['guestdetailsubmit'])) {
-     $Name = $_POST['Name'] ?? '';
-     $Email = $_POST['Email'] ?? '';
-     $Country = $_POST['Country'] ?? '';
-     $Phone = $_POST['Phone'] ?? '';
-     $RoomType = $_POST['RoomType'] ?? '';
-     $Bed = $_POST['Bed'] ?? '';
-     $NoofRoom = $_POST['NoofRoom'] ?? '';
-     $Meal = $_POST['Meal'] ?? '';
-     $cin = $_POST['cin'] ?? '';
-     $cout = $_POST['cout'] ?? '';
- 
-     if ($Name === '' || $Email === '' || $Country === '') {
-         echo "<script>swal({title: 'Completa los datos del huésped', icon: 'error'});</script>";
-     } else {
-         $sta = 'NotConfirm';
-         $sql = "INSERT INTO roombook (Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATEDIFF(?, ?))";
-         $stmt = $conn->prepare($sql);
-         if ($stmt) {
-             $stmt->bind_param('sssssssssssss', $Name, $Email, $Country, $Phone, $RoomType, $Bed, $NoofRoom, $Meal, $cin, $cout, $sta, $cout, $cin);
-             if ($stmt->execute()) {
-                 echo "<script>swal({title: 'Reserva registrada', icon: 'success'});</script>";
-diff --git a/admin/roomconfirm.php b/admin/roomconfirm.php
-index aecdf84d1827392be760785a6b73c90126cdb772..461ac76b959fee494da87a15f6839468e6d6baee 100644
---- a/admin/roomconfirm.php
-+++ b/admin/roomconfirm.php
-@@ -1,33 +1,34 @@
- <?php
- 
- session_start();
- include '../config.php';
- require_once __DIR__ . '/includes/admin_bootstrap.php';
- 
- ensureEmpStructure($conn);
- ensureRoomRates($conn);
-+admin_ensure_guest_portal($conn);
- admin_refresh_session($conn, $_SESSION['adminmail'] ?? '');
- admin_require_permission('reservas');
- 
- $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
- if ($id <= 0) {
-     header('Location: roombook.php');
-     exit;
- }
- 
- $sql ="Select * from roombook where id = '$id'";
- $re = mysqli_query($conn,$sql);
- while($row=mysqli_fetch_array($re))
- {
- 	$Name = $row['Name'];
-     $Email = $row['Email'];
-     $Country = $row['Country'];
-     $Phone = $row['Phone'];
-     $RoomType = $row['RoomType'];
-     $Bed = $row['Bed'];
-     $NoofRoom = $row['NoofRoom'];
-     $Meal = $row['Meal'];
-     $cin = $row['cin'];
-     $cout = $row['cout'];
-     $noofday = $row['nodays'];
-     $stat = $row['stat'];
-diff --git a/css/home.css b/css/home.css
-index 6fbac4ea7f8e5d4e9d3cdb9d82756c4adee18c00..bf0d9336b3d04473bc5e486dba84410af884b425 100644
---- a/css/home.css
-+++ b/css/home.css
-@@ -47,55 +47,99 @@ nav ul{
-   display:flex; align-items:center; justify-content:center;
-   gap:12px; height:100%; width:auto; margin:0;
- }
- nav ul li{
-   list-style:none; position:relative;
-   display:flex; align-items:center; height:100%;
- }
- nav ul li a{
-   display:flex; align-items:center; justify-content:center;
-   height:100%; padding:0 12px; line-height:1;
-   text-decoration:none; color:#000;
-   font-weight:500;
- }
- nav ul li a:hover{ color:var(--gold-dark); }
- 
- /* Subrayado pegado al texto */
- nav ul li a::after{
-   content:""; position:absolute; left:50%; transform:translateX(-50%);
-   bottom:20px; /* ✅ más pegado al texto */
-   height:2px; width:0; background:var(--gold-dark);
-   transition:width .2s ease;
- }
- nav ul li a:hover::after{ width:100%; }
- 
- 
--/* Botón “Cerrar sesión” */
--nav .btn, nav ul .btn{
--  display:inline-flex; align-items:center; justify-content:center;
--  height:40px; padding:0 16px; font-weight:600; border-radius:20px;
--}
-+/* Perfil en la barra */
-+.nav-profile{ position:relative; display:flex; align-items:center; }
-+.nav-profile-trigger{
-+  display:flex; align-items:center; justify-content:center;
-+  width:44px; height:44px;
-+  border-radius:50%;
-+  border:0;
-+  background:var(--gold);
-+  color:#fff;
-+  font-weight:600;
-+  font-size:18px;
-+  cursor:pointer;
-+  transition:transform .2s ease, box-shadow .2s ease;
-+}
-+.nav-profile-trigger:focus{ outline:2px solid var(--gold-dark); outline-offset:2px; }
-+.nav-profile-trigger:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.16); }
-+.nav-profile-avatar{ display:inline-flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; }
-+.nav-profile-avatar--lg{ width:60px; height:60px; font-size:26px; }
-+.nav-profile-dropdown{
-+  position:absolute;
-+  top:calc(100% + 10px);
-+  right:0;
-+  width:220px;
-+  background:#fff;
-+  border-radius:14px;
-+  box-shadow:0 12px 32px rgba(0,0,0,.15);
-+  padding:16px;
-+  display:none;
-+  flex-direction:column;
-+  gap:12px;
-+  z-index:500;
-+}
-+.nav-profile.is-open .nav-profile-dropdown{ display:flex; }
-+.nav-profile-summary{ display:flex; align-items:center; gap:12px; }
-+.nav-profile-text{ display:flex; flex-direction:column; font-size:14px; color:var(--ink); }
-+.nav-profile-text strong{ font-size:16px; color:var(--ink-2); }
-+.nav-profile-actions{ display:flex; flex-direction:column; gap:8px; }
-+.nav-profile-link{
-+  display:flex; align-items:center; gap:8px;
-+  font-size:14px; color:var(--ink);
-+  text-decoration:none;
-+  padding:6px 8px;
-+  border-radius:10px;
-+  transition:background .2s ease, color .2s ease;
-+}
-+.nav-profile-link:hover{ background:rgba(212,175,55,0.12); color:var(--gold-dark); }
-+.nav-profile-divider{ height:1px; background:#ececec; margin:4px 0; }
-+.nav-profile-link--logout{ color:#c0392b; }
-+.nav-profile-link--logout:hover{ background:rgba(192,57,43,.12); color:#c0392b; }
- 
- /* ===== Overrides Bootstrap ===== */
- .btn-danger{
-   background:linear-gradient(180deg,var(--gold-light),var(--gold)) !important;
-   border:none !important; border-radius:20px !important;
-   padding:8px 16px !important; font-weight:bold !important; color:#fff !important;
-   box-shadow:0 3px 8px rgba(0,0,0,.2); transition:all .2s ease;
- }
- .btn-danger:hover{
-   background:linear-gradient(180deg,var(--gold),var(--gold-dark)) !important;
-   transform:translateY(-1px); color:#fff !important;
- }
- /* Botón reservar (por si usas ambas variantes) */
- .btn-primary.bookbtn, a.btn-primary.bookbtn,
- .bookbtn{
-   background:linear-gradient(180deg,var(--gold-light),var(--gold)) !important;
-   border:none !important; color:#fff !important;
-   border-radius:12px !important; font-weight:bold !important;
-   padding:8px 16px !important; transition:all .2s ease;
-   box-shadow:0 4px 10px rgba(0,0,0,0.2);
- }
- .btn-primary.bookbtn:hover, a.btn-primary.bookbtn:hover,
- .bookbtn:hover{
-   background:linear-gradient(180deg,var(--gold),var(--gold-dark)) !important;
-   transform:translateY(-1px); color:#fff !important;
-@@ -176,50 +220,98 @@ nav .btn, nav ul .btn{
-   height:70%; width:100%;
-   display:flex; justify-content:space-around; flex-wrap:nowrap;
- }
- .facility .box{
-   height:100%; width:310px; border:10px solid #fff;
-   background:#3a2d16; background-size:cover; background-position:center;
- }
- .facility .box h2{
-   text-align:center; position:relative; top:80%; color:#fff; background:#0000005e;
- }
- .box:nth-child(1){ background-image:url(../image/swimingpool.jpg); }
- .box:nth-child(2){ background-image:url(../image/spa.jpg); }
- .box:nth-child(3){ background-image:url(../image/food.jpg); }
- .box:nth-child(4){ background-image:url(../image/gym.jpg); }
- .box:nth-child(5){ background-image:url(../image/heli.jpg); }
- 
- /* ===== Footer ===== */
- #contactus{
-   height:70px; width:100%; background:#000;
-   display:flex; justify-content:space-between; align-items:center; padding:0 100px;
- }
- #contactus .social{ width:200px; display:flex; justify-content:space-evenly; gap:8px; }
- #contactus i{ color:var(--gold-light); font-size:25px; cursor:pointer; }
- #contactus .createdby{ color:#f6f6f6; }
- 
-+/* ===== Guest Experience ===== */
-+.guest-experience{ padding:120px 100px 60px; background:#faf7ef; }
-+.guest-experience__layout{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; align-items:stretch; }
-+.guest-card{ background:#fff; border-radius:20px; padding:24px; box-shadow:0 12px 30px rgba(0,0,0,.08); display:flex; flex-direction:column; gap:18px; }
-+.guest-card__title{ font-size:22px; color:var(--ink-2); margin:0; }
-+.guest-card__subtitle{ font-size:14px; color:#6b6b6b; margin:0; }
-+.guest-card__stats{ list-style:none; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; padding:0; margin:0; }
-+.guest-card__stats li{ background:#fff7da; border-radius:14px; padding:12px; text-align:center; display:flex; flex-direction:column; gap:4px; }
-+.guest-card__stats .label{ font-size:13px; color:#6f5b36; }
-+.guest-card__stats .value{ font-size:20px; font-weight:700; color:var(--ink-2); }
-+.guest-card--room{ position:relative; overflow:hidden; }
-+.guest-room__header{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
-+.guest-room__grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:16px; padding:16px 0; }
-+.guest-room__grid .label{ font-size:12px; text-transform:uppercase; color:#877042; letter-spacing:.04em; }
-+.guest-room__grid .value{ font-size:16px; font-weight:600; color:var(--ink-2); }
-+.status-badge{ display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600; text-transform:capitalize; background:#f1f1f1; color:var(--ink); }
-+.status-confirm, .status-confirmada{ background:rgba(46,204,113,.18); color:#1e8449; }
-+.status-pendiente, .status-notconfirm{ background:rgba(241,196,15,.18); color:#b9770e; }
-+.status-en_proceso, .status-ocupado, .status-checkin{ background:rgba(52,152,219,.18); color:#1f618d; }
-+.status-completado{ background:rgba(39,174,96,.18); color:#1d8348; }
-+.status-cancelado{ background:rgba(231,76,60,.18); color:#943126; }
-+.guest-request-form__form{ display:flex; flex-direction:column; gap:12px; }
-+.guest-request-form__form .btn{ align-self:flex-start; border-radius:12px; }
-+.guest-requests__list{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px; }
-+.guest-requests__header{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
-+.guest-requests__type{ font-weight:600; color:var(--ink-2); }
-+.guest-requests__details{ font-size:14px; color:#5b5b5b; margin:8px 0 4px; white-space:pre-wrap; }
-+.guest-requests__meta{ display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:#7f7f7f; }
-+.guest-muted{ color:#8c836c; font-size:14px; }
-+.guest-empty{ text-align:center; display:flex; flex-direction:column; gap:14px; align-items:center; justify-content:center; min-height:260px; }
-+.guest-empty .btn{ border-radius:20px; }
-+.guest-history{ margin-top:32px; background:#fff; border-radius:20px; padding:24px; box-shadow:0 12px 30px rgba(0,0,0,.06); }
-+.guest-table{ width:100%; border-collapse:collapse; }
-+.guest-table th, .guest-table td{ padding:12px 14px; border-bottom:1px solid #f0e4c6; font-size:14px; text-align:left; }
-+.guest-table tbody tr:hover{ background:#fff7da; }
-+.guest-table th{ font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#7a6a3d; }
-+
-+@media (max-width: 992px){
-+  nav{ padding:0 24px; }
-+  .guest-experience{ padding:110px 24px 50px; }
++function formatMessage(text) {
++  const safe = String(text)
++    .replace(/&/g, '&amp;')
++    .replace(/</g, '&lt;')
++    .replace(/>/g, '&gt;');
++  return safe.replace(/\n/g, '<br>');
 +}
 +
-+@media (max-width: 600px){
-+  .guest-card__stats{ grid-template-columns:1fr; }
-+  .guest-history{ padding:16px; }
-+  .guest-table th, .guest-table td{ padding:10px 8px; font-size:13px; }
-+}
-+
- /* ===== Responsive ===== */
- @media (max-width:30rem){
-   nav{ justify-content:center; position:relative; background:rgba(212,175,55,.25); padding:0 24px; }
-   nav ul{ display:none; }
+ // ===== Listeners y restauración =====
+ document.addEventListener('DOMContentLoaded', () => {
+-  // Click en botón Enviar
+   const sendBtn = document.getElementById('send-btn');
+-  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
++  if (sendBtn) {
++    sendBtn.addEventListener('click', () => sendMessage());
++  }
  
-   #firstsection{ height:50vh; text-align:center; }
-   #firstsection .carousel-inner{ height:50vh; }
-   #firstsection .carousel-item img{ height:50vh; }
-   #firstsection .welcomeline{ height:50vh; }
-   #firstsection .welcometag{ font-size:50px; line-height:60px; }
+-  // Enviar con Enter
+   const userInput = document.getElementById('user-input');
+   if (userInput) {
+     userInput.addEventListener('keypress', (e) => {
+-      if (e.key === 'Enter') sendMessage();
++      if (e.key === 'Enter') {
++        e.preventDefault();
++        sendMessage();
++      }
+     });
+   }
  
-   #secondsection{ height:auto; }
-   #secondsection img{ display:none; }
-   .ourroom{ top:30px; height:auto; }
-   .roomselect{ flex-direction:column; align-items:center; gap:20px; }
-   .roomselect .roombox{ width:75%; }
+-  // Click en FAB
+   const fab = document.getElementById('chat-fab');
+   if (fab) fab.addEventListener('click', () => toggleChatbot());
  
-   #thirdsection{ height:100vh; }
-   .facility{ height:70%; flex-wrap:wrap; }
-   .facility .box{ height:55%; width:50%; }
-   .facility .box h2{ font-size:18px; }
-   .box:nth-child(5){ display:none; }
+-  // Restaurar estado (si el usuario lo dejó abierto)
+   try {
+     const saved = localStorage.getItem('chatOpen');
+-    if (saved === 'true') toggleChatbot(false); // abre
++    if (saved === 'true') toggleChatbot(false);
+   } catch (e) {}
+ });
  
-   #contactus{ padding:0 30px; }
- }
+ // Cerrar con ESC
+ document.addEventListener('keydown', (e) => {
+   if (e.key === 'Escape') {
+     const popup = document.getElementById('chatbot-popup');
+     const isOpen = popup && !(popup.style.display === 'none' || popup.style.display === '');
+-    if (isOpen) toggleChatbot(true); // forzar cerrar
++    if (isOpen) toggleChatbot(true);
+   }
+ });
 diff --git a/home.php b/home.php
-index 62be81773d1dd89dafe1598bb7d8f66cb0099ba9..22a2dfba9829af1409fb7d62f4f7509316cd17f1 100644
+index 22a2dfba9829af1409fb7d62f4f7509316cd17f1..0f6cfc1018e678ecc8781c1c64a07956f6c48124 100644
 --- a/home.php
 +++ b/home.php
-@@ -1,37 +1,122 @@
- <?php
- include 'config.php';
-+require_once __DIR__ . '/includes/guest_portal.php';
- session_start();
+@@ -143,86 +143,146 @@ unset($_SESSION['guest_request_flash']);
+       .chat-fab[data-open="true"] .icon-close{ display: block; }
  
- /* ===========
-    Autenticación
-    =========== */
- if (empty($_SESSION['usermail'])) {
-   header("Location: index.php");
-   exit;
- }
-+
- $usermail = $_SESSION['usermail'];
-+
-+guest_portal_ensure_schema($conn);
-+
-+$currentUser = guest_portal_fetch_user($conn, $usermail);
-+if (!$currentUser) {
-+  header("Location: logout.php");
-+  exit;
-+}
-+
-+$userId = (int) ($currentUser['UserID'] ?? 0);
-+$profileName = $currentUser['Username'] ?: $usermail;
-+$profileInitial = strtoupper(substr($profileName, 0, 1));
-+$requestTypes = guest_portal_request_types();
-+
-+$reservations = $userId ? guest_portal_reservations_for_user($conn, $userId) : [];
-+$activeReservation = $userId ? guest_portal_active_reservation($conn, $userId) : null;
-+$userRequests = $userId ? guest_portal_requests_for_user($conn, $userId) : [];
-+$openRequestsCount = count(array_filter(
-+  $userRequests,
-+  static fn($item) => in_array($item['status'] ?? '', ['pendiente', 'en_proceso'], true)
-+));
-+
-+$requestsByReservation = [];
-+foreach ($userRequests as $requestRow) {
-+  $rid = (int) ($requestRow['roombook_id'] ?? 0);
-+  if (!isset($requestsByReservation[$rid])) {
-+    $requestsByReservation[$rid] = [];
-+  }
-+  $requestsByReservation[$rid][] = $requestRow;
-+}
-+
-+$confirmedReservations = array_filter(
-+  $reservations,
-+  static fn(array $row): bool => in_array($row['stat'] ?? '', ['Confirm', 'Ocupado', 'CheckIn'], true)
-+);
-+$confirmedReservationIds = array_map(static fn($row) => (int) ($row['id'] ?? 0), $confirmedReservations);
-+
-+if ($userId && isset($_POST['create_service_request'])) {
-+  $reservationId = (int) ($_POST['reservation_id'] ?? 0);
-+  $requestType = $_POST['request_type'] ?? '';
-+  $requestDetail = trim($_POST['request_detail'] ?? '');
-+
-+  $isValidReservation = in_array($reservationId, $confirmedReservationIds, true);
-+  $isValidType = isset($requestTypes[$requestType]);
-+
-+  if ($isValidReservation && $isValidType) {
-+    $requestId = guest_portal_create_request($conn, $reservationId, $userId, $requestType, $requestDetail);
-+
-+    if ($requestId) {
-+      $selectedReservation = null;
-+      foreach ($reservations as $row) {
-+        if ((int) ($row['id'] ?? 0) === $reservationId) {
-+          $selectedReservation = $row;
-+          break;
-+        }
-+      }
-+      $message = sprintf('Nueva solicitud de %s para %s', $profileName, strtolower($requestTypes[$requestType] ?? 'servicio'));
-+      guest_portal_record_notification($conn, 'admin', 'Solicitud de habitación', $message, 'admin/guest-requests.php', $reservationId, $requestId);
-+      guest_portal_record_notification($conn, 'recepcion', 'Solicitud de habitación', $message, 'admin/guest-requests.php', $reservationId, $requestId);
-+
-+      $_SESSION['guest_request_flash'] = [
-+        'type' => 'success',
-+        'text' => 'Tu solicitud fue enviada al equipo del hotel. Te contactaremos pronto.',
-+      ];
-+    } else {
-+      $_SESSION['guest_request_flash'] = [
-+        'type' => 'error',
-+        'text' => 'No fue posible registrar tu solicitud. Intenta nuevamente.',
-+      ];
-+    }
-+  } else {
-+    $_SESSION['guest_request_flash'] = [
-+      'type' => 'error',
-+      'text' => 'Selecciona una reserva y un servicio válidos para continuar.',
-+    ];
-+  }
-+
-+  header('Location: home.php');
-+  exit;
-+}
-+
-+$guestRequestFlash = $_SESSION['guest_request_flash'] ?? null;
-+unset($_SESSION['guest_request_flash']);
- ?>
- <!DOCTYPE html>
- <html lang="es">
- <head>
-     <meta charset="UTF-8">
-     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <link rel="stylesheet" href="./css/home.css">
-     <title>Hotel Andino</title>
-     <!-- boot -->
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-     <!-- fontawesome -->
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-     <!-- sweet alert -->
-     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-     <link rel="stylesheet" href="./admin/css/roombook.css">
- 
-     <!-- ======= NUEVO: estilos FAB + popup chat en esquina ======= -->
-     <style>
-       #guestdetailpanel{ display:none; }
-       #guestdetailpanel .middle{ height: 450px; }
- 
-       /* ==== FAB Chatbot ==== */
-       .chat-fab{
-@@ -118,54 +203,84 @@ $usermail = $_SESSION['usermail'];
+       /* Pulso sutil cuando está cerrado */
+       .chat-fab:not([data-open="true"])::after{
+         content: "";
+         position: absolute; inset: 0;
+         border-radius: 50%;
+         animation: fabPulse 2.2s ease-out infinite;
+         box-shadow: 0 0 0 0 rgba(212,175,55,.45);
        }
+       @keyframes fabPulse{
+         0% { box-shadow: 0 0 0 0 rgba(212,175,55,.45); }
+         70%{ box-shadow: 0 0 0 14px rgba(212,175,55,0); }
+         100%{ box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+       }
+ 
+       /* ==== Popup del chatbot anclado a esquina ==== */
+       .chatbot-popup{
+         position: fixed;
+         right: calc(92px + env(safe-area-inset-right)); /* deja espacio al FAB */
+         bottom: calc(20px + env(safe-area-inset-bottom));
+         max-width: 360px;
+         width: 92vw;
+         max-height: 70vh;
+         background: #fff;
+-        border-radius: 14px;
++        border-radius: 16px;
+         box-shadow: 0 18px 48px rgba(0,0,0,.22), 0 10px 24px rgba(0,0,0,.12);
++        border: 1px solid rgba(212,175,55,.2);
+         overflow: hidden;
+         z-index: 9998;
+       }
+       .chat-header{
+         background: var(--gold, #d4af37);
+         color: #fff;
+         padding: 10px 12px;
+         display:flex; align-items:center; justify-content:space-between;
+         font-weight:600;
+       }
+       .chat-header button{
+         border:0; background:transparent; color:#fff; font-size:18px; line-height:1; cursor:pointer;
+       }
+       .chat-box{
+-        height: 340px; overflow:auto; padding:12px;
+-        background: #fafafa;
++        height: 340px;
++        overflow:auto;
++        padding:16px;
++        background: #faf8ef;
+       }
+       .chat-input{
+-        display:flex; gap:8px; padding:10px; background:#fff; border-top:1px solid #eee;
++        display:flex;
++        align-items:center;
++        gap:12px;
++        padding:12px 16px;
++        background:#fff;
++        border-top:1px solid #e6e0cf;
++      }
++      .chat-input input{
++        flex:1;
++        border:1px solid #ded6bd;
++        border-radius:12px;
++        padding:12px;
++        outline:none;
++        font-size:14px;
++        background:#fdfbf5;
++        transition:border-color .2s ease, box-shadow .2s ease;
++      }
++      .chat-input input:focus{
++        border-color: var(--gold, #d4af37);
++        box-shadow: 0 0 0 2px rgba(212,175,55,.18);
++        background:#fff;
++      }
++      .chat-input button{
++        border:0;
++        border-radius:12px;
++        padding:10px 18px;
++        background:var(--gold, #d4af37);
++        color:#fff;
++        cursor:pointer;
++        transition:background .2s ease, transform .2s ease;
++      }
++      .chat-input button:hover{
++        background:#c79b1f;
++        transform: translateY(-1px);
+       }
+-      .chat-input input{ flex:1; border:1px solid #e5e5e5; border-radius:10px; padding:10px; outline:none;}
+-      .chat-input button{ border:0; border-radius:10px; padding:10px 14px; background:var(--gold, #d4af37); color:#fff; cursor:pointer; }
+ 
+       .user-message, .bot-message{
+-        max-width: 80%;
+-        margin: 6px 0; padding: 10px 12px; border-radius: 12px;
+-        word-break: break-word; line-height: 1.25;
++        max-width: 82%;
++        margin: 8px 0;
++        padding: 11px 14px;
++        border-radius: 14px;
++        word-break: break-word;
++        line-height: 1.35;
+       }
+       .user-message{
+         margin-left: auto; background:#efefef; color:#1f1f1f; border-top-right-radius: 4px;
+       }
+       .bot-message{
+-        margin-right: auto; background:#ffeebe; color:#1f1f1f; border-top-left-radius: 4px;
++        margin-right: auto;
++        background:#ffe0a3;
++        color:#1f1f1f;
++        border-top-left-radius: 4px;
++        box-shadow: inset 0 0 0 1px rgba(212,175,55,.25);
++      }
++
++      .chat-options{
++        display:flex;
++        flex-wrap:wrap;
++        gap:8px;
++        margin:8px 0 0;
++      }
++      .chat-options--disabled{ opacity:.55; }
++      .chat-option-btn{
++        background:#fff7e0;
++        border:1px solid rgba(212,175,55,.55);
++        border-radius:999px;
++        padding:6px 12px;
++        font-size:12px;
++        cursor:pointer;
++        transition:background .2s ease, border-color .2s ease, transform .2s ease;
+       }
++      .chat-option-btn:hover{ background:#fbe3a3; border-color:var(--gold,#d4af37); transform:translateY(-1px); }
++      .chat-options--disabled .chat-option-btn{ cursor:default; }
  
        @media (max-width: 600px){
          .chatbot-popup{
@@ -1057,425 +644,16 @@ index 62be81773d1dd89dafe1598bb7d8f66cb0099ba9..22a2dfba9829af1409fb7d62f4f75093
        <!-- EDITADO: Se elimina el enlace que abría el chatbot desde la navbar -->
        <li><a href="turismo.php">Turismo</a></li>
        <li><a href="#contactus">Contáctanos</a></li>
--      <a href="./logout.php"><button class="btn btn-danger">Cerrar Sesión</button></a>
-+      <li class="nav-profile">
-+        <button class="nav-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
-+          <span class="nav-profile-avatar" aria-hidden="true"><?php echo htmlspecialchars($profileInitial); ?></span>
-+          <span class="visually-hidden">Abrir menú de perfil</span>
-+        </button>
-+        <div class="nav-profile-dropdown" role="menu">
-+          <div class="nav-profile-summary">
-+            <span class="nav-profile-avatar nav-profile-avatar--lg" aria-hidden="true"><?php echo htmlspecialchars($profileInitial); ?></span>
-+            <div class="nav-profile-text">
-+              <strong><?php echo htmlspecialchars($profileName); ?></strong>
-+              <span><?php echo htmlspecialchars($usermail); ?></span>
-+            </div>
-+          </div>
-+          <div class="nav-profile-actions">
-+            <a class="nav-profile-link" href="#guest-experience"><i class="fa-solid fa-door-open"></i> Mi habitación</a>
-+            <a class="nav-profile-link" href="onboarding.php"><i class="fa-solid fa-sliders"></i> Preferencias</a>
-+            <div class="nav-profile-divider"></div>
-+            <a class="nav-profile-link nav-profile-link--logout" href="./logout.php"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
-+          </div>
-+        </div>
-+      </li>
-     </ul>
-   </nav>
+       <li class="nav-profile">
+@@ -768,51 +828,51 @@ unset($_SESSION['guest_request_flash']);
  
-+  <?php if (!empty($guestRequestFlash)): ?>
-+    <script>
-+      swal({
-+        title: <?php echo json_encode($guestRequestFlash['type'] === 'success' ? '¡Listo!' : 'Aviso'); ?>,
-+        text: <?php echo json_encode($guestRequestFlash['text']); ?>,
-+        icon: <?php echo json_encode($guestRequestFlash['type'] === 'success' ? 'success' : 'error'); ?>
-+      });
-+    </script>
-+  <?php endif; ?>
-+
-   <section id="firstsection" class="carousel slide carousel_section" data-bs-ride="carousel">
-     <div class="carousel-inner">
-         <div class="carousel-item active">
-             <img class="carousel-image" src="./image/hotel1.jpg" alt="Hotel 1">
-         </div>
-         <div class="carousel-item">
-             <img class="carousel-image" src="./image/hotel2.jpg" alt="Hotel 2">
-         </div>
-         <div class="carousel-item">
-             <img class="carousel-image" src="./image/hotel3.jpg" alt="Hotel 3">
-         </div>
-         <div class="carousel-item">
-             <img class="carousel-image" src="./image/hotel4.jpg" alt="Hotel 4">
-         </div>
+     document.addEventListener('keydown', (event) => {
+       if (event.key === 'Escape') {
+         setOpen(false);
+       }
+     });
+   })();
  
-         <div class="welcomeline">
-           <h1 class="welcometag">Bienvenido al cielo en la tierra</h1>
-         </div>
- 
-       <!-- bookbox -->
-       <div id="guestdetailpanel">
-         <form action="" method="POST" class="guestdetailpanelform">
-             <div class="head">
-                 <h3>Reserva</h3>
-                 <i class="fa-solid fa-circle-xmark" onclick="closebox()"></i>
-@@ -241,82 +356,290 @@ $usermail = $_SESSION['usermail'];
-         <!-- ==== room book php ====-->
-         <?php
-             if (isset($_POST['guestdetailsubmit'])) {
-                 $Name     = trim($_POST['Name'] ?? '');
-                 $Email    = trim($_POST['Email'] ?? '');
-                 $Country  = trim($_POST['Country'] ?? '');
-                 $Phone    = trim($_POST['Phone'] ?? '');
-                 $RoomType = trim($_POST['RoomType'] ?? '');
-                 $Bed      = trim($_POST['Bed'] ?? '');
-                 $NoofRoom = (int)($_POST['NoofRoom'] ?? 0);
-                 $Meal     = trim($_POST['Meal'] ?? '');
-                 $cin      = $_POST['cin'] ?? '';
-                 $cout     = $_POST['cout'] ?? '';
- 
-                 if ($Name === "" || $Email === "" || $Country === "" || $RoomType === "" || $Bed === "" || $NoofRoom < 1 || $Meal === "" || $cin === "" || $cout === "") {
-                     echo "<script>swal({ title: 'Completa los datos correctamente', icon: 'error' });</script>";
-                 } else {
-                     $d1 = strtotime($cin);
-                     $d2 = strtotime($cout);
-                     if ($d1 === false || $d2 === false || $d2 <= $d1) {
-                         echo "<script>swal({ title: 'Rango de fechas inválido', icon: 'error' });</script>";
-                     } else {
-                         $nodays = (int)round(($d2 - $d1) / 86400); // días
-                         $sta = "NotConfirm";
- 
--                        $sql = "INSERT INTO roombook
--                                (Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays)
--                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-+                        $sql = "INSERT INTO roombook"
-+                                . "(user_id, Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays)"
-+                                . "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
- 
-                         if ($stmt = mysqli_prepare($conn, $sql)) {
-                             mysqli_stmt_bind_param(
-                                 $stmt,
--                                "ssssssissssi",
--                                $Name, $Email, $Country, $Phone, $RoomType, $Bed, $NoofRoom, $Meal, $cin, $cout, $sta, $nodays
-+                                "issssssissssi",
-+                                $userId,
-+                                $Name,
-+                                $Email,
-+                                $Country,
-+                                $Phone,
-+                                $RoomType,
-+                                $Bed,
-+                                $NoofRoom,
-+                                $Meal,
-+                                $cin,
-+                                $cout,
-+                                $sta,
-+                                $nodays
-                             );
-                             $ok = mysqli_stmt_execute($stmt);
-+                            $reservationId = $ok ? mysqli_insert_id($conn) : 0;
-                             mysqli_stmt_close($stmt);
- 
--                            if ($ok) {
--                                echo "<script>
--                                    swal({ title: 'Reserva exitosa', icon: 'success' });
--                                </script>";
-+                            if ($ok && $reservationId > 0) {
-+                                $notifMessage = sprintf('Nueva reserva pendiente de %s (%s)', $Name, $Email);
-+                                guest_portal_record_notification($conn, 'admin', 'Reserva solicitada', $notifMessage, 'admin/roombook.php', $reservationId, null);
-+                                guest_portal_record_notification($conn, 'recepcion', 'Reserva solicitada', $notifMessage, 'admin/roombook.php', $reservationId, null);
-+
-+                                echo "<script>"
-+                                    . "swal({ title: 'Reserva exitosa', text: 'Nuestro equipo confirmará tu habitación muy pronto.', icon: 'success' });"
-+                                . "</script>";
-                             } else {
-                                 echo "<script>swal({ title: 'Algo salió mal al guardar', icon: 'error' });</script>";
-                             }
-                         } else {
-                             echo "<script>swal({ title: 'Error preparando consulta', icon: 'error' });</script>";
-                         }
-                     }
-                 }
-             }
-             ?>
-           </div>
- 
-     </div>
-   </section>
- 
-+  <?php
-+    $activeReservationRequests = [];
-+    $minibarTotal = 0.0;
-+    if ($activeReservation) {
-+      $activeReservationId = (int) ($activeReservation['id'] ?? 0);
-+      $activeReservationRequests = $requestsByReservation[$activeReservationId] ?? [];
-+      foreach ($activeReservationRequests as $req) {
-+        if (($req['request_type'] ?? '') === 'minibar' && $req['charge_amount'] !== null) {
-+          $minibarTotal += (float) $req['charge_amount'];
-+        }
-+      }
-+    }
-+  ?>
-+
-+  <section id="guest-experience" class="guest-experience">
-+    <div class="guest-experience__layout">
-+      <article class="guest-card guest-card--profile">
-+        <h2 class="guest-card__title">Hola, <?php echo htmlspecialchars($profileName); ?></h2>
-+        <p class="guest-card__subtitle">Tu correo registrado es <strong><?php echo htmlspecialchars($usermail); ?></strong></p>
-+        <ul class="guest-card__stats">
-+          <li>
-+            <span class="label">Reservas totales</span>
-+            <span class="value"><?php echo count($reservations); ?></span>
-+          </li>
-+          <li>
-+            <span class="label">Reservas confirmadas</span>
-+            <span class="value"><?php echo count($confirmedReservationIds); ?></span>
-+          </li>
-+          <li>
-+            <span class="label">Solicitudes abiertas</span>
-+            <span class="value"><?php echo $openRequestsCount; ?></span>
-+          </li>
-+        </ul>
-+      </article>
-+
-+      <article class="guest-card guest-card--room">
-+        <?php if ($activeReservation): ?>
-+          <?php
-+            $activeId = (int) ($activeReservation['id'] ?? 0);
-+            $activeStatus = $activeReservation['stat'] ?? '';
-+            $statusLabel = match ($activeStatus) {
-+              'Confirm'              => 'Confirmada',
-+              'Ocupado', 'CheckIn'   => 'En curso',
-+              'NotConfirm'           => 'Pendiente',
-+              default                => ucfirst(strtolower($activeStatus)),
-+            };
-+            $checkIn  = !empty($activeReservation['cin']) ? date('d/m/Y', strtotime($activeReservation['cin'])) : '—';
-+            $checkOut = !empty($activeReservation['cout']) ? date('d/m/Y', strtotime($activeReservation['cout'])) : '—';
-+            $roomNumber = $activeReservation['room_number'] ?? null;
-+            $roomType   = $activeReservation['RoomType'] ?? ($activeReservation['room_type_name'] ?? 'Habitación');
-+            $activeRequestsCount = count($activeReservationRequests);
-+          ?>
-+          <header class="guest-room__header">
-+            <div>
-+              <h3 class="guest-card__title">Tu habitación</h3>
-+              <p class="guest-card__subtitle">
-+                <?php echo htmlspecialchars($roomType); ?>
-+                <?php if ($roomNumber): ?> · #<?php echo htmlspecialchars($roomNumber); ?><?php endif; ?>
-+              </p>
-+            </div>
-+            <span class="status-badge status-<?php echo htmlspecialchars(strtolower($activeStatus)); ?>">
-+              <?php echo htmlspecialchars($statusLabel); ?>
-+            </span>
-+          </header>
-+          <div class="guest-room__grid">
-+            <div>
-+              <span class="label">Check-in</span>
-+              <span class="value"><?php echo htmlspecialchars($checkIn); ?></span>
-+            </div>
-+            <div>
-+              <span class="label">Check-out</span>
-+              <span class="value"><?php echo htmlspecialchars($checkOut); ?></span>
-+            </div>
-+            <div>
-+              <span class="label">Solicitudes registradas</span>
-+              <span class="value"><?php echo $activeRequestsCount; ?></span>
-+            </div>
-+            <div>
-+              <span class="label">Consumo minibar</span>
-+              <span class="value"><?php echo $minibarTotal > 0 ? 'COP ' . number_format($minibarTotal, 0, ',', '.') : 'Sin consumos'; ?></span>
-+            </div>
-+          </div>
-+
-+          <div class="guest-request-form">
-+            <h4>Solicita asistencia</h4>
-+            <form method="post" class="guest-request-form__form">
-+              <input type="hidden" name="reservation_id" value="<?php echo $activeId; ?>">
-+              <label for="request_type" class="form-label">¿Qué necesitas?</label>
-+              <select class="form-select" id="request_type" name="request_type" required>
-+                <option value="" disabled selected>Selecciona una opción</option>
-+                <?php foreach ($requestTypes as $typeKey => $typeLabel): ?>
-+                  <option value="<?php echo htmlspecialchars($typeKey); ?>"><?php echo htmlspecialchars($typeLabel); ?></option>
-+                <?php endforeach; ?>
-+              </select>
-+              <label for="request_detail" class="form-label">Detalles adicionales</label>
-+              <textarea id="request_detail" name="request_detail" rows="3" class="form-control" placeholder="Cuéntanos si necesitas algo específico (opcional)"></textarea>
-+              <button class="btn btn-primary" type="submit" name="create_service_request" value="1">
-+                <i class="fa-solid fa-paper-plane"></i> Enviar solicitud
-+              </button>
-+            </form>
-+          </div>
-+
-+          <div class="guest-requests">
-+            <h4>Historial de solicitudes</h4>
-+            <?php if (!empty($activeReservationRequests)): ?>
-+              <ul class="guest-requests__list">
-+                <?php foreach ($activeReservationRequests as $request): ?>
-+                  <?php
-+                    $badgeStatus = guest_portal_format_status($request['status'] ?? '');
-+                    $badgeClass = 'status-' . preg_replace('/[^a-z_\-]/i', '', strtolower($request['status'] ?? 'pendiente'));
-+                    $updatedAt = $request['updated_at'] ?? $request['created_at'] ?? '';
-+                    $updatedLabel = $updatedAt ? date('d/m/Y H:i', strtotime($updatedAt)) : '—';
-+                    $typeLabel = $requestTypes[$request['request_type']] ?? ucfirst($request['request_type'] ?? 'Servicio');
-+                  ?>
-+                  <li>
-+                    <div class="guest-requests__header">
-+                      <span class="guest-requests__type"><?php echo htmlspecialchars($typeLabel); ?></span>
-+                      <span class="status-badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($badgeStatus); ?></span>
-+                    </div>
-+                    <?php if (!empty($request['details'])): ?>
-+                      <p class="guest-requests__details"><?php echo nl2br(htmlspecialchars($request['details'])); ?></p>
-+                    <?php endif; ?>
-+                    <div class="guest-requests__meta">
-+                      <span>Actualizado: <?php echo htmlspecialchars($updatedLabel); ?></span>
-+                      <?php if ($request['charge_amount'] !== null): ?>
-+                        <span>Consumo: COP <?php echo number_format((float) $request['charge_amount'], 0, ',', '.'); ?></span>
-+                      <?php endif; ?>
-+                    </div>
-+                  </li>
-+                <?php endforeach; ?>
-+              </ul>
-+            <?php else: ?>
-+              <p class="guest-muted">Aún no registras solicitudes para esta reserva.</p>
-+            <?php endif; ?>
-+          </div>
-+        <?php else: ?>
-+          <div class="guest-empty">
-+            <h3 class="guest-card__title">Aún no tienes una habitación confirmada</h3>
-+            <p class="guest-card__subtitle">Cuando el equipo confirme tu reserva podrás gestionar tus solicitudes aquí.</p>
-+            <a href="#firstsection" class="btn btn-primary"><i class="fa-solid fa-calendar-plus"></i> Reservar ahora</a>
-+          </div>
-+        <?php endif; ?>
-+      </article>
-+    </div>
-+
-+    <div class="guest-history">
-+      <h3 class="guest-card__title">Mis reservas</h3>
-+      <?php if (!empty($reservations)): ?>
-+        <div class="table-responsive">
-+          <table class="guest-table">
-+            <thead>
-+              <tr>
-+                <th>#</th>
-+                <th>Tipo</th>
-+                <th>Ingreso</th>
-+                <th>Salida</th>
-+                <th>Estado</th>
-+                <th>Noches</th>
-+              </tr>
-+            </thead>
-+            <tbody>
-+              <?php foreach ($reservations as $reservation): ?>
-+                <?php
-+                  $status = $reservation['stat'] ?? '';
-+                  $statusText = match ($status) {
-+                    'Confirm'              => 'Confirmada',
-+                    'NotConfirm'           => 'Pendiente',
-+                    'Ocupado', 'CheckIn'   => 'En curso',
-+                    default                => ucfirst(strtolower($status)),
-+                  };
-+                  $cin = !empty($reservation['cin']) ? date('d/m/Y', strtotime($reservation['cin'])) : '—';
-+                  $cout = !empty($reservation['cout']) ? date('d/m/Y', strtotime($reservation['cout'])) : '—';
-+                ?>
-+                <tr>
-+                  <td><?php echo (int) ($reservation['id'] ?? 0); ?></td>
-+                  <td><?php echo htmlspecialchars($reservation['RoomType'] ?? 'Habitación'); ?></td>
-+                  <td><?php echo htmlspecialchars($cin); ?></td>
-+                  <td><?php echo htmlspecialchars($cout); ?></td>
-+                  <td><span class="status-badge status-<?php echo htmlspecialchars(strtolower($status)); ?>"><?php echo htmlspecialchars($statusText); ?></span></td>
-+                  <td><?php echo (int) ($reservation['nodays'] ?? 0); ?></td>
-+                </tr>
-+              <?php endforeach; ?>
-+            </tbody>
-+          </table>
-+        </div>
-+      <?php else: ?>
-+        <p class="guest-muted">Aún no has registrado reservas. ¡Empieza creando una desde el formulario superior!</p>
-+      <?php endif; ?>
-+    </div>
-+  </section>
-+
-   <section id="secondsection">
-     <img src="./image/homeanimatebg.svg" alt="Decoración">
-     <div class="ourroom">
-       <h1 class="head">≼ Nuestras habitaciones ≽</h1>
-       <div class="roomselect">
-         <div class="roombox">
-           <div class="hotelphoto h1"></div>
-           <div class="roomdata">
-             <h2>Habitación Doble</h2>
-             <div class="services">
-               <i class="fa-solid fa-wifi"></i>
-               <i class="fa-solid fa-burger"></i>
-               <i class="fa-solid fa-spa"></i>
-               <i class="fa-solid fa-dumbbell"></i>
-               <i class="fa-solid fa-person-swimming"></i>
-             </div>
-             <button class="btn btn-primary bookbtn" onclick="openbookbox()">Reservar</button>
-           </div>
-         </div>
-         <div class="roombox">
-           <div class="hotelphoto h2"></div>
-           <div class="roomdata">
-             <h2>Habitación Suite</h2>
-             <div class="services">
-               <i class="fa-solid fa-wifi"></i>
-@@ -395,50 +718,83 @@ $usermail = $_SESSION['usermail'];
-   </div>
-   <button id="close-btn" class="icon-btn" aria-label="Cerrar" onclick="toggleChatbot()">
-     <i class="fa-solid fa-chevron-down"></i>
-   </button>
- </div>
-     <div id="chat-box" class="chat-box"></div>
-     <div class="chat-input">
-       <input type="text" id="user-input" placeholder="Escribe tu mensaje..." />
-       <button id="send-btn">Enviar</button>
-     </div>
-   </div>
- 
-   <!-- ======= NUEVO: FAB para abrir/cerrar el chat ======= -->
- <button id="chat-fab" class="chat-fab" aria-label="Abrir chat" title="Chatear" data-open="false">
-   <i class="fa-solid fa-robot icon-robot" aria-hidden="true"></i>
- </button>
- 
- </body>
- 
- <script>
-   // ===== Reserva =====
-   var bookbox = document.getElementById("guestdetailpanel");
-   function openbookbox(){ bookbox.style.display = "flex"; }
-   function closebox(){ bookbox.style.display = "none"; }
- 
-+  // ===== Perfil =====
-+  (function(){
-+    const profile = document.querySelector('.nav-profile');
-+    if (!profile) return;
-+    const trigger = profile.querySelector('.nav-profile-trigger');
-+    const dropdown = profile.querySelector('.nav-profile-dropdown');
-+
-+    const setOpen = (open) => {
-+      if (!dropdown) return;
-+      profile.classList.toggle('is-open', open);
-+      if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-+    };
-+
-+    if (trigger) trigger.addEventListener('click', (event) => {
-+      event.preventDefault();
-+      event.stopPropagation();
-+      const isOpen = profile.classList.contains('is-open');
-+      setOpen(!isOpen);
-+    });
-+
-+    document.addEventListener('click', (event) => {
-+      if (!profile.contains(event.target)) {
-+        setOpen(false);
-+      }
-+    });
-+
-+    document.addEventListener('keydown', (event) => {
-+      if (event.key === 'Escape') {
-+        setOpen(false);
-+      }
-+    });
-+  })();
-+
    // ===== Chatbot =====
    function toggleChatbot(forceClose){
      const chatbotPopup = document.getElementById('chatbot-popup');
@@ -1493,7 +671,8 @@ index 62be81773d1dd89dafe1598bb7d8f66cb0099ba9..22a2dfba9829af1409fb7d62f4f75093
  
      // Mensaje de bienvenida si abre por primera vez
      if (shouldOpen && document.getElementById('chat-box').children.length === 0) {
-       appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. ¿En qué puedo ayudarte hoy?");
+-      appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. ¿En qué puedo ayudarte hoy?");
++      appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel y ayudarte a gestionar reservas. ¿En qué puedo apoyarte?");
      }
  
      // Persistir estado
@@ -1501,576 +680,1224 @@ index 62be81773d1dd89dafe1598bb7d8f66cb0099ba9..22a2dfba9829af1409fb7d62f4f75093
    }
  
    async function sendMessage() {
-diff --git a/hotelandino.sql b/hotelandino.sql
-index 2f1fc7aa7520f12e0b42dcd21fb8e64902b8a6b7..5c4c7201c64a4c6195c7381a19b1a41e03a4ff2c 100644
---- a/hotelandino.sql
-+++ b/hotelandino.sql
-@@ -167,90 +167,140 @@ CREATE TABLE `sales` (
- -- ======================================================
- -- Tabla: room_stays (detalle de huéspedes por habitación)
- -- ======================================================
- CREATE TABLE `room_stays` (
-   `room_id` INT NOT NULL,
-   `guest_id` VARCHAR(40) NOT NULL,
-   `guest_name` VARCHAR(120) NOT NULL,
-   `nationality` VARCHAR(80) NOT NULL,
-   `check_in_date` DATE NOT NULL,
-   `check_in_time` TIME NOT NULL,
-   `check_out_date` DATE NOT NULL,
-   `receptionist_email` VARCHAR(190) NOT NULL,
-   `price` DECIMAL(10,2) NOT NULL DEFAULT 0,
-   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-   PRIMARY KEY (`room_id`),
-   CONSTRAINT `fk_room_stays_room` FOREIGN KEY (`room_id`) REFERENCES `room`(`id`) ON DELETE CASCADE
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+     const inputField = document.getElementById('user-input');
+     const userInput = inputField.value.trim();
+     if (userInput === '') return;
  
- -- ======================================================
- -- Tabla: roombook (reservas)
- -- ======================================================
- CREATE TABLE `roombook` (
-   `id` INT NOT NULL AUTO_INCREMENT,
-   `room_id` INT NULL,
-+  `user_id` INT NULL,
-   `Name` VARCHAR(50) NOT NULL,
-   `Email` VARCHAR(50) NOT NULL,
-   `Country` VARCHAR(30) NOT NULL,
-   `Phone` VARCHAR(30) NOT NULL,
-   `RoomType` VARCHAR(30) NOT NULL,
-   `Bed` VARCHAR(30) NOT NULL,
-   `Meal` VARCHAR(30) NOT NULL,
-   `NoofRoom` VARCHAR(30) NOT NULL,
-   `cin` DATE NOT NULL,
-   `cout` DATE NOT NULL,
-   `nodays` INT NOT NULL,
-   `stat` VARCHAR(30) NOT NULL,
-+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-   PRIMARY KEY (`id`),
-   KEY `idx_roombook_room_id` (`room_id`),
-+  KEY `idx_roombook_user_id` (`user_id`),
-   CONSTRAINT `fk_roombook_room`
-     FOREIGN KEY (`room_id`) REFERENCES `room`(`id`)
--    ON UPDATE CASCADE
-+    ON UPDATE CASCADE,
-+  CONSTRAINT `fk_roombook_user`
-+    FOREIGN KEY (`user_id`) REFERENCES `signup`(`UserID`)
-+    ON DELETE SET NULL
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+     appendMessage('user', userInput);
+     inputField.value = '';
  
- -- ======================================================
- -- Tabla: payment (pagos)
- -- ======================================================
- CREATE TABLE `payment` (
-   `id` INT NOT NULL AUTO_INCREMENT,
-   `Name` VARCHAR(30) NOT NULL,
-   `Email` VARCHAR(30) NOT NULL,
-   `RoomType` VARCHAR(30) NOT NULL,
-   `Bed` VARCHAR(30) NOT NULL,
-   `NoofRoom` INT NOT NULL,
-   `cin` DATE NOT NULL,
-   `cout` DATE NOT NULL,
-   `noofdays` INT NOT NULL,
-   `roomtotal` DECIMAL(10,2) NOT NULL,
-   `bedtotal` DECIMAL(10,2) NOT NULL,
-   `meal` VARCHAR(30) NOT NULL,
-   `mealtotal` DECIMAL(10,2) NOT NULL,
-   `finaltotal` DECIMAL(10,2) NOT NULL,
-   PRIMARY KEY (`id`)
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+     try {
+       const r = await fetch('send_to_groq.php', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ message: userInput })
+       });
  
-+-- ======================================================
-+-- Tabla: guest_service_requests (solicitudes durante la estancia)
-+-- ======================================================
-+CREATE TABLE `guest_service_requests` (
-+  `id` INT NOT NULL AUTO_INCREMENT,
-+  `roombook_id` INT NOT NULL,
-+  `user_id` INT NULL,
-+  `request_type` VARCHAR(40) NOT NULL,
-+  `details` TEXT NULL,
-+  `status` ENUM('pendiente','en_proceso','completado','cancelado') NOT NULL DEFAULT 'pendiente',
-+  `charge_amount` DECIMAL(10,2) NULL,
-+  `requested_by` ENUM('guest','staff') NOT NULL DEFAULT 'guest',
-+  `response_note` TEXT NULL,
-+  `handled_by` VARCHAR(190) NULL,
-+  `resolved_at` DATETIME NULL,
-+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-+  PRIMARY KEY (`id`),
-+  KEY `idx_guest_requests_room` (`roombook_id`),
-+  KEY `idx_guest_requests_user` (`user_id`),
-+  CONSTRAINT `fk_guest_requests_reservation` FOREIGN KEY (`roombook_id`) REFERENCES `roombook`(`id`) ON DELETE CASCADE,
-+  CONSTRAINT `fk_guest_requests_user` FOREIGN KEY (`user_id`) REFERENCES `signup`(`UserID`) ON DELETE SET NULL
-+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-+
-+-- ======================================================
-+-- Tabla: system_notifications (alertas para staff)
-+-- ======================================================
-+CREATE TABLE `system_notifications` (
-+  `id` INT NOT NULL AUTO_INCREMENT,
-+  `audience` ENUM('admin','recepcion','staff') NOT NULL DEFAULT 'admin',
-+  `title` VARCHAR(190) NOT NULL,
-+  `message` TEXT NOT NULL,
-+  `link` VARCHAR(255) NULL,
-+  `related_reservation_id` INT NULL,
-+  `related_request_id` INT NULL,
-+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
-+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-+  PRIMARY KEY (`id`),
-+  KEY `idx_notifications_audience` (`audience`),
-+  KEY `idx_notifications_reservation` (`related_reservation_id`),
-+  KEY `idx_notifications_request` (`related_request_id`)
-+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-+
- -- ======================================================
- -- Tabla: staff (personal)
- -- ======================================================
- CREATE TABLE `staff` (
-   `id` INT NOT NULL AUTO_INCREMENT,
-   `name` VARCHAR(120) NOT NULL,
-   `work` VARCHAR(80) NOT NULL,
-   `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   PRIMARY KEY (`id`)
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
- 
- -- ======================================================
- -- Tabla: preference_catalog (catálogo opcional)
- -- ======================================================
- CREATE TABLE `preference_catalog` (
-   `pref_key` VARCHAR(30) NOT NULL,
-   `label` VARCHAR(50) NOT NULL,
-   `place_types` VARCHAR(255) NOT NULL,   -- tipos de Google Places separados por coma
-   `active` TINYINT(1) NOT NULL DEFAULT 1,
-   PRIMARY KEY (`pref_key`)
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
- 
- -- Semillas de catálogo (opcional)
- INSERT INTO `preference_catalog` (`pref_key`, `label`, `place_types`, `active`) VALUES
- ('nature',    'Naturaleza',        'park,tourist_attraction',                    1),
-diff --git a/includes/guest_portal.php b/includes/guest_portal.php
+       if (r.ok) {
+         const d = await r.json();
+         appendMessage('bot', d.reply);
+       } else {
+diff --git a/includes/chatbot_responder.php b/includes/chatbot_responder.php
 new file mode 100644
-index 0000000000000000000000000000000000000000..913f9a47b0dab63b4cc5b229d2047c9cd855554a
+index 0000000000000000000000000000000000000000..9ba45923b59437162d723b2e8e00bb6989b14445
 --- /dev/null
-+++ b/includes/guest_portal.php
-@@ -0,0 +1,418 @@
++++ b/includes/chatbot_responder.php
+@@ -0,0 +1,1074 @@
 +<?php
++declare(strict_types=1);
++
 +/**
-+ * Funciones de apoyo para el portal del huésped y las operaciones
-+ * compartidas entre la web pública y el panel administrativo.
++ * Chatbot especializado del Hotel Andino.
++ * Gestiona respuestas frecuentes, reserva de habitaciones y solicitudes a la habitación sin depender de APIs externas.
 + */
++class HotelChatbotResponder
++{
++    private const BOOKING_SESSION_KEY = 'chatbot_booking';
++    private const SERVICE_SESSION_KEY = 'chatbot_service';
 +
-+if (!function_exists('guest_portal_column_exists')) {
-+    function guest_portal_column_exists(mysqli $conn, string $table, string $column): bool
++    private mysqli $conn;
++    private ?int $userId;
++    private ?array $activeReservation;
++
++    /** @var array<string, mixed> */
++    private array $knowledge;
++
++    /** @var array<string, string> */
++    private array $roomTypes;
++
++    /** @var array<string, string> */
++    private array $bedOptions;
++
++    /** @var array<string, string> */
++    private array $mealPlans;
++
++    /** @var array<string, string> */
++    private array $serviceTypeLabels;
++
++    /** @var array<string, string> */
++    private array $serviceTypeKeywords;
++
++    /** @var array<int, array<string, string>> */
++    private array $defaultSuggestions;
++
++    public function __construct(mysqli $conn)
 +    {
-+        $table = $conn->real_escape_string($table);
-+        $column = $conn->real_escape_string($column);
-+        $sql = "SHOW COLUMNS FROM `{$table}` LIKE '{$column}'";
-+        if (!$result = $conn->query($sql)) {
++        $this->conn = $conn;
++        guest_portal_ensure_schema($conn);
++
++        $this->roomTypes = [
++            'habitacion doble'     => 'Habitación Doble',
++            'habitación doble'     => 'Habitación Doble',
++            'doble'                => 'Habitación Doble',
++            'habitacion suite'     => 'Habitación Suite',
++            'habitación suite'     => 'Habitación Suite',
++            'suite'                => 'Habitación Suite',
++            'habitacion multiple'  => 'Habitación Múltiple',
++            'habitación múltiple'  => 'Habitación Múltiple',
++            'multiple'             => 'Habitación Múltiple',
++            'habitacion sencilla'  => 'Habitación Sencilla',
++            'habitación sencilla'  => 'Habitación Sencilla',
++            'sencilla'             => 'Habitación Sencilla',
++        ];
++
++        $this->bedOptions = [
++            '1 cliente'    => '1 cliente',
++            'uno'          => '1 cliente',
++            '1'            => '1 cliente',
++            '2 clientes'   => '2 clientes',
++            'dos'          => '2 clientes',
++            '2'            => '2 clientes',
++            '3 clientes'   => '3 clientes',
++            'tres'         => '3 clientes',
++            '3'            => '3 clientes',
++            '4 clientes'   => '4 clientes',
++            'cuatro'       => '4 clientes',
++            '4'            => '4 clientes',
++            'sin adicional'=> 'None',
++            'sin adicional extra' => 'None',
++            'ninguno'      => 'None',
++            'none'         => 'None',
++        ];
++
++        $this->mealPlans = [
++            'solo habitacion'     => 'Room only',
++            'solo habitación'     => 'Room only',
++            'room only'           => 'Room only',
++            'sin comidas'         => 'Room only',
++            'desayuno'            => 'Breakfast',
++            'desayuno incluido'   => 'Breakfast',
++            'breakfast'           => 'Breakfast',
++            'desayuno y cena'     => 'Half Board',
++            'media pension'       => 'Half Board',
++            'media pensión'       => 'Half Board',
++            'half board'          => 'Half Board',
++            'pension completa'    => 'Full Board',
++            'pensión completa'    => 'Full Board',
++            'comidas completas'   => 'Full Board',
++            'full board'          => 'Full Board',
++        ];
++
++        $this->serviceTypeLabels = [
++            'room_service' => 'Servicio a la habitación',
++            'toalla'       => 'Toallas adicionales',
++            'jabon'        => 'Artículos de aseo',
++            'asistencia'   => 'Asistencia de recepción',
++            'minibar'      => 'Atención al minibar',
++            'otro'         => 'Otro servicio',
++        ];
++
++        $this->serviceTypeKeywords = [
++            'servicio a la habitación' => 'room_service',
++            'servicio a la habitacion' => 'room_service',
++            'room service'             => 'room_service',
++            'desayuno a la habitación' => 'room_service',
++            'desayuno a la habitacion' => 'room_service',
++            'enviar comida'            => 'room_service',
++            'pedir comida'             => 'room_service',
++            'pedido a la habitación'   => 'room_service',
++            'pedido a la habitacion'   => 'room_service',
++            'toalla adicional'         => 'toalla',
++            'toallas adicionales'      => 'toalla',
++            'toalla'                   => 'toalla',
++            'jabón'                    => 'jabon',
++            'jabon'                    => 'jabon',
++            'amenities'                => 'jabon',
++            'artículos de aseo'        => 'jabon',
++            'articulos de aseo'        => 'jabon',
++            'recepción'                => 'asistencia',
++            'recepcion'                => 'asistencia',
++            'ayuda de recepción'       => 'asistencia',
++            'ayuda de recepcion'       => 'asistencia',
++            'minibar'                  => 'minibar',
++            'otro servicio'            => 'otro',
++            'otro'                     => 'otro',
++        ];
++
++        $this->knowledge = [
++            'descripcion' => 'El Hotel Andino es un hotel de estilo contemporáneo ubicado en Puerto Boyacá, Boyacá. Combinamos un ambiente acogedor con amenidades modernas para viajeros de negocio y turismo.',
++            'ubicacion' => 'Estamos en Puerto Boyacá, en el departamento de Boyacá, Colombia. Desde el centro de la ciudad puedes tomar la vía principal hacia el malecón y encontrarás el hotel a pocas cuadras, cerca del río Magdalena.',
++            'servicios' => [
++                'Piscina con zona de solárium',
++                'Spa con cabinas de masajes y sauna',
++                'Restaurante con room service 24/7',
++                'Gimnasio equipado disponible 24/7',
++                'Servicio de transporte en helicóptero bajo reserva previa',
++                'Conectividad Wi-Fi de alta velocidad en todas las áreas',
++            ],
++            'habitaciones' => [
++                'Habitación Doble: ideal para dos huéspedes, con cama queen, escritorio y vista urbana.',
++                'Habitación Suite: espacio amplio con sala independiente, cama king y amenidades premium.',
++                'Habitación Múltiple: perfecta para familias o grupos, configuraciones flexibles hasta cuatro personas.',
++                'Habitación Sencilla: opción práctica para viajeros individuales con todas las comodidades esenciales.',
++            ],
++            'check' => 'El check-in se realiza desde las 15:00 y el check-out hasta las 12:00. Si necesitas horarios distintos, cuéntanos y coordinamos con recepción.',
++            'contacto' => 'Puedes escribirnos a reservas@hotelandino.com o llamarnos al (+57) 320 555 0198. Nuestro equipo de recepción atiende 24/7.',
++            'indicaciones' => 'Para llegar desde el centro de Puerto Boyacá dirígete hacia el malecón por la Carrera 8. Al pasar la plaza principal verás señalización del Hotel Andino a tu derecha; contamos con estacionamiento vigilado.',
++            'turismo' => 'En la sección de experiencias (turismo.php) encontrarás atractivos cercanos, recorridos por el río Magdalena y recomendaciones personalizadas según tus intereses.',
++            'gastronomia' => 'Nuestro restaurante ofrece desayuno típico colombiano, opciones saludables, almuerzos ejecutivos y cenas gourmet. También podemos llevar platos y bebidas a tu habitación las 24 horas.',
++        ];
++
++        $this->userId = $this->resolveUserId();
++        $this->activeReservation = $this->userId ? guest_portal_active_reservation($conn, $this->userId) : null;
++        $this->defaultSuggestions = $this->buildDefaultSuggestions();
++    }
++
++    /**
++     * @return array{message:string,suggestions:array<int,array{label:string,value:string}>,meta:array<string,string>}
++     */
++    public function handle(string $message): array
++    {
++        $message = trim($message);
++        if ($message === '') {
++            return $this->respond(
++                'Cuéntame en qué puedo ayudarte: información del hotel, servicios o si deseas reservar una habitación.',
++                $this->defaultSuggestions,
++            );
++        }
++
++        $normalized = mb_strtolower($message, 'UTF-8');
++
++        if ($this->isResetCommand($normalized)) {
++            $this->resetBooking();
++            $this->resetService();
++            return $this->respond(
++                'He reiniciado la conversación. ¿Necesitas información del hotel, deseas reservar o prefieres solicitar algo a tu habitación?',
++                $this->defaultSuggestions,
++            );
++        }
++
++        if ($this->isCancelling($normalized)) {
++            if ($this->isBookingActive()) {
++                $this->resetBooking();
++                return $this->respond(
++                    'No hay problema, cancelé la reserva en curso. Si necesitas retomarla solo dime “reservar habitación”.',
++                    $this->defaultSuggestions,
++                );
++            }
++            if ($this->isServiceActive()) {
++                $this->resetService();
++                return $this->respond(
++                    'Cancelé la solicitud en curso. Si necesitas pedir algo a la habitación vuelve a indicármelo.',
++                    $this->defaultSuggestions,
++                );
++            }
++        }
++
++        if ($this->isBookingActive()) {
++            return $this->continueBooking($message);
++        }
++
++        if ($this->isServiceActive()) {
++            return $this->continueServiceRequest($message);
++        }
++
++        if ($this->shouldStartBooking($normalized)) {
++            return $this->startBooking();
++        }
++
++        if ($this->shouldStartServiceRequest($normalized)) {
++            return $this->startServiceRequest();
++        }
++
++        if ($this->isReservationStatusQuestion($normalized)) {
++            return $this->reservationStatusMessage();
++        }
++
++        if ($this->contains($normalized, ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'hey', 'saludos'])) {
++            return $this->respond(
++                '¡Hola! Soy el asistente virtual del Hotel Andino. Puedo darte detalles del hotel, servicios, ayudarte a reservar o solicitar algo para tu habitación.',
++                $this->defaultSuggestions,
++            );
++        }
++
++        if ($this->contains($normalized, ['dónde están', 'donde estan', 'ubicación', 'ubicacion', 'ciudad', 'puerto boyacá', 'puerto boyaca'])) {
++            return $this->respond($this->knowledge['ubicacion'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['qué es el hotel', 'que es el hotel', 'sobre el hotel', 'quienes son', 'información del hotel', 'informacion del hotel'])) {
++            return $this->respond($this->knowledge['descripcion'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['habitaciones', 'tipos de habitación', 'tipo de habitación', 'cuartos disponibles', 'habitacion', 'habitaciones disponibles'])) {
++            return $this->respond('Contamos con estas opciones de habitación: ' . $this->formatList($this->knowledge['habitaciones']), $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['servicios', 'amenidades', 'instalaciones', 'spa', 'piscina', 'gimnasio', 'restaurante'])) {
++            return $this->respond('Nuestros servicios destacados incluyen: ' . $this->formatList($this->knowledge['servicios']), $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['desayuno', 'restaurante', 'comida', 'cena', 'almuerzo', 'gastronomía'])) {
++            return $this->respond($this->knowledge['gastronomia'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['check in', 'check-in', 'check out', 'check-out', 'horario de llegada', 'horario de salida'])) {
++            return $this->respond($this->knowledge['check'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['contacto', 'teléfono', 'telefono', 'correo', 'email', 'whatsapp'])) {
++            return $this->respond($this->knowledge['contacto'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['cómo llegar', 'como llegar', 'indicaciones', 'llegar al hotel', 'direccion'])) {
++            return $this->respond($this->knowledge['indicaciones'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['actividades', 'planes', 'turismo', 'qué hacer', 'que hacer', 'lugares cercanos'])) {
++            return $this->respond($this->knowledge['turismo'], $this->defaultSuggestions);
++        }
++
++        if ($this->contains($normalized, ['precio', 'tarifa', 'costo', 'cuánto vale', 'cuanto vale', 'valores'])) {
++            return $this->respond(
++                'Las tarifas cambian según temporada y disponibilidad. Dime qué fechas te interesan o inicia una reserva y te contactaremos con la cotización exacta.',
++                $this->defaultSuggestions,
++            );
++        }
++
++        if ($this->contains($normalized, ['ayuda', 'qué puedes hacer', 'que puedes hacer', 'opciones'])) {
++            return $this->respond(
++                'Puedo compartir información del Hotel Andino, detallar servicios, contarte sobre experiencias turísticas, guiarte en una reserva o solicitar algo para tu habitación.',
++                $this->defaultSuggestions,
++            );
++        }
++
++        return $this->respond(
++            'Puedo ayudarte con información del hotel, servicios disponibles, reservas o solicitudes a la habitación. Si quieres reservar, dime “reservar habitación”.',
++            $this->defaultSuggestions,
++        );
++    }
++
++    private function startBooking(): array
++    {
++        $_SESSION[self::BOOKING_SESSION_KEY] = [
++            'step' => 'name',
++            'data' => [],
++        ];
++
++        return $this->respond(
++            'Perfecto, iniciemos tu reserva. ¿Cuál es tu nombre completo? (Escribe “cancelar” para detener el proceso.)',
++            [],
++            ['inputType' => 'text', 'placeholder' => 'Nombre y apellido']
++        );
++    }
++
++    private function continueBooking(string $message): array
++    {
++        $state = $_SESSION[self::BOOKING_SESSION_KEY] ?? ['step' => 'name', 'data' => []];
++        $step = $state['step'] ?? 'name';
++        $data = $state['data'] ?? [];
++
++        switch ($step) {
++            case 'name':
++                $value = trim($message);
++                if (mb_strlen($value, 'UTF-8') < 3) {
++                    return $this->respond(
++                        'Necesito un nombre y apellido para la reserva. Por favor escríbelo completo.',
++                        [],
++                        ['inputType' => 'text', 'placeholder' => 'Nombre y apellido']
++                    );
++                }
++                $data['Name'] = $value;
++                $nextPrompt = 'Gracias, ' . $value . '. ¿Cuál es tu correo electrónico de contacto?';
++                $nextStep = 'email';
++                $suggestions = [];
++                $meta = ['inputType' => 'email', 'placeholder' => 'correo@ejemplo.com'];
++                break;
++
++            case 'email':
++                $email = filter_var(trim($message), FILTER_VALIDATE_EMAIL);
++                if (!$email) {
++                    return $this->respond(
++                        'El correo no parece válido. Escríbelo con formato nombre@dominio.com.',
++                        [],
++                        ['inputType' => 'email', 'placeholder' => 'correo@ejemplo.com']
++                    );
++                }
++                $data['Email'] = $email;
++                $nextPrompt = '¿Desde qué país nos visitas?';
++                $nextStep = 'country';
++                $suggestions = [];
++                $meta = ['inputType' => 'text', 'placeholder' => 'Escribe tu país'];
++                break;
++
++            case 'country':
++                $country = trim($message);
++                if ($country === '') {
++                    return $this->respond(
++                        'Indica el país de procedencia para registrar la reserva.',
++                        [],
++                        ['inputType' => 'text', 'placeholder' => 'Escribe tu país']
++                    );
++                }
++                $data['Country'] = $country;
++                $nextPrompt = '¿Deseas registrar un número de teléfono? (puedes escribir “omitir”).';
++                $nextStep = 'phone';
++                $suggestions = [
++                    $this->suggestion('Omitir', 'Omitir'),
++                ];
++                $meta = ['inputType' => 'tel', 'placeholder' => 'Número con indicativo u “omitir”'];
++                break;
++
++            case 'phone':
++                $phone = trim($message);
++                if ($phone === '' || $this->isSkipWord($phone)) {
++                    $data['Phone'] = '';
++                } else {
++                    $sanitized = preg_replace('/[^0-9+\s()-]/', '', $phone);
++                    if ($sanitized === '') {
++                        return $this->respond(
++                            'Si deseas compartirlo, escribe el número incluyendo indicativo. También puedes responder “omitir”.',
++                            [$this->suggestion('Omitir', 'Omitir')],
++                            ['inputType' => 'tel', 'placeholder' => 'Número con indicativo u “omitir”']
++                        );
++                    }
++                    $data['Phone'] = $sanitized;
++                }
++                $options = $this->suggestionListFromValues(array_values($this->roomTypes));
++                $nextPrompt = '¿Qué tipo de habitación prefieres? Elige una opción:';
++                $nextStep = 'room_type';
++                $suggestions = $options;
++                $meta = ['inputType' => 'text', 'placeholder' => 'Selecciona un tipo de habitación'];
++                break;
++
++            case 'room_type':
++                $room = $this->matchOption($message, $this->roomTypes);
++                if ($room === null) {
++                    return $this->respond(
++                        'Indica uno de los tipos disponibles (Doble, Suite, Múltiple o Sencilla).',
++                        $this->suggestionListFromValues(array_values($this->roomTypes)),
++                        ['inputType' => 'text', 'placeholder' => 'Selecciona un tipo de habitación']
++                    );
++                }
++                $data['RoomType'] = $room;
++                $suggestions = [
++                    $this->suggestion('1 cliente', '1 cliente'),
++                    $this->suggestion('2 clientes', '2 clientes'),
++                    $this->suggestion('3 clientes', '3 clientes'),
++                    $this->suggestion('4 clientes', '4 clientes'),
++                    $this->suggestion('Sin adicional', 'Sin adicional'),
++                ];
++                $nextPrompt = '¿Para cuántas personas necesitas la habitación? (1, 2, 3, 4 clientes o “sin adicional”).';
++                $nextStep = 'bed';
++                $meta = ['inputType' => 'text', 'placeholder' => 'Selecciona la capacidad'];
++                break;
++
++            case 'bed':
++                $bed = $this->matchOption($message, $this->bedOptions);
++                if ($bed === null) {
++                    return $this->respond(
++                        'Responde con 1, 2, 3, 4 clientes o indica “sin adicional”.',
++                        [
++                            $this->suggestion('1 cliente', '1'),
++                            $this->suggestion('2 clientes', '2'),
++                            $this->suggestion('3 clientes', '3'),
++                            $this->suggestion('4 clientes', '4'),
++                            $this->suggestion('Sin adicional', 'Sin adicional'),
++                        ],
++                        ['inputType' => 'text', 'placeholder' => 'Selecciona la capacidad']
++                    );
++                }
++                $data['Bed'] = $bed;
++                $suggestions = [
++                    $this->suggestion('1', '1'),
++                    $this->suggestion('2', '2'),
++                    $this->suggestion('3', '3'),
++                ];
++                $nextPrompt = '¿Cuántas habitaciones del mismo tipo necesitas? (normalmente 1).';
++                $nextStep = 'rooms';
++                $meta = ['inputType' => 'number', 'placeholder' => 'Indica un número'];
++                break;
++
++            case 'rooms':
++                $count = (int) filter_var($message, FILTER_SANITIZE_NUMBER_INT);
++                if ($count < 1) {
++                    return $this->respond(
++                        'Indica un número válido de habitaciones (por ejemplo 1).',
++                        [
++                            $this->suggestion('1', '1'),
++                            $this->suggestion('2', '2'),
++                            $this->suggestion('3', '3'),
++                        ],
++                        ['inputType' => 'number', 'placeholder' => 'Indica un número entero']
++                    );
++                }
++                $data['NoofRoom'] = $count;
++                $suggestions = [
++                    $this->suggestion('Solo habitación', 'Solo habitación'),
++                    $this->suggestion('Desayuno incluido', 'Desayuno incluido'),
++                    $this->suggestion('Desayuno y cena', 'Desayuno y cena'),
++                    $this->suggestion('Pensión completa', 'Pensión completa'),
++                ];
++                $nextPrompt = '¿Qué plan de alimentación prefieres?';
++                $nextStep = 'meal';
++                $meta = ['inputType' => 'text', 'placeholder' => 'Selecciona un plan de alimentación'];
++                break;
++
++            case 'meal':
++                $meal = $this->matchOption($message, $this->mealPlans);
++                if ($meal === null) {
++                    return $this->respond(
++                        'Elige entre Solo habitación, Desayuno incluido, Desayuno y cena o Pensión completa.',
++                        [
++                            $this->suggestion('Solo habitación', 'Solo habitación'),
++                            $this->suggestion('Desayuno incluido', 'Desayuno incluido'),
++                            $this->suggestion('Desayuno y cena', 'Desayuno y cena'),
++                            $this->suggestion('Pensión completa', 'Pensión completa'),
++                        ],
++                        ['inputType' => 'text', 'placeholder' => 'Selecciona un plan de alimentación']
++                    );
++                }
++                $data['Meal'] = $meal;
++                $nextPrompt = '¿Cuál es la fecha de llegada? (usa el selector o formato AAAA-MM-DD).';
++                $nextStep = 'check_in';
++                $suggestions = [];
++                $meta = ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de llegada'];
++                break;
++
++            case 'check_in':
++                $cin = $this->parseDate($message);
++                if ($cin === null) {
++                    return $this->respond(
++                        'No pude reconocer la fecha de llegada. Usa el selector o el formato AAAA-MM-DD.',
++                        [],
++                        ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de llegada']
++                    );
++                }
++                $data['cin'] = $cin;
++                $nextPrompt = '¿Cuál es la fecha de salida? (usa el selector o formato AAAA-MM-DD).';
++                $nextStep = 'check_out';
++                $suggestions = [];
++                $meta = ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de salida'];
++                break;
++
++            case 'check_out':
++                $cout = $this->parseDate($message);
++                if ($cout === null) {
++                    return $this->respond(
++                        'No pude reconocer la fecha de salida. Usa el selector o el formato AAAA-MM-DD.',
++                        [],
++                        ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de salida']
++                    );
++                }
++                $data['cout'] = $cout;
++                $this->resetBooking();
++                return $this->finalizeBooking($data);
++
++            default:
++                $this->resetBooking();
++                return $this->respond(
++                    'Ocurrió algo inesperado, reiniciemos la reserva. ¿Deseas intentarlo de nuevo?',
++                    $this->defaultSuggestions
++                );
++        }
++
++        $_SESSION[self::BOOKING_SESSION_KEY] = [
++            'step' => $nextStep,
++            'data' => $data,
++        ];
++
++        return $this->respond($nextPrompt, $suggestions ?? [], $meta ?? []);
++    }
++
++    private function finalizeBooking(array $data): array
++    {
++        $cin = strtotime($data['cin']);
++        $cout = strtotime($data['cout']);
++        if ($cin === false || $cout === false || $cout <= $cin) {
++            return $this->respond(
++                'La fecha de salida debe ser posterior a la llegada. Vuelve a iniciar la reserva para corregir las fechas.',
++                $this->defaultSuggestions,
++                ['inputType' => 'text']
++            );
++        }
++        $nodays = (int) round(($cout - $cin) / 86400);
++
++        $userId = $this->userId;
++        $sta = 'NotConfirm';
++
++        $sql = 'INSERT INTO roombook (user_id, Name, Email, Country, Phone, RoomType, Bed, NoofRoom, Meal, cin, cout, stat, nodays) '
++            . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
++        $stmt = $this->conn->prepare($sql);
++        if (!$stmt) {
++            return $this->respond(
++                'No pude registrar la reserva en este momento. Intenta nuevamente en unos minutos.',
++                $this->defaultSuggestions
++            );
++        }
++
++        $phone = $data['Phone'] ?? '';
++        if (!is_string($phone)) {
++            $phone = '';
++        }
++
++        $stmt->bind_param(
++            'issssssissssi',
++            $userId,
++            $data['Name'],
++            $data['Email'],
++            $data['Country'],
++            $phone,
++            $data['RoomType'],
++            $data['Bed'],
++            $data['NoofRoom'],
++            $data['Meal'],
++            $data['cin'],
++            $data['cout'],
++            $sta,
++            $nodays
++        );
++
++        $ok = $stmt->execute();
++        $reservationId = $ok ? (int) $stmt->insert_id : 0;
++        $stmt->close();
++
++        if (!$ok || $reservationId <= 0) {
++            return $this->respond(
++                'No pude registrar la reserva en la base de datos. Por favor intenta nuevamente más tarde.',
++                $this->defaultSuggestions
++            );
++        }
++
++        $notifMessage = sprintf('Nueva reserva pendiente de %s (%s)', $data['Name'], $data['Email']);
++        guest_portal_record_notification($this->conn, 'admin', 'Reserva solicitada', $notifMessage, 'admin/roombook.php', $reservationId, null);
++        guest_portal_record_notification($this->conn, 'recepcion', 'Reserva solicitada', $notifMessage, 'admin/roombook.php', $reservationId, null);
++
++        $summary = sprintf(
++            'Reserva registrada para %s (%s). Tipo: %s · Plan: %s · Llegada %s · Salida %s. Nuestro equipo confirmará la disponibilidad y tarifas en breve.',
++            $data['Name'],
++            $data['Email'],
++            $data['RoomType'],
++            $this->friendlyMealLabel($data['Meal']),
++            $this->formatDateForUser($data['cin']),
++            $this->formatDateForUser($data['cout'])
++        );
++
++        return $this->respond($summary, $this->defaultSuggestions);
++    }
++
++    private function reservationStatusMessage(): array
++    {
++        if (!$this->userId) {
++            return $this->respond(
++                'Para consultar el estado de tus reservas inicia sesión con tu cuenta y dirígete a la sección “Mis reservas” en el portal de huéspedes.',
++                $this->defaultSuggestions
++            );
++        }
++
++        if (!$this->activeReservation) {
++            return $this->respond(
++                'No encuentro reservas activas asociadas a tu cuenta en este momento. Puedes iniciar una nueva reserva cuando lo desees.',
++                $this->defaultSuggestions
++            );
++        }
++
++        $status = $this->activeReservation['stat'] ?? 'NotConfirm';
++        $label = match ($status) {
++            'Confirm' => 'confirmada',
++            'Ocupado', 'CheckIn' => 'en curso',
++            'Checkout' => 'finalizada',
++            default => 'pendiente de confirmación',
++        };
++
++        $message = sprintf(
++            'Tu reserva más reciente está %s. Llegada: %s · Salida: %s. Si deseas realizar algún ajuste o solicitar un servicio adicional, házmelo saber.',
++            $label,
++            $this->formatDateForUser((string) ($this->activeReservation['cin'] ?? '')),
++            $this->formatDateForUser((string) ($this->activeReservation['cout'] ?? ''))
++        );
++
++        return $this->respond($message, $this->defaultSuggestions);
++    }
++
++    private function startServiceRequest(): array
++    {
++        if (!$this->userId || !$this->activeReservation) {
++            return $this->respond(
++                'Para solicitar algo a tu habitación inicia sesión y asegúrate de tener una reserva confirmada o en curso. También puedo ayudarte a crear una reserva nueva.',
++                $this->defaultSuggestions
++            );
++        }
++
++        $_SESSION[self::SERVICE_SESSION_KEY] = [
++            'step' => 'type',
++            'data' => [
++                'reservation_id' => (int) ($this->activeReservation['id'] ?? 0),
++                'guest_name' => (string) ($this->activeReservation['Name'] ?? ''),
++            ],
++        ];
++
++        return $this->respond(
++            '¿Qué deseas solicitar a tu habitación? Elige una opción o cuéntame con tus palabras.',
++            $this->serviceTypeSuggestions(),
++            ['placeholder' => 'Selecciona una opción o descríbela']
++        );
++    }
++
++    private function continueServiceRequest(string $message): array
++    {
++        $state = $_SESSION[self::SERVICE_SESSION_KEY] ?? ['step' => 'type', 'data' => []];
++        $step = $state['step'] ?? 'type';
++        $data = $state['data'] ?? [];
++
++        switch ($step) {
++            case 'type':
++                $type = $this->matchOption($message, $this->serviceTypeKeywords);
++                if ($type === null || !isset($this->serviceTypeLabels[$type])) {
++                    return $this->respond(
++                        'Selecciona una de las opciones disponibles o descríbeme qué necesitas.',
++                        $this->serviceTypeSuggestions(),
++                        ['placeholder' => 'Selecciona una opción o descríbela']
++                    );
++                }
++                $data['type'] = $type;
++                $data['type_label'] = $this->serviceTypeLabels[$type];
++                $nextPrompt = 'Perfecto, ¿qué deseas que enviemos o hagamos?';
++                $nextStep = 'detail';
++                $suggestions = $this->detailSuggestionsForType($type);
++                $meta = ['placeholder' => 'Describe tu solicitud'];
++                break;
++
++            case 'detail':
++                $detail = trim($message);
++                if ($detail === '') {
++                    return $this->respond(
++                        'Cuéntame brevemente qué necesitas para poder registrarlo.',
++                        $this->detailSuggestionsForType((string) ($data['type'] ?? '')),
++                        ['placeholder' => 'Describe tu solicitud']
++                    );
++                }
++                $data['detail'] = $detail;
++                $typeLabel = (string) ($data['type_label'] ?? 'servicio');
++                $nextPrompt = sprintf('Registraré %s con la nota: “%s”. ¿Lo confirmamos?', strtolower($typeLabel), $detail);
++                $nextStep = 'confirm';
++                $suggestions = [
++                    $this->suggestion('Confirmar solicitud', 'Confirmar solicitud'),
++                    $this->suggestion('Cambiar detalle', 'Cambiar detalle'),
++                    $this->suggestion('Cancelar solicitud', 'Cancelar solicitud'),
++                ];
++                $meta = ['placeholder' => 'Confirma, cambia el detalle o cancela'];
++                break;
++
++            case 'confirm':
++                $normalized = mb_strtolower($message, 'UTF-8');
++                if ($this->contains($normalized, ['confirmar', 'enviar', 'sí', 'si', 'listo', 'ok'])) {
++                    $this->resetService();
++                    return $this->finalizeServiceRequest($data);
++                }
++                if ($this->contains($normalized, ['cambiar', 'editar', 'modificar'])) {
++                    $_SESSION[self::SERVICE_SESSION_KEY] = [
++                        'step' => 'detail',
++                        'data' => $data,
++                    ];
++                    return $this->respond(
++                        'Sin problema, ¿qué deseas solicitar exactamente?',
++                        $this->detailSuggestionsForType((string) ($data['type'] ?? '')),
++                        ['placeholder' => 'Actualiza tu solicitud']
++                    );
++                }
++                if ($this->contains($normalized, ['cancelar', 'no enviar', 'ninguno'])) {
++                    $this->resetService();
++                    return $this->respond(
++                        'Cancelé la solicitud. Si necesitas otra cosa, házmelo saber.',
++                        $this->defaultSuggestions
++                    );
++                }
++                return $this->respond(
++                    '¿Deseas que envíe la solicitud ahora? Puedes confirmar, cambiar el detalle o cancelar.',
++                    [
++                        $this->suggestion('Confirmar solicitud', 'Confirmar solicitud'),
++                        $this->suggestion('Cambiar detalle', 'Cambiar detalle'),
++                        $this->suggestion('Cancelar solicitud', 'Cancelar solicitud'),
++                    ],
++                    ['placeholder' => 'Confirma, cambia o cancela la solicitud']
++                );
++
++            default:
++                $this->resetService();
++                return $this->respond(
++                    'Ocurrió algo inesperado con la solicitud. Podemos intentarlo de nuevo cuando lo desees.',
++                    $this->defaultSuggestions
++                );
++        }
++
++        $_SESSION[self::SERVICE_SESSION_KEY] = [
++            'step' => $nextStep,
++            'data' => $data,
++        ];
++
++        return $this->respond($nextPrompt, $suggestions ?? [], $meta ?? []);
++    }
++
++    private function finalizeServiceRequest(array $data): array
++    {
++        $reservationId = (int) ($data['reservation_id'] ?? 0);
++        $type = (string) ($data['type'] ?? '');
++        $detail = trim((string) ($data['detail'] ?? ''));
++        if ($reservationId <= 0 || $type === '' || $detail === '') {
++            return $this->respond(
++                'No pude registrar la solicitud porque faltan datos. Intenta nuevamente o contáctanos por recepción.',
++                $this->defaultSuggestions
++            );
++        }
++
++        $requestId = guest_portal_create_request(
++            $this->conn,
++            $reservationId,
++            $this->userId,
++            $type,
++            $detail,
++            'guest'
++        );
++
++        if (!$requestId) {
++            return $this->respond(
++                'No fue posible registrar la solicitud en este momento. Intenta de nuevo en unos minutos o comunícate con recepción.',
++                $this->defaultSuggestions
++            );
++        }
++
++        $guestName = (string) ($data['guest_name'] ?? ($this->activeReservation['Name'] ?? 'Huésped'));
++        $typeLabel = $this->serviceTypeLabels[$type] ?? ucfirst(str_replace('_', ' ', $type));
++        $notifMessage = sprintf('%s solicitó %s: %s', $guestName, mb_strtolower($typeLabel, 'UTF-8'), $detail);
++
++        guest_portal_record_notification($this->conn, 'admin', 'Solicitud de habitación', $notifMessage, 'admin/guest-requests.php', $reservationId, $requestId);
++        guest_portal_record_notification($this->conn, 'recepcion', 'Solicitud de habitación', $notifMessage, 'admin/guest-requests.php', $reservationId, $requestId);
++
++        $summary = sprintf('Avisé al equipo para atender tu solicitud de %s. Te notificaremos cuando esté en camino.', strtolower($typeLabel));
++
++        return $this->respond($summary, $this->defaultSuggestions);
++    }
++
++    private function isBookingActive(): bool
++    {
++        return isset($_SESSION[self::BOOKING_SESSION_KEY]) && is_array($_SESSION[self::BOOKING_SESSION_KEY]);
++    }
++
++    private function resetBooking(): void
++    {
++        unset($_SESSION[self::BOOKING_SESSION_KEY]);
++    }
++
++    private function isServiceActive(): bool
++    {
++        return isset($_SESSION[self::SERVICE_SESSION_KEY]) && is_array($_SESSION[self::SERVICE_SESSION_KEY]);
++    }
++
++    private function resetService(): void
++    {
++        unset($_SESSION[self::SERVICE_SESSION_KEY]);
++    }
++
++    private function isResetCommand(string $normalized): bool
++    {
++        return $this->contains($normalized, ['reiniciar chat', 'reinicia', 'reset', 'comenzar de nuevo']);
++    }
++
++    private function isCancelling(string $normalized): bool
++    {
++        return $this->contains($normalized, ['cancelar', 'detener', 'no continuar', 'parar reserva', 'cancelar solicitud']);
++    }
++
++    private function shouldStartBooking(string $normalized): bool
++    {
++        if ($this->contains($normalized, ['mi reserva', 'estado de mi reserva', 'tengo una reserva'])) {
 +            return false;
 +        }
-+        $exists = $result->num_rows > 0;
-+        $result->free();
-+        return $exists;
++        return $this->contains($normalized, ['reservar', 'reservar habitación', 'reservar habitacion', 'hacer una reserva', 'quiero reservar', 'necesito una habitación', 'necesito habitacion']);
 +    }
-+}
 +
-+if (!function_exists('guest_portal_constraint_exists')) {
-+    function guest_portal_constraint_exists(mysqli $conn, string $table, string $constraint): bool
++    private function shouldStartServiceRequest(string $normalized): bool
 +    {
-+        $sql = "SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? LIMIT 1";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return false;
-+        }
-+        $stmt->bind_param('ss', $table, $constraint);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return false;
-+        }
-+        $stmt->store_result();
-+        $exists = $stmt->num_rows > 0;
-+        $stmt->free_result();
-+        $stmt->close();
-+        return $exists;
++        return $this->contains($normalized, [
++            'servicio a la habitación',
++            'servicio a la habitacion',
++            'room service',
++            'pedir a la habitación',
++            'pedir a la habitacion',
++            'enviar a mi habitación',
++            'enviar a mi habitacion',
++            'toalla adicional',
++            'solicitud a la habitación',
++            'solicitar a la habitacion',
++        ]);
 +    }
-+}
 +
-+if (!function_exists('guest_portal_ensure_schema')) {
-+    function guest_portal_ensure_schema(mysqli $conn): void
++    private function isReservationStatusQuestion(string $normalized): bool
 +    {
-+        // --- roombook ---
-+        if (!guest_portal_column_exists($conn, 'roombook', 'user_id')) {
-+            $conn->query("ALTER TABLE roombook ADD COLUMN user_id INT NULL AFTER room_id");
-+        }
-+        if (!guest_portal_column_exists($conn, 'roombook', 'created_at')) {
-+            $conn->query("ALTER TABLE roombook ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER stat");
-+        }
-+        if (!guest_portal_column_exists($conn, 'roombook', 'updated_at')) {
-+            $conn->query("ALTER TABLE roombook ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at");
-+        }
-+        if (!guest_portal_constraint_exists($conn, 'roombook', 'fk_roombook_user')) {
-+            $conn->query("ALTER TABLE roombook ADD CONSTRAINT fk_roombook_user FOREIGN KEY (user_id) REFERENCES signup(UserID) ON DELETE SET NULL");
-+        }
-+
-+        // --- guest_service_requests ---
-+        $conn->query("CREATE TABLE IF NOT EXISTS guest_service_requests (
-+            id INT NOT NULL AUTO_INCREMENT,
-+            roombook_id INT NOT NULL,
-+            user_id INT NULL,
-+            request_type VARCHAR(40) NOT NULL,
-+            details TEXT NULL,
-+            status ENUM('pendiente','en_proceso','completado','cancelado') NOT NULL DEFAULT 'pendiente',
-+            charge_amount DECIMAL(10,2) NULL,
-+            requested_by ENUM('guest','staff') NOT NULL DEFAULT 'guest',
-+            response_note TEXT NULL,
-+            handled_by VARCHAR(190) NULL,
-+            resolved_at DATETIME NULL,
-+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-+            PRIMARY KEY (id),
-+            KEY idx_guest_requests_user (user_id),
-+            KEY idx_guest_requests_room (roombook_id),
-+            CONSTRAINT fk_guest_requests_reservation FOREIGN KEY (roombook_id) REFERENCES roombook(id) ON DELETE CASCADE,
-+            CONSTRAINT fk_guest_requests_user FOREIGN KEY (user_id) REFERENCES signup(UserID) ON DELETE SET NULL
-+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-+
-+        if (!guest_portal_column_exists($conn, 'guest_service_requests', 'charge_amount')) {
-+            $conn->query("ALTER TABLE guest_service_requests ADD COLUMN charge_amount DECIMAL(10,2) NULL AFTER status");
-+        }
-+        if (!guest_portal_column_exists($conn, 'guest_service_requests', 'requested_by')) {
-+            $conn->query("ALTER TABLE guest_service_requests ADD COLUMN requested_by ENUM('guest','staff') NOT NULL DEFAULT 'guest' AFTER charge_amount");
-+        }
-+        if (!guest_portal_column_exists($conn, 'guest_service_requests', 'response_note')) {
-+            $conn->query("ALTER TABLE guest_service_requests ADD COLUMN response_note TEXT NULL AFTER requested_by");
-+        }
-+        if (!guest_portal_column_exists($conn, 'guest_service_requests', 'handled_by')) {
-+            $conn->query("ALTER TABLE guest_service_requests ADD COLUMN handled_by VARCHAR(190) NULL AFTER response_note");
-+        }
-+        if (!guest_portal_column_exists($conn, 'guest_service_requests', 'resolved_at')) {
-+            $conn->query("ALTER TABLE guest_service_requests ADD COLUMN resolved_at DATETIME NULL AFTER handled_by");
-+        }
-+
-+        // --- notifications ---
-+        $conn->query("CREATE TABLE IF NOT EXISTS system_notifications (
-+            id INT NOT NULL AUTO_INCREMENT,
-+            audience ENUM('admin','recepcion','staff') NOT NULL DEFAULT 'admin',
-+            title VARCHAR(190) NOT NULL,
-+            message TEXT NOT NULL,
-+            link VARCHAR(255) NULL,
-+            related_reservation_id INT NULL,
-+            related_request_id INT NULL,
-+            is_read TINYINT(1) NOT NULL DEFAULT 0,
-+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-+            PRIMARY KEY (id),
-+            KEY idx_notifications_audience (audience),
-+            KEY idx_notifications_reservation (related_reservation_id),
-+            KEY idx_notifications_request (related_request_id)
-+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
++        return $this->contains($normalized, ['mi reserva', 'estado de mi reserva', 'reserva actual', 'tengo una reserva', 'ver mi reserva']);
 +    }
-+}
 +
-+if (!function_exists('guest_portal_fetch_user')) {
-+    function guest_portal_fetch_user(mysqli $conn, string $email): ?array
++    private function matchOption(string $input, array $options): ?string
 +    {
-+        $sql = "SELECT UserID, Username, Email FROM signup WHERE Email = ? LIMIT 1";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
++        $normalized = mb_strtolower(trim($input), 'UTF-8');
++        foreach ($options as $key => $value) {
++            if ($normalized === $key) {
++                return $value;
++            }
++        }
++        foreach ($options as $key => $value) {
++            if ($key !== '' && mb_strpos($normalized, $key) !== false) {
++                return $value;
++            }
++        }
++        return null;
++    }
++
++    private function parseDate(string $input): ?string
++    {
++        $value = trim($input);
++        if ($value === '') {
 +            return null;
 +        }
-+        $stmt->bind_param('s', $email);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return null;
-+        }
-+        $result = $stmt->get_result();
-+        $user = $result ? $result->fetch_assoc() : null;
-+        $stmt->close();
-+        return $user ?: null;
-+    }
-+}
 +
-+if (!function_exists('guest_portal_reservations_for_user')) {
-+    function guest_portal_reservations_for_user(mysqli $conn, int $userId): array
++        $formats = ['Y-m-d', 'd/m/Y', 'd-m-Y'];
++        foreach ($formats as $format) {
++            $dt = DateTime::createFromFormat($format, $value);
++            if ($dt instanceof DateTime) {
++                $errors = DateTime::getLastErrors();
++                if ($errors['warning_count'] === 0 && $errors['error_count'] === 0) {
++                    return $dt->format('Y-m-d');
++                }
++            }
++        }
++
++        if (preg_match('/^\d{4}\d{2}\d{2}$/', $value)) {
++            $dt = DateTime::createFromFormat('Ymd', $value);
++            if ($dt instanceof DateTime) {
++                return $dt->format('Y-m-d');
++            }
++        }
++
++        return null;
++    }
++
++    private function formatDateForUser(string $date): string
 +    {
-+        $sql = "SELECT r.*, p.finaltotal, p.mealtotal, p.roomtotal, p.bedtotal
-+                FROM roombook r
-+                LEFT JOIN payment p ON p.id = r.id
-+                WHERE r.user_id = ?
-+                ORDER BY r.created_at DESC, r.id DESC";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return [];
++        $dt = DateTime::createFromFormat('Y-m-d', $date) ?: DateTime::createFromFormat('Y-m-d H:i:s', $date);
++        if ($dt instanceof DateTime) {
++            return $dt->format('d/m/Y');
 +        }
-+        $stmt->bind_param('i', $userId);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return [];
-+        }
-+        $result = $stmt->get_result();
-+        $reservations = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-+        $stmt->close();
-+        return $reservations;
++        return $date;
 +    }
-+}
 +
-+if (!function_exists('guest_portal_active_reservation')) {
-+    function guest_portal_active_reservation(mysqli $conn, int $userId): ?array
++    private function formatList(array $items): string
 +    {
-+        $sql = "SELECT r.*, rm.room_number, rm.type AS room_type_name, rm.bedding AS room_bedding,
-+                       p.finaltotal, p.mealtotal, p.roomtotal, p.bedtotal
-+                FROM roombook r
-+                LEFT JOIN room rm ON rm.id = r.room_id
-+                LEFT JOIN payment p ON p.id = r.id
-+                WHERE r.user_id = ? AND r.stat IN ('Confirm','Ocupado','CheckIn')
-+                ORDER BY r.cin DESC, r.id DESC
-+                LIMIT 1";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return null;
-+        }
-+        $stmt->bind_param('i', $userId);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return null;
-+        }
-+        $result = $stmt->get_result();
-+        $reservation = $result ? $result->fetch_assoc() : null;
-+        $stmt->close();
-+        return $reservation ?: null;
++        return implode('; ', $items);
 +    }
-+}
 +
-+if (!function_exists('guest_portal_request_types')) {
-+    function guest_portal_request_types(): array
++    private function isSkipWord(string $value): bool
++    {
++        $normalized = mb_strtolower(trim($value), 'UTF-8');
++        return in_array($normalized, ['omitir', 'skip', 'ninguno', 'no', 'prefiero no'], true);
++    }
++
++    private function contains(string $haystack, array $needles): bool
++    {
++        foreach ($needles as $needle) {
++            if ($needle !== '' && mb_strpos($haystack, $needle) !== false) {
++                return true;
++            }
++        }
++        return false;
++    }
++
++    private function resolveUserId(): ?int
++    {
++        if (isset($_SESSION['user'])) {
++            $user = $_SESSION['user'];
++            if (is_array($user)) {
++                $id = $user['id'] ?? $user['UserID'] ?? $user['UserId'] ?? null;
++                if (is_numeric($id)) {
++                    return (int) $id;
++                }
++            }
++        }
++
++        if (isset($_SESSION['user_id']) && is_numeric($_SESSION['user_id'])) {
++            return (int) $_SESSION['user_id'];
++        }
++
++        if (isset($_SESSION['uid']) && is_numeric($_SESSION['uid'])) {
++            return (int) $_SESSION['uid'];
++        }
++
++        if (!empty($_SESSION['usermail']) && is_string($_SESSION['usermail'])) {
++            $user = guest_portal_fetch_user($this->conn, $_SESSION['usermail']);
++            if ($user) {
++                $id = $user['UserID'] ?? $user['id'] ?? null;
++                if (is_numeric($id)) {
++                    return (int) $id;
++                }
++            }
++        }
++
++        return null;
++    }
++
++    /** @return array<int, array{label:string,value:string}> */
++    private function buildDefaultSuggestions(): array
++    {
++        $items = [
++            ['Reservar habitación', 'Reservar habitación'],
++            ['Solicitar servicio a la habitación', 'Solicitar servicio a la habitación'],
++            ['Ver estado de mi reserva', 'Estado de mi reserva'],
++            ['Ver servicios del hotel', 'Servicios del hotel'],
++        ];
++
++        $suggestions = [];
++        foreach ($items as $item) {
++            $suggestions[] = $this->suggestion($item[0], $item[1]);
++        }
++        return $suggestions;
++    }
++
++    private function suggestion(string $label, string $value): array
++    {
++        return ['label' => $label, 'value' => $value];
++    }
++
++    /** @param array<int, string> $values */
++    private function suggestionListFromValues(array $values): array
++    {
++        $unique = array_values(array_unique($values));
++        return array_map(fn(string $item) => $this->suggestion($item, $item), $unique);
++    }
++
++    /** @return array<int, array{label:string,value:string}> */
++    private function serviceTypeSuggestions(): array
++    {
++        $list = [];
++        foreach ($this->serviceTypeLabels as $type => $label) {
++            $list[] = $this->suggestion($label, $label);
++        }
++        return $list;
++    }
++
++    /** @return array<int, array{label:string,value:string}> */
++    private function detailSuggestionsForType(string $type): array
++    {
++        return match ($type) {
++            'room_service' => [
++                $this->suggestion('Desayuno a la habitación', 'Desayuno a la habitación'),
++                $this->suggestion('Café y bocadillos', 'Café y bocadillos'),
++                $this->suggestion('Agua embotellada', 'Agua embotellada'),
++                $this->suggestion('Postre nocturno', 'Postre nocturno'),
++            ],
++            'toalla' => [
++                $this->suggestion('Toallas adicionales', 'Toallas adicionales'),
++                $this->suggestion('Toallas para la piscina', 'Toallas para la piscina'),
++                $this->suggestion('Reemplazar toallas usadas', 'Reemplazar toallas usadas'),
++            ],
++            'jabon' => [
++                $this->suggestion('Kit de aseo personal', 'Kit de aseo personal'),
++                $this->suggestion('Jabón y shampoo', 'Jabón y shampoo'),
++                $this->suggestion('Cepillo de dientes', 'Cepillo de dientes'),
++            ],
++            'asistencia' => [
++                $this->suggestion('Hablar con recepción', 'Hablar con recepción'),
++                $this->suggestion('Ayuda con el televisor', 'Ayuda con el televisor'),
++                $this->suggestion('Información sobre transporte', 'Información sobre transporte'),
++            ],
++            'minibar' => [
++                $this->suggestion('Reabastecer minibar', 'Reabastecer minibar'),
++                $this->suggestion('Registrar consumo del minibar', 'Registrar consumo del minibar'),
++                $this->suggestion('Retirar artículos del minibar', 'Retirar artículos del minibar'),
++            ],
++            default => [
++                $this->suggestion('Almohada adicional', 'Almohada adicional'),
++                $this->suggestion('Limpieza adicional', 'Limpieza adicional'),
++                $this->suggestion('Otro servicio', 'Otro servicio'),
++            ],
++        };
++    }
++
++    private function friendlyMealLabel(string $meal): string
++    {
++        return match ($meal) {
++            'Room only' => 'Solo habitación',
++            'Breakfast' => 'Desayuno incluido',
++            'Half Board' => 'Desayuno y cena',
++            'Full Board' => 'Pensión completa',
++            default => $meal,
++        };
++    }
++
++    private function defaultMeta(): array
 +    {
 +        return [
-+            'toalla'      => 'Toalla adicional',
-+            'jabon'       => 'Jabón / amenities',
-+            'asistencia'  => 'Asistencia de recepción',
-+            'minibar'     => 'Consumo de minibar',
-+            'otro'        => 'Otro servicio'
++            'inputType' => 'text',
++            'placeholder' => 'Escribe tu mensaje o elige una opción',
++        ];
++    }
++
++    private function respond(string $message, array $suggestions = [], array $meta = []): array
++    {
++        $cleanSuggestions = [];
++        foreach ($suggestions as $item) {
++            if (!is_array($item)) {
++                continue;
++            }
++            if (!isset($item['label'], $item['value'])) {
++                continue;
++            }
++            $label = (string) $item['label'];
++            $value = (string) $item['value'];
++            if ($label === '' || $value === '') {
++                continue;
++            }
++            $cleanSuggestions[] = ['label' => $label, 'value' => $value];
++        }
++
++        $meta = array_merge($this->defaultMeta(), $meta);
++
++        return [
++            'message' => $message,
++            'suggestions' => $cleanSuggestions,
++            'meta' => $meta,
 +        ];
 +    }
 +}
 +
-+if (!function_exists('guest_portal_create_request')) {
-+    function guest_portal_create_request(mysqli $conn, int $reservationId, ?int $userId, string $type, string $details, string $requestedBy = 'guest', ?float $charge = null): ?int
-+    {
-+        $sql = "INSERT INTO guest_service_requests (roombook_id, user_id, request_type, details, requested_by, charge_amount)
-+                VALUES (?, NULLIF(?,0), ?, ?, ?, NULLIF(?, -1))";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return null;
-+        }
-+        $userIdParam = $userId ? (int)$userId : 0;
-+        $chargeParam = ($charge !== null) ? (float)$charge : -1.0;
-+        $stmt->bind_param('iisssd', $reservationId, $userIdParam, $type, $details, $requestedBy, $chargeParam);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return null;
-+        }
-+        $id = $stmt->insert_id;
-+        $stmt->close();
-+        return $id > 0 ? $id : null;
-+    }
-+}
-+
-+if (!function_exists('guest_portal_requests_for_user')) {
-+    function guest_portal_requests_for_user(mysqli $conn, int $userId): array
-+    {
-+        $sql = "SELECT r.id, r.request_type, r.details, r.status, r.charge_amount, r.created_at, r.updated_at, r.roombook_id,
-+                       rb.RoomType, rb.stat, rb.cin, rb.cout, rb.room_id
-+                FROM guest_service_requests r
-+                INNER JOIN roombook rb ON rb.id = r.roombook_id
-+                WHERE r.user_id = ?
-+                ORDER BY r.created_at DESC";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return [];
-+        }
-+        $stmt->bind_param('i', $userId);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return [];
-+        }
-+        $result = $stmt->get_result();
-+        $requests = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-+        $stmt->close();
-+        return $requests;
-+    }
-+}
-+
-+if (!function_exists('guest_portal_requests_for_admin')) {
-+    function guest_portal_requests_for_admin(mysqli $conn, ?string $statusFilter = null): array
-+    {
-+        $sql = "SELECT r.*, s.Username, s.Email AS user_email, rb.RoomType, rb.cin, rb.cout, rb.stat, rb.Name AS reservation_name, rb.Email AS reservation_email, rm.room_number
-+                FROM guest_service_requests r
-+                LEFT JOIN signup s ON s.UserID = r.user_id
-+                LEFT JOIN roombook rb ON rb.id = r.roombook_id
-+                LEFT JOIN room rm ON rm.id = rb.room_id";
-+        $params = [];
-+        $types = '';
-+        if ($statusFilter && in_array($statusFilter, ['pendiente','en_proceso','completado','cancelado'], true)) {
-+            $sql .= " WHERE r.status = ?";
-+            $types .= 's';
-+            $params[] = $statusFilter;
-+        }
-+        $sql .= " ORDER BY r.created_at DESC";
-+
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return [];
-+        }
-+        if (!empty($params)) {
-+            $stmt->bind_param($types, ...$params);
-+        }
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return [];
-+        }
-+        $result = $stmt->get_result();
-+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-+        $stmt->close();
-+        return $rows;
-+    }
-+}
-+
-+if (!function_exists('guest_portal_confirmed_reservations')) {
-+    function guest_portal_confirmed_reservations(mysqli $conn): array
-+    {
-+        $sql = "SELECT rb.id, rb.Name, rb.Email, rb.RoomType, rb.user_id, rb.cin, rb.cout, rb.stat, rb.room_id, rm.room_number
-+                FROM roombook rb
-+                LEFT JOIN room rm ON rm.id = rb.room_id
-+                WHERE rb.stat IN ('Confirm','Ocupado','CheckIn')
-+                ORDER BY rb.cin DESC, rb.id DESC";
-+        $result = $conn->query($sql);
-+        if (!$result) {
-+            return [];
-+        }
-+        $rows = $result->fetch_all(MYSQLI_ASSOC);
-+        $result->free();
-+        return $rows;
-+    }
-+}
-+
-+if (!function_exists('guest_portal_update_request')) {
-+    function guest_portal_update_request(mysqli $conn, int $requestId, string $status, ?string $note, ?string $handledBy, ?float $charge = null): bool
-+    {
-+        if (!in_array($status, ['pendiente','en_proceso','completado','cancelado'], true)) {
-+            return false;
-+        }
-+        $resolvedAt = null;
-+        if (in_array($status, ['completado','cancelado'], true)) {
-+            $resolvedAt = date('Y-m-d H:i:s');
-+        }
-+
-+        if ($charge === null) {
-+            $sql = "UPDATE guest_service_requests SET status = ?, response_note = ?, handled_by = ?, resolved_at = ?, updated_at = NOW() WHERE id = ?";
-+            $stmt = $conn->prepare($sql);
-+            if (!$stmt) {
-+                return false;
-+            }
-+            $stmt->bind_param('ssssi', $status, $note, $handledBy, $resolvedAt, $requestId);
-+        } else {
-+            $sql = "UPDATE guest_service_requests SET status = ?, response_note = ?, handled_by = ?, resolved_at = ?, charge_amount = ?, updated_at = NOW() WHERE id = ?";
-+            $stmt = $conn->prepare($sql);
-+            if (!$stmt) {
-+                return false;
-+            }
-+            $stmt->bind_param('ssssdi', $status, $note, $handledBy, $resolvedAt, $charge, $requestId);
-+        }
-+
-+        $ok = $stmt->execute();
-+        $stmt->close();
-+        return (bool)$ok;
-+    }
-+}
-+
-+if (!function_exists('guest_portal_record_notification')) {
-+    function guest_portal_record_notification(mysqli $conn, string $audience, string $title, string $message, ?string $link = null, ?int $reservationId = null, ?int $requestId = null): void
-+    {
-+        if (!in_array($audience, ['admin','recepcion','staff'], true)) {
-+            $audience = 'admin';
-+        }
-+        $sql = "INSERT INTO system_notifications (audience, title, message, link, related_reservation_id, related_request_id)
-+                VALUES (?, ?, ?, ?, ?, ?)";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return;
-+        }
-+        $stmt->bind_param('ssssii', $audience, $title, $message, $link, $reservationId, $requestId);
-+        $stmt->execute();
-+        $stmt->close();
-+    }
-+}
-+
-+if (!function_exists('guest_portal_notifications_for_audience')) {
-+    function guest_portal_notifications_for_audience(mysqli $conn, string $audience, int $limit = 10, bool $onlyUnread = false): array
-+    {
-+        if (!in_array($audience, ['admin','recepcion','staff'], true)) {
-+            $audience = 'admin';
-+        }
-+        $sql = "SELECT * FROM system_notifications WHERE audience = ?";
-+        $params = [$audience];
-+        $types = 's';
-+        if ($onlyUnread) {
-+            $sql .= " AND is_read = 0";
-+        }
-+        $sql .= " ORDER BY created_at DESC LIMIT ?";
-+        $types .= 'i';
-+        $params[] = $limit;
-+
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return [];
-+        }
-+        $stmt->bind_param($types, ...$params);
-+        if (!$stmt->execute()) {
-+            $stmt->close();
-+            return [];
-+        }
-+        $result = $stmt->get_result();
-+        $notifications = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-+        $stmt->close();
-+        return $notifications;
-+    }
-+}
-+
-+if (!function_exists('guest_portal_mark_notifications')) {
-+    function guest_portal_mark_notifications(mysqli $conn, array $ids, bool $read = true): void
-+    {
-+        $ids = array_values(array_filter(array_map('intval', $ids)));
-+        if (empty($ids)) {
-+            return;
-+        }
-+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-+        $sql = "UPDATE system_notifications SET is_read = ? WHERE id IN ($placeholders)";
-+        $stmt = $conn->prepare($sql);
-+        if (!$stmt) {
-+            return;
-+        }
-+        $types = str_repeat('i', count($ids) + 1);
-+        $params = array_merge([$read ? 1 : 0], $ids);
-+        $stmt->bind_param($types, ...$params);
-+        $stmt->execute();
-+        $stmt->close();
-+    }
-+}
-+
-+if (!function_exists('guest_portal_format_status')) {
-+    function guest_portal_format_status(string $status): string
-+    {
-+        return match ($status) {
-+            'pendiente'   => 'Pendiente',
-+            'en_proceso'  => 'En proceso',
-+            'completado'  => 'Completado',
-+            'cancelado'   => 'Cancelado',
-+            default       => ucfirst(str_replace('_', ' ', $status)),
-+        };
-+    }
-+}
-+
-+?>
+diff --git a/includes/guest_portal.php b/includes/guest_portal.php
+index 913f9a47b0dab63b4cc5b229d2047c9cd855554a..f3d0fb60cd532446546865a58d6310d6ac640280 100644
+--- a/includes/guest_portal.php
++++ b/includes/guest_portal.php
+@@ -167,50 +167,51 @@ if (!function_exists('guest_portal_active_reservation')) {
+                 LEFT JOIN room rm ON rm.id = r.room_id
+                 LEFT JOIN payment p ON p.id = r.id
+                 WHERE r.user_id = ? AND r.stat IN ('Confirm','Ocupado','CheckIn')
+                 ORDER BY r.cin DESC, r.id DESC
+                 LIMIT 1";
+         $stmt = $conn->prepare($sql);
+         if (!$stmt) {
+             return null;
+         }
+         $stmt->bind_param('i', $userId);
+         if (!$stmt->execute()) {
+             $stmt->close();
+             return null;
+         }
+         $result = $stmt->get_result();
+         $reservation = $result ? $result->fetch_assoc() : null;
+         $stmt->close();
+         return $reservation ?: null;
+     }
+ }
+ 
+ if (!function_exists('guest_portal_request_types')) {
+     function guest_portal_request_types(): array
+     {
+         return [
++            'room_service' => 'Servicio a la habitación',
+             'toalla'      => 'Toalla adicional',
+             'jabon'       => 'Jabón / amenities',
+             'asistencia'  => 'Asistencia de recepción',
+             'minibar'     => 'Consumo de minibar',
+             'otro'        => 'Otro servicio'
+         ];
+     }
+ }
+ 
+ if (!function_exists('guest_portal_create_request')) {
+     function guest_portal_create_request(mysqli $conn, int $reservationId, ?int $userId, string $type, string $details, string $requestedBy = 'guest', ?float $charge = null): ?int
+     {
+         $sql = "INSERT INTO guest_service_requests (roombook_id, user_id, request_type, details, requested_by, charge_amount)
+                 VALUES (?, NULLIF(?,0), ?, ?, ?, NULLIF(?, -1))";
+         $stmt = $conn->prepare($sql);
+         if (!$stmt) {
+             return null;
+         }
+         $userIdParam = $userId ? (int)$userId : 0;
+         $chargeParam = ($charge !== null) ? (float)$charge : -1.0;
+         $stmt->bind_param('iisssd', $reservationId, $userIdParam, $type, $details, $requestedBy, $chargeParam);
+         if (!$stmt->execute()) {
+             $stmt->close();
+             return null;
+         }
+diff --git a/send_to_groq.php b/send_to_groq.php
+index edad1e1f766fad4d7393f5bc9d6835f69642fe24..0697e2f505b9b135c463527790d50c5b3ccd88c8 100644
+--- a/send_to_groq.php
++++ b/send_to_groq.php
+@@ -1,46 +1,20 @@
+ <?php
+-header('Content-Type: application/json');
++declare(strict_types=1);
+ 
+-$data = json_decode(file_get_contents("php://input"), true);
+-$userMsg = $data['message'] ?? '';
++session_start();
++header('Content-Type: application/json; charset=utf-8');
+ 
+-$apiKey = "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"; // <-- pega aquí tu key de Groq
++require_once __DIR__ . '/config.php';
++require_once __DIR__ . '/includes/guest_portal.php';
++require_once __DIR__ . '/includes/chatbot_responder.php';
+ 
+-$ch = curl_init("https://api.groq.com/openai/v1/chat/completions");
+-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+-curl_setopt($ch, CURLOPT_HTTPHEADER, [
+-    "Content-Type: application/json",
+-    "Authorization: Bearer $apiKey"
+-]);
++$payload = json_decode(file_get_contents('php://input'), true);
++$userMsg = is_array($payload) ? ($payload['message'] ?? '') : '';
+ 
+-curl_setopt($ch, CURLOPT_POST, true);
+-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+-    "model" => "llama-3.1-8b-instant", // modelo recomendado (rápido y gratis)
+-    "messages" => [
+-        ["role" => "system", "content" => "Eres el asistente virtual del Hotel Andino, responde en español de manera amable, breve y clara."],
+-        ["role" => "user", "content" => $userMsg]
+-    ],
+-    "max_tokens" => 200,
+-    "temperature" => 0.7
+-]));
++$responder = new HotelChatbotResponder($conn);
++$reply = $responder->handle(is_string($userMsg) ? $userMsg : '');
+ 
+-$response = curl_exec($ch);
+-
+-if (curl_errno($ch)) {
+-    echo json_encode(["reply" => "⚠️ Error cURL: " . curl_error($ch)]);
+-    curl_close($ch);
+-    exit;
+-}
+-
+-curl_close($ch);
+-
+-$result = json_decode($response, true);
+-
+-if (isset($result['error'])) {
+-    echo json_encode(["reply" => "⚠️ Error API: " . $result['error']['message']]);
+-    exit;
+-}
+-
+-$reply = $result['choices'][0]['message']['content'] ?? "Lo siento, no entendí eso.";
+-echo json_encode(["reply" => $reply]);
++echo json_encode([
++    'reply' => $reply,
++], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+ ?>
  
 EOF
 )

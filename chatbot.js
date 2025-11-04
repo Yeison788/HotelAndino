@@ -9,24 +9,19 @@ function toggleChatbot(forceClose) {
   const isHidden = chatbotPopup.style.display === 'none' || chatbotPopup.style.display === '';
   const shouldOpen = (typeof forceClose === 'boolean') ? !forceClose : isHidden;
 
-  // visibilidad base (compatibilidad con tu lógica previa)
   chatbotPopup.style.display = shouldOpen ? 'block' : 'none';
-  // clase para animación y estados
   chatbotPopup.classList.toggle('open', shouldOpen);
 
-  // FAB visual
   if (fab) {
     fab.setAttribute('data-open', String(shouldOpen));
     fab.setAttribute('aria-label', shouldOpen ? 'Cerrar chat' : 'Abrir chat');
     fab.title = shouldOpen ? 'Cerrar chat' : 'Chatear';
   }
 
-  // Mensaje de bienvenida
   if (shouldOpen && document.getElementById('chat-box')?.children.length === 0) {
     appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel y ayudarte a gestionar reservas. ¿En qué puedo apoyarte?");
   }
 
-  // Focus al abrir y persistencia
   if (shouldOpen) setTimeout(() => document.getElementById('user-input')?.focus(), 0);
   try { localStorage.setItem('chatOpen', String(shouldOpen)); } catch(e) {}
 }
@@ -49,59 +44,30 @@ async function sendMessage() {
     });
 
     if (r.ok) {
-      const d = await r.json();
-      appendMessage('bot', d.reply);
+      const data = await r.json();
+      appendMessage('bot', data.reply || 'Lo siento, no entendí eso.');
     } else {
-      appendMessage('bot', '⚠️ Error en el servidor, intenta más tarde.');
+      appendMessage('bot', '⚠️ Ocurrió un problema al conectar con el servidor.');
     }
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     appendMessage('bot', '⚠️ Error de conexión.');
   }
 }
 
-// Agrega un mensaje al chat
-function appendMessage(sender, message) {
-  const chatBox = document.getElementById('chat-box');
-  if (!chatBox) return;
-
+// Agregar mensajes al chat
+function appendMessage(sender, text) {
+  const box = document.getElementById('chat-box');
+  if (!box) return;
   const div = document.createElement('div');
-  div.className = sender === 'user' ? 'user-message' : 'bot-message';
-  div.textContent = message;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  div.className = 'chat-message ' + sender;
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
 }
 
-// ===== Listeners y restauración =====
-document.addEventListener('DOMContentLoaded', () => {
-  // Click en botón Enviar
-  const sendBtn = document.getElementById('send-btn');
-  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-
-  // Enviar con Enter
-  const userInput = document.getElementById('user-input');
-  if (userInput) {
-    userInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
-  }
-
-  // Click en FAB
-  const fab = document.getElementById('chat-fab');
-  if (fab) fab.addEventListener('click', () => toggleChatbot());
-
-  // Restaurar estado (si el usuario lo dejó abierto)
-  try {
-    const saved = localStorage.getItem('chatOpen');
-    if (saved === 'true') toggleChatbot(false); // abre
-  } catch (e) {}
-});
-
-// Cerrar con ESC
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    const popup = document.getElementById('chatbot-popup');
-    const isOpen = popup && !(popup.style.display === 'none' || popup.style.display === '');
-    if (isOpen) toggleChatbot(true); // forzar cerrar
-  }
+// Inicializar estado al cargar
+window.addEventListener('DOMContentLoaded', () => {
+  const open = localStorage.getItem('chatOpen') === 'true';
+  if (open) toggleChatbot(false);
 });
