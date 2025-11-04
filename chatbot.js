@@ -35,7 +35,12 @@ function toggleChatbot(forceClose) {
 
   if (shouldOpen && document.getElementById('chat-box')?.children.length === 0) {
 <<<<<<< ours
+<<<<<<< ours
     appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel y ayudarte a gestionar reservas. ¿En qué puedo apoyarte?");
+=======
+    appendMessage('bot', '👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel, ayudarte a reservar o solicitar algo a tu habitación. ¿Qué necesitas hoy?', DEFAULT_SUGGESTIONS);
+    applyInputMeta(DEFAULT_META);
+>>>>>>> theirs
 =======
     appendMessage('bot', '👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel, ayudarte a reservar o solicitar algo a tu habitación. ¿Qué necesitas hoy?', DEFAULT_SUGGESTIONS);
     applyInputMeta(DEFAULT_META);
@@ -77,6 +82,7 @@ async function dispatchMessage(message) {
       body: JSON.stringify({ message }),
     });
 
+<<<<<<< ours
 <<<<<<< ours
     if (r.ok) {
       const data = await r.json();
@@ -129,6 +135,31 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 }
 
+=======
+    if (!response.ok) {
+      appendMessage('bot', '⚠️ Error en el servidor, intenta más tarde.');
+      applyInputMeta(DEFAULT_META);
+      return;
+    }
+
+    const data = await response.json();
+    const payload = data?.reply ?? {};
+    const replyText = typeof payload.message === 'string' && payload.message.trim() !== ''
+      ? payload.message
+      : 'Aquí estoy para ayudarte con información del Hotel Andino.';
+    const suggestions = Array.isArray(payload.suggestions) ? payload.suggestions : [];
+    appendMessage('bot', replyText, suggestions);
+    applyInputMeta(payload.meta);
+  } catch (err) {
+    console.error(err);
+    appendMessage('bot', '⚠️ Error de conexión. Por favor revisa tu red.');
+    applyInputMeta(DEFAULT_META);
+  } finally {
+    setSendingState(false, inputField, sendBtn);
+  }
+}
+
+>>>>>>> theirs
 function appendMessage(sender, message, suggestions = []) {
   const chatBox = document.getElementById('chat-box');
   if (!chatBox) return;

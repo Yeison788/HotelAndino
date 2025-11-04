@@ -118,6 +118,7 @@ unset($_SESSION['guest_request_flash']);
       #guestdetailpanel{ display:none; }
       #guestdetailpanel .middle{ height: 450px; }
 <<<<<<< ours
+<<<<<<< ours
 
       /* ==== FAB Chatbot ==== */
       .chat-fab{
@@ -270,6 +271,8 @@ unset($_SESSION['guest_request_flash']);
           max-height: 78vh;
         }
       }
+=======
+>>>>>>> theirs
 =======
 >>>>>>> theirs
     </style>
@@ -836,6 +839,7 @@ unset($_SESSION['guest_request_flash']);
   })();
 
 <<<<<<< ours
+<<<<<<< ours
   // ===== Chatbot =====
   function toggleChatbot(forceClose){
     const chatbotPopup = document.getElementById('chatbot-popup');
@@ -922,6 +926,8 @@ unset($_SESSION['guest_request_flash']);
       }
     }
   });
+=======
+>>>>>>> theirs
 =======
 >>>>>>> theirs
 </script>
