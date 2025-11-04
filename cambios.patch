@@ -227,10 +227,10 @@ index 6f339def22d095df847b0da34e357983dc1166c7..8b3883c904b6b55eda9fbc9d9d5d91b5
      padding: 10px 50px;
      border: none;
 diff --git a/chatbot.js b/chatbot.js
-index c4126f14c114c6b2e8d14932d40cb34b5df2f3da..8503ff2a66b7f9041e1701d5b4af3a05e371f307 100644
+index c4126f14c114c6b2e8d14932d40cb34b5df2f3da..0a7ab75269c2430d017a9373cf1a596b0e225f50 100644
 --- a/chatbot.js
 +++ b/chatbot.js
-@@ -1,107 +1,217 @@
+@@ -1,107 +1,220 @@
 -// ===== Chatbot: abrir/cerrar desde FAB, saludo, persistencia, envío a Groq =====
 +// ===== Chatbot: abrir/cerrar desde FAB, saludo, persistencia, envío al responder interno =====
 +
@@ -468,6 +468,9 @@ index c4126f14c114c6b2e8d14932d40cb34b5df2f3da..8503ff2a66b7f9041e1701d5b4af3a05
    if (fab) fab.addEventListener('click', () => toggleChatbot());
  
 -  // Restaurar estado (si el usuario lo dejó abierto)
++  const closeBtn = document.getElementById('close-btn');
++  if (closeBtn) closeBtn.addEventListener('click', () => toggleChatbot(true));
++
    try {
      const saved = localStorage.getItem('chatOpen');
 -    if (saved === 'true') toggleChatbot(false); // abre
@@ -485,149 +488,142 @@ index c4126f14c114c6b2e8d14932d40cb34b5df2f3da..8503ff2a66b7f9041e1701d5b4af3a05
    }
  });
 diff --git a/home.php b/home.php
-index 22a2dfba9829af1409fb7d62f4f7509316cd17f1..0f6cfc1018e678ecc8781c1c64a07956f6c48124 100644
+index 22a2dfba9829af1409fb7d62f4f7509316cd17f1..dc24e8807cf3e96a184fd1ddfbd984210c2c8666 100644
 --- a/home.php
 +++ b/home.php
-@@ -143,86 +143,146 @@ unset($_SESSION['guest_request_flash']);
-       .chat-fab[data-open="true"] .icon-close{ display: block; }
+@@ -81,156 +81,64 @@ if ($userId && isset($_POST['create_service_request'])) {
+         'type' => 'error',
+         'text' => 'No fue posible registrar tu solicitud. Intenta nuevamente.',
+       ];
+     }
+   } else {
+     $_SESSION['guest_request_flash'] = [
+       'type' => 'error',
+       'text' => 'Selecciona una reserva y un servicio válidos para continuar.',
+     ];
+   }
  
-       /* Pulso sutil cuando está cerrado */
-       .chat-fab:not([data-open="true"])::after{
-         content: "";
-         position: absolute; inset: 0;
-         border-radius: 50%;
-         animation: fabPulse 2.2s ease-out infinite;
-         box-shadow: 0 0 0 0 rgba(212,175,55,.45);
-       }
-       @keyframes fabPulse{
-         0% { box-shadow: 0 0 0 0 rgba(212,175,55,.45); }
-         70%{ box-shadow: 0 0 0 14px rgba(212,175,55,0); }
-         100%{ box-shadow: 0 0 0 0 rgba(212,175,55,0); }
-       }
+   header('Location: home.php');
+   exit;
+ }
  
-       /* ==== Popup del chatbot anclado a esquina ==== */
-       .chatbot-popup{
-         position: fixed;
-         right: calc(92px + env(safe-area-inset-right)); /* deja espacio al FAB */
-         bottom: calc(20px + env(safe-area-inset-bottom));
-         max-width: 360px;
-         width: 92vw;
-         max-height: 70vh;
-         background: #fff;
+ $guestRequestFlash = $_SESSION['guest_request_flash'] ?? null;
+ unset($_SESSION['guest_request_flash']);
+ ?>
+ <!DOCTYPE html>
+ <html lang="es">
+ <head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="./css/home.css">
++    <link rel="stylesheet" href="./chatbot.css">
+     <title>Hotel Andino</title>
+     <!-- boot -->
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+     <!-- fontawesome -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+     <!-- sweet alert -->
+     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+     <link rel="stylesheet" href="./admin/css/roombook.css">
+ 
+-    <!-- ======= NUEVO: estilos FAB + popup chat en esquina ======= -->
+     <style>
+       #guestdetailpanel{ display:none; }
+       #guestdetailpanel .middle{ height: 450px; }
+-
+-      /* ==== FAB Chatbot ==== */
+-      .chat-fab{
+-        position: fixed;
+-        right: calc(20px + env(safe-area-inset-right));
+-        bottom: calc(20px + env(safe-area-inset-bottom));
+-        width: 56px; height: 56px;
+-        border-radius: 50%;
+-        border: 0;
+-        background: var(--gold, #d4af37);
+-        color: #fff;
+-        box-shadow: 0 10px 24px rgba(0,0,0,.18), 0 6px 12px rgba(0,0,0,.12);
+-        display: inline-flex; align-items: center; justify-content: center;
+-        cursor: pointer;
+-        z-index: 9999;
+-        transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+-      }
+-      .chat-fab:hover{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,.22), 0 8px 16px rgba(0,0,0,.14); }
+-      .chat-fab:active{ transform: translateY(0); }
+-
+-      .chat-fab .icon-chat{ display: block; }
+-      .chat-fab .icon-close{ display: none; }
+-      .chat-fab[data-open="true"] .icon-chat{ display: none; }
+-      .chat-fab[data-open="true"] .icon-close{ display: block; }
+-
+-      /* Pulso sutil cuando está cerrado */
+-      .chat-fab:not([data-open="true"])::after{
+-        content: "";
+-        position: absolute; inset: 0;
+-        border-radius: 50%;
+-        animation: fabPulse 2.2s ease-out infinite;
+-        box-shadow: 0 0 0 0 rgba(212,175,55,.45);
+-      }
+-      @keyframes fabPulse{
+-        0% { box-shadow: 0 0 0 0 rgba(212,175,55,.45); }
+-        70%{ box-shadow: 0 0 0 14px rgba(212,175,55,0); }
+-        100%{ box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+-      }
+-
+-      /* ==== Popup del chatbot anclado a esquina ==== */
+-      .chatbot-popup{
+-        position: fixed;
+-        right: calc(92px + env(safe-area-inset-right)); /* deja espacio al FAB */
+-        bottom: calc(20px + env(safe-area-inset-bottom));
+-        max-width: 360px;
+-        width: 92vw;
+-        max-height: 70vh;
+-        background: #fff;
 -        border-radius: 14px;
-+        border-radius: 16px;
-         box-shadow: 0 18px 48px rgba(0,0,0,.22), 0 10px 24px rgba(0,0,0,.12);
-+        border: 1px solid rgba(212,175,55,.2);
-         overflow: hidden;
-         z-index: 9998;
-       }
-       .chat-header{
-         background: var(--gold, #d4af37);
-         color: #fff;
-         padding: 10px 12px;
-         display:flex; align-items:center; justify-content:space-between;
-         font-weight:600;
-       }
-       .chat-header button{
-         border:0; background:transparent; color:#fff; font-size:18px; line-height:1; cursor:pointer;
-       }
-       .chat-box{
+-        box-shadow: 0 18px 48px rgba(0,0,0,.22), 0 10px 24px rgba(0,0,0,.12);
+-        overflow: hidden;
+-        z-index: 9998;
+-      }
+-      .chat-header{
+-        background: var(--gold, #d4af37);
+-        color: #fff;
+-        padding: 10px 12px;
+-        display:flex; align-items:center; justify-content:space-between;
+-        font-weight:600;
+-      }
+-      .chat-header button{
+-        border:0; background:transparent; color:#fff; font-size:18px; line-height:1; cursor:pointer;
+-      }
+-      .chat-box{
 -        height: 340px; overflow:auto; padding:12px;
 -        background: #fafafa;
-+        height: 340px;
-+        overflow:auto;
-+        padding:16px;
-+        background: #faf8ef;
-       }
-       .chat-input{
+-      }
+-      .chat-input{
 -        display:flex; gap:8px; padding:10px; background:#fff; border-top:1px solid #eee;
-+        display:flex;
-+        align-items:center;
-+        gap:12px;
-+        padding:12px 16px;
-+        background:#fff;
-+        border-top:1px solid #e6e0cf;
-+      }
-+      .chat-input input{
-+        flex:1;
-+        border:1px solid #ded6bd;
-+        border-radius:12px;
-+        padding:12px;
-+        outline:none;
-+        font-size:14px;
-+        background:#fdfbf5;
-+        transition:border-color .2s ease, box-shadow .2s ease;
-+      }
-+      .chat-input input:focus{
-+        border-color: var(--gold, #d4af37);
-+        box-shadow: 0 0 0 2px rgba(212,175,55,.18);
-+        background:#fff;
-+      }
-+      .chat-input button{
-+        border:0;
-+        border-radius:12px;
-+        padding:10px 18px;
-+        background:var(--gold, #d4af37);
-+        color:#fff;
-+        cursor:pointer;
-+        transition:background .2s ease, transform .2s ease;
-+      }
-+      .chat-input button:hover{
-+        background:#c79b1f;
-+        transform: translateY(-1px);
-       }
+-      }
 -      .chat-input input{ flex:1; border:1px solid #e5e5e5; border-radius:10px; padding:10px; outline:none;}
 -      .chat-input button{ border:0; border-radius:10px; padding:10px 14px; background:var(--gold, #d4af37); color:#fff; cursor:pointer; }
- 
-       .user-message, .bot-message{
+-
+-      .user-message, .bot-message{
 -        max-width: 80%;
 -        margin: 6px 0; padding: 10px 12px; border-radius: 12px;
 -        word-break: break-word; line-height: 1.25;
-+        max-width: 82%;
-+        margin: 8px 0;
-+        padding: 11px 14px;
-+        border-radius: 14px;
-+        word-break: break-word;
-+        line-height: 1.35;
-       }
-       .user-message{
-         margin-left: auto; background:#efefef; color:#1f1f1f; border-top-right-radius: 4px;
-       }
-       .bot-message{
+-      }
+-      .user-message{
+-        margin-left: auto; background:#efefef; color:#1f1f1f; border-top-right-radius: 4px;
+-      }
+-      .bot-message{
 -        margin-right: auto; background:#ffeebe; color:#1f1f1f; border-top-left-radius: 4px;
-+        margin-right: auto;
-+        background:#ffe0a3;
-+        color:#1f1f1f;
-+        border-top-left-radius: 4px;
-+        box-shadow: inset 0 0 0 1px rgba(212,175,55,.25);
-+      }
-+
-+      .chat-options{
-+        display:flex;
-+        flex-wrap:wrap;
-+        gap:8px;
-+        margin:8px 0 0;
-+      }
-+      .chat-options--disabled{ opacity:.55; }
-+      .chat-option-btn{
-+        background:#fff7e0;
-+        border:1px solid rgba(212,175,55,.55);
-+        border-radius:999px;
-+        padding:6px 12px;
-+        font-size:12px;
-+        cursor:pointer;
-+        transition:background .2s ease, border-color .2s ease, transform .2s ease;
-       }
-+      .chat-option-btn:hover{ background:#fbe3a3; border-color:var(--gold,#d4af37); transform:translateY(-1px); }
-+      .chat-options--disabled .chat-option-btn{ cursor:default; }
- 
-       @media (max-width: 600px){
-         .chatbot-popup{
-           right: calc(20px + env(safe-area-inset-right));
-           width: 94vw;
-           max-height: 78vh;
-         }
-       }
+-      }
+-
+-      @media (max-width: 600px){
+-        .chatbot-popup{
+-          right: calc(20px + env(safe-area-inset-right));
+-          width: 94vw;
+-          max-height: 78vh;
+-        }
+-      }
      </style>
  </head>
  
@@ -645,7 +641,93 @@ index 22a2dfba9829af1409fb7d62f4f7509316cd17f1..0f6cfc1018e678ecc8781c1c64a07956
        <li><a href="turismo.php">Turismo</a></li>
        <li><a href="#contactus">Contáctanos</a></li>
        <li class="nav-profile">
-@@ -768,51 +828,51 @@ unset($_SESSION['guest_request_flash']);
+         <button class="nav-profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+           <span class="nav-profile-avatar" aria-hidden="true"><?php echo htmlspecialchars($profileInitial); ?></span>
+           <span class="visually-hidden">Abrir menú de perfil</span>
+         </button>
+         <div class="nav-profile-dropdown" role="menu">
+           <div class="nav-profile-summary">
+             <span class="nav-profile-avatar nav-profile-avatar--lg" aria-hidden="true"><?php echo htmlspecialchars($profileInitial); ?></span>
+             <div class="nav-profile-text">
+@@ -694,170 +602,85 @@ unset($_SESSION['guest_request_flash']);
+       </div>
+       <div class="box">
+         <h2>Servicio de helicóptero</h2>
+       </div>
+     </div>
+   </section>
+ 
+    <section id="contactus">
+     <div class="social">
+       <i class="fa-brands fa-instagram"></i>
+       <i class="fa-brands fa-facebook"></i>
+       <i class="fa-solid fa-envelope"></i>
+     </div>
+   </section>
+ 
+   <!-- Chatbot Popup -->
+   <div id="chatbot-popup" class="chatbot-popup" style="display:none;">
+     <div class="chat-header">
+   <div class="bot-identity">
+     <span class="avatar"><i class="fa-solid fa-robot"></i></span>
+     <div class="meta">
+       <strong>Asistente Andino</strong>
+       <small>en línea</small>
+     </div>
+   </div>
+-  <button id="close-btn" class="icon-btn" aria-label="Cerrar" onclick="toggleChatbot()">
++  <button id="close-btn" class="icon-btn" type="button" aria-label="Cerrar">
+     <i class="fa-solid fa-chevron-down"></i>
+   </button>
+ </div>
+     <div id="chat-box" class="chat-box"></div>
+     <div class="chat-input">
+       <input type="text" id="user-input" placeholder="Escribe tu mensaje..." />
+       <button id="send-btn">Enviar</button>
+     </div>
+   </div>
+ 
+   <!-- ======= NUEVO: FAB para abrir/cerrar el chat ======= -->
+-<button id="chat-fab" class="chat-fab" aria-label="Abrir chat" title="Chatear" data-open="false">
+-  <i class="fa-solid fa-robot icon-robot" aria-hidden="true"></i>
++<button id="chat-fab" class="chat-fab" type="button" aria-label="Abrir chat" title="Chatear" data-open="false">
++  <span class="icon-chat" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
++  <span class="icon-close" aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+ </button>
+ 
+-</body>
+-
+ <script>
+   // ===== Reserva =====
+   var bookbox = document.getElementById("guestdetailpanel");
+   function openbookbox(){ bookbox.style.display = "flex"; }
+   function closebox(){ bookbox.style.display = "none"; }
+ 
+   // ===== Perfil =====
+   (function(){
+     const profile = document.querySelector('.nav-profile');
+     if (!profile) return;
+     const trigger = profile.querySelector('.nav-profile-trigger');
+     const dropdown = profile.querySelector('.nav-profile-dropdown');
+ 
+     const setOpen = (open) => {
+       if (!dropdown) return;
+       profile.classList.toggle('is-open', open);
+       if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+     };
+ 
+     if (trigger) trigger.addEventListener('click', (event) => {
+       event.preventDefault();
+       event.stopPropagation();
+       const isOpen = profile.classList.contains('is-open');
+       setOpen(!isOpen);
+     });
+ 
+     document.addEventListener('click', (event) => {
+       if (!profile.contains(event.target)) {
+         setOpen(false);
+       }
+     });
  
      document.addEventListener('keydown', (event) => {
        if (event.key === 'Escape') {
@@ -654,58 +736,108 @@ index 22a2dfba9829af1409fb7d62f4f7509316cd17f1..0f6cfc1018e678ecc8781c1c64a07956
      });
    })();
  
-   // ===== Chatbot =====
-   function toggleChatbot(forceClose){
-     const chatbotPopup = document.getElementById('chatbot-popup');
-     const fab = document.getElementById('chat-fab');
-     if(!chatbotPopup || !fab) return;
- 
-     // Estado actual según display inline
-     const isHidden = chatbotPopup.style.display === 'none' || chatbotPopup.style.display === '';
-     const shouldOpen = (typeof forceClose === 'boolean') ? !forceClose : isHidden;
- 
-     chatbotPopup.style.display = shouldOpen ? 'block' : 'none';
-     fab.setAttribute('data-open', String(shouldOpen));
-     fab.setAttribute('aria-label', shouldOpen ? 'Cerrar chat' : 'Abrir chat');
-     fab.title = shouldOpen ? 'Cerrar chat' : 'Chatear';
- 
-     // Mensaje de bienvenida si abre por primera vez
-     if (shouldOpen && document.getElementById('chat-box').children.length === 0) {
+-  // ===== Chatbot =====
+-  function toggleChatbot(forceClose){
+-    const chatbotPopup = document.getElementById('chatbot-popup');
+-    const fab = document.getElementById('chat-fab');
+-    if(!chatbotPopup || !fab) return;
+-
+-    // Estado actual según display inline
+-    const isHidden = chatbotPopup.style.display === 'none' || chatbotPopup.style.display === '';
+-    const shouldOpen = (typeof forceClose === 'boolean') ? !forceClose : isHidden;
+-
+-    chatbotPopup.style.display = shouldOpen ? 'block' : 'none';
+-    fab.setAttribute('data-open', String(shouldOpen));
+-    fab.setAttribute('aria-label', shouldOpen ? 'Cerrar chat' : 'Abrir chat');
+-    fab.title = shouldOpen ? 'Cerrar chat' : 'Chatear';
+-
+-    // Mensaje de bienvenida si abre por primera vez
+-    if (shouldOpen && document.getElementById('chat-box').children.length === 0) {
 -      appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. ¿En qué puedo ayudarte hoy?");
-+      appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel y ayudarte a gestionar reservas. ¿En qué puedo apoyarte?");
-     }
- 
-     // Persistir estado
-     try{ localStorage.setItem('chatOpen', String(shouldOpen)); }catch(e){}
-   }
- 
-   async function sendMessage() {
-     const inputField = document.getElementById('user-input');
-     const userInput = inputField.value.trim();
-     if (userInput === '') return;
- 
-     appendMessage('user', userInput);
-     inputField.value = '';
- 
-     try {
-       const r = await fetch('send_to_groq.php', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ message: userInput })
-       });
- 
-       if (r.ok) {
-         const d = await r.json();
-         appendMessage('bot', d.reply);
-       } else {
+-    }
+-
+-    // Persistir estado
+-    try{ localStorage.setItem('chatOpen', String(shouldOpen)); }catch(e){}
+-  }
+-
+-  async function sendMessage() {
+-    const inputField = document.getElementById('user-input');
+-    const userInput = inputField.value.trim();
+-    if (userInput === '') return;
+-
+-    appendMessage('user', userInput);
+-    inputField.value = '';
+-
+-    try {
+-      const r = await fetch('send_to_groq.php', {
+-        method: 'POST',
+-        headers: { 'Content-Type': 'application/json' },
+-        body: JSON.stringify({ message: userInput })
+-      });
+-
+-      if (r.ok) {
+-        const d = await r.json();
+-        appendMessage('bot', d.reply);
+-      } else {
+-        appendMessage('bot', "⚠️ Error en el servidor, intenta más tarde.");
+-      }
+-    } catch (e) {
+-      console.error(e);
+-      appendMessage('bot', "⚠️ Error de conexión.");
+-    }
+-  }
+-
+-  function appendMessage(sender, message) {
+-    const chatBox = document.getElementById('chat-box');
+-    const div = document.createElement('div');
+-    div.className = sender === 'user' ? 'user-message' : 'bot-message';
+-    div.textContent = message;
+-    chatBox.appendChild(div);
+-    chatBox.scrollTop = chatBox.scrollHeight;
+-  }
+-
+-  // Eventos
+-  document.getElementById('send-btn').addEventListener('click', sendMessage);
+-  document.getElementById('user-input').addEventListener('keypress', e => {
+-    if (e.key === 'Enter') sendMessage();
+-  });
+-
+-  // NUEVO: click en FAB abre/cierra el chat
+-  document.getElementById('chat-fab').addEventListener('click', () => toggleChatbot());
+-
+-  // NUEVO: restaurar estado abierto si el usuario lo dejó abierto
+-  document.addEventListener('DOMContentLoaded', () => {
+-    try{
+-      const saved = localStorage.getItem('chatOpen');
+-      if(saved === 'true'){ toggleChatbot(false); }
+-    }catch(e){}
+-  });
+-
+-  // NUEVO: cerrar con ESC
+-  document.addEventListener('keydown', (e) => {
+-    if(e.key === 'Escape'){
+-      const popup = document.getElementById('chatbot-popup');
+-      if(popup && !(popup.style.display === 'none' || popup.style.display === '')){
+-        toggleChatbot(true); // forzar cerrar
+-      }
+-    }
+-  });
+ </script>
++<script src="./chatbot.js"></script>
++</body>
+ </html>
 diff --git a/includes/chatbot_responder.php b/includes/chatbot_responder.php
 new file mode 100644
-index 0000000000000000000000000000000000000000..9ba45923b59437162d723b2e8e00bb6989b14445
+index 0000000000000000000000000000000000000000..d74848c358356fa138ade3f4bf43edd5701f5586
 --- /dev/null
 +++ b/includes/chatbot_responder.php
-@@ -0,0 +1,1074 @@
+@@ -0,0 +1,1080 @@
 +<?php
 +declare(strict_types=1);
++
++require_once __DIR__ . '/guest_portal.php';
++
++if (!class_exists('HotelChatbotResponder')) {
 +
 +/**
 + * Chatbot especializado del Hotel Andino.
@@ -1776,6 +1908,8 @@ index 0000000000000000000000000000000000000000..9ba45923b59437162d723b2e8e00bb69
 +            'meta' => $meta,
 +        ];
 +    }
++}
++
 +}
 +
 diff --git a/includes/guest_portal.php b/includes/guest_portal.php
