@@ -103,6 +103,7 @@ unset($_SESSION['guest_request_flash']);
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./css/home.css">
+    <link rel="stylesheet" href="./chatbot.css">
     <title>Hotel Andino</title>
     <!-- boot -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
@@ -113,10 +114,10 @@ unset($_SESSION['guest_request_flash']);
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <link rel="stylesheet" href="./admin/css/roombook.css">
 
-    <!-- ======= NUEVO: estilos FAB + popup chat en esquina ======= -->
     <style>
       #guestdetailpanel{ display:none; }
       #guestdetailpanel .middle{ height: 450px; }
+<<<<<<< ours
 
       /* ==== FAB Chatbot ==== */
       .chat-fab{
@@ -269,6 +270,8 @@ unset($_SESSION['guest_request_flash']);
           max-height: 78vh;
         }
       }
+=======
+>>>>>>> theirs
     </style>
 </head>
 
@@ -776,7 +779,7 @@ unset($_SESSION['guest_request_flash']);
       <small>en línea</small>
     </div>
   </div>
-  <button id="close-btn" class="icon-btn" aria-label="Cerrar" onclick="toggleChatbot()">
+  <button id="close-btn" class="icon-btn" type="button" aria-label="Cerrar">
     <i class="fa-solid fa-chevron-down"></i>
   </button>
 </div>
@@ -788,11 +791,10 @@ unset($_SESSION['guest_request_flash']);
   </div>
 
   <!-- ======= NUEVO: FAB para abrir/cerrar el chat ======= -->
-<button id="chat-fab" class="chat-fab" aria-label="Abrir chat" title="Chatear" data-open="false">
-  <i class="fa-solid fa-robot icon-robot" aria-hidden="true"></i>
+<button id="chat-fab" class="chat-fab" type="button" aria-label="Abrir chat" title="Chatear" data-open="false">
+  <span class="icon-chat" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+  <span class="icon-close" aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
 </button>
-
-</body>
 
 <script>
   // ===== Reserva =====
@@ -833,6 +835,7 @@ unset($_SESSION['guest_request_flash']);
     });
   })();
 
+<<<<<<< ours
   // ===== Chatbot =====
   function toggleChatbot(forceClose){
     const chatbotPopup = document.getElementById('chatbot-popup');
@@ -919,5 +922,9 @@ unset($_SESSION['guest_request_flash']);
       }
     }
   });
+=======
+>>>>>>> theirs
 </script>
+<script src="./chatbot.js"></script>
+</body>
 </html>
