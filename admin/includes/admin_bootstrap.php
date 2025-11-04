@@ -332,5 +332,155 @@ if (!function_exists('admin_first_records_view')) {
         return 'summary';
     }
 }
+/* ================================================================
+   🏨 MÓDULO: PORTAL DE HUÉSPEDES (Guest Portal)
+   ================================================================ */
+
+if (!function_exists('admin_ensure_guest_portal')) {
+    function admin_ensure_guest_portal(mysqli $conn): void
+    {
+        // Crear tablas si no existen
+        mysqli_query($conn, "CREATE TABLE IF NOT EXISTS guest_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            roombook_id INT NULL,
+            user_id INT NULL,
+            request_type VARCHAR(100) NOT NULL,
+            details TEXT NULL,
+            status ENUM('pendiente','en_proceso','completado','cancelado') NOT NULL DEFAULT 'pendiente',
+            response_note TEXT NULL,
+            charge_amount DECIMAL(10,2) NULL,
+            created_by VARCHAR(100) NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        mysqli_query($conn, "CREATE TABLE IF NOT EXISTS guest_notifications (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            audience ENUM('admin','recepcion') NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            link VARCHAR(255) NULL,
+            roombook_id INT NULL,
+            request_id INT NULL,
+            is_read TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+}
+
+if (!function_exists('guest_portal_create_request')) {
+    function guest_portal_create_request(mysqli $conn, ?int $roombookId, ?int $userId, string $type, string $details, string $createdBy, ?float $charge = null): ?int
+    {
+        $stmt = $conn->prepare("INSERT INTO guest_requests (roombook_id, user_id, request_type, details, created_by, charge_amount) VALUES (?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('iisssd', $roombookId, $userId, $type, $details, $createdBy, $charge);
+            if ($stmt->execute()) {
+                $id = $stmt->insert_id;
+                $stmt->close();
+                return $id;
+            }
+            $stmt->close();
+        }
+        return null;
+    }
+}
+
+if (!function_exists('guest_portal_update_request')) {
+    function guest_portal_update_request(mysqli $conn, int $id, string $status, string $note, string $updatedBy, ?float $charge = null): bool
+    {
+        $stmt = $conn->prepare("UPDATE guest_requests SET status = ?, response_note = ?, charge_amount = ?, updated_at = NOW() WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param('ssdi', $status, $note, $charge, $id);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('guest_portal_record_notification')) {
+    function guest_portal_record_notification(mysqli $conn, string $audience, string $title, string $message, ?string $link, ?int $roombookId = null, ?int $requestId = null): void
+    {
+        $stmt = $conn->prepare("INSERT INTO guest_notifications (audience, title, message, link, roombook_id, request_id) VALUES (?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('ssssii', $audience, $title, $message, $link, $roombookId, $requestId);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+}
+
+if (!function_exists('guest_portal_requests_for_admin')) {
+    function guest_portal_requests_for_admin(mysqli $conn, ?string $statusFilter = null): array
+    {
+        $sql = "SELECT * FROM guest_requests";
+        if ($statusFilter) {
+            $sql .= " WHERE status = '" . $conn->real_escape_string($statusFilter) . "'";
+        }
+        $sql .= " ORDER BY updated_at DESC";
+        $result = mysqli_query($conn, $sql);
+        return $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : [];
+    }
+}
+
+if (!function_exists('guest_portal_notifications_for_audience')) {
+    function guest_portal_notifications_for_audience(mysqli $conn, string $audience, int $limit = 10, bool $unreadOnly = false): array
+    {
+        $query = "SELECT * FROM guest_notifications WHERE audience = '" . $conn->real_escape_string($audience) . "'";
+        if ($unreadOnly) {
+            $query .= " AND is_read = 0";
+        }
+        $query .= " ORDER BY created_at DESC LIMIT " . (int)$limit;
+        $result = mysqli_query($conn, $query);
+        return $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : [];
+    }
+}
+
+if (!function_exists('guest_portal_confirmed_reservations')) {
+    function guest_portal_confirmed_reservations(mysqli $conn): array
+    {
+        $sql = "SELECT id, Name, Email FROM roombook WHERE stat = 'Confirmado' ORDER BY id DESC";
+        $result = mysqli_query($conn, $sql);
+        return $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : [];
+    }
+}
+
+if (!function_exists('guest_portal_request_types')) {
+    function guest_portal_request_types(): array
+    {
+        return [
+            'minibar'      => 'Consumo de minibar',
+            'limpieza'     => 'Solicitud de limpieza',
+            'asistencia'   => 'Asistencia general',
+            'otros'        => 'Otros servicios',
+        ];
+    }
+}
+
+if (!function_exists('guest_portal_format_status')) {
+    function guest_portal_format_status(string $status): string
+    {
+        $labels = [
+            'pendiente'   => 'Pendiente',
+            'en_proceso'  => 'En proceso',
+            'completado'  => 'Completado',
+            'cancelado'   => 'Cancelado',
+        ];
+        return $labels[$status] ?? ucfirst($status);
+    }
+}
+
+if (!function_exists('guest_portal_mark_notifications')) {
+    function guest_portal_mark_notifications(mysqli $conn, array $ids, bool $asRead = true): void
+    {
+        if (empty($ids)) {
+            return;
+        }
+        $idsList = implode(',', array_map('intval', $ids));
+        $value = $asRead ? 1 : 0;
+        mysqli_query($conn, "UPDATE guest_notifications SET is_read = $value WHERE id IN ($idsList)");
+    }
+}
 
 

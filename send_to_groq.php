@@ -1,46 +1,20 @@
 <?php
-header('Content-Type: application/json');
+declare(strict_types=1);
 
-$data = json_decode(file_get_contents("php://input"), true);
-$userMsg = $data['message'] ?? '';
+session_start();
+header('Content-Type: application/json; charset=utf-8');
 
-$apiKey = "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"; // <-- pega aquí tu key de Groq
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/guest_portal.php';
+require_once __DIR__ . '/includes/chatbot_responder.php';
 
-$ch = curl_init("https://api.groq.com/openai/v1/chat/completions");
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "Content-Type: application/json",
-    "Authorization: Bearer $apiKey"
-]);
+$payload = json_decode(file_get_contents('php://input'), true);
+$userMsg = is_array($payload) ? ($payload['message'] ?? '') : '';
 
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-    "model" => "llama-3.1-8b-instant", // modelo recomendado (rápido y gratis)
-    "messages" => [
-        ["role" => "system", "content" => "Eres el asistente virtual del Hotel Andino, responde en español de manera amable, breve y clara."],
-        ["role" => "user", "content" => $userMsg]
-    ],
-    "max_tokens" => 200,
-    "temperature" => 0.7
-]));
+$responder = new HotelChatbotResponder($conn);
+$reply = $responder->handle(is_string($userMsg) ? $userMsg : '');
 
-$response = curl_exec($ch);
-
-if (curl_errno($ch)) {
-    echo json_encode(["reply" => "⚠️ Error cURL: " . curl_error($ch)]);
-    curl_close($ch);
-    exit;
-}
-
-curl_close($ch);
-
-$result = json_decode($response, true);
-
-if (isset($result['error'])) {
-    echo json_encode(["reply" => "⚠️ Error API: " . $result['error']['message']]);
-    exit;
-}
-
-$reply = $result['choices'][0]['message']['content'] ?? "Lo siento, no entendí eso.";
-echo json_encode(["reply" => $reply]);
+echo json_encode([
+    'reply' => $reply,
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 ?>

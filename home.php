@@ -790,7 +790,7 @@ unset($_SESSION['guest_request_flash']);
 
     // Mensaje de bienvenida si abre por primera vez
     if (shouldOpen && document.getElementById('chat-box').children.length === 0) {
-      appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. ¿En qué puedo ayudarte hoy?");
+      appendMessage('bot', "👋 Hola, soy el asistente virtual del Hotel Andino. Puedo darte información del hotel y ayudarte a gestionar reservas. ¿En qué puedo apoyarte?");
     }
 
     // Persistir estado
