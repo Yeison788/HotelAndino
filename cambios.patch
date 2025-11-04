@@ -700,12 +700,16 @@ index 22a2dfba9829af1409fb7d62f4f7509316cd17f1..0f6cfc1018e678ecc8781c1c64a07956
        } else {
 diff --git a/includes/chatbot_responder.php b/includes/chatbot_responder.php
 new file mode 100644
-index 0000000000000000000000000000000000000000..9ba45923b59437162d723b2e8e00bb6989b14445
+index 0000000000000000000000000000000000000000..d74848c358356fa138ade3f4bf43edd5701f5586
 --- /dev/null
 +++ b/includes/chatbot_responder.php
-@@ -0,0 +1,1074 @@
+@@ -0,0 +1,1080 @@
 +<?php
 +declare(strict_types=1);
++
++require_once __DIR__ . '/guest_portal.php';
++
++if (!class_exists('HotelChatbotResponder')) {
 +
 +/**
 + * Chatbot especializado del Hotel Andino.
@@ -1776,6 +1780,8 @@ index 0000000000000000000000000000000000000000..9ba45923b59437162d723b2e8e00bb69
 +            'meta' => $meta,
 +        ];
 +    }
++}
++
 +}
 +
 diff --git a/includes/guest_portal.php b/includes/guest_portal.php

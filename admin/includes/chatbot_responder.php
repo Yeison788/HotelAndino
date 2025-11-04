@@ -3,20 +3,12 @@ declare(strict_types=1);
 
 /**
  * Chatbot especializado del Hotel Andino.
-<<<<<<< ours
- * Gestiona respuestas frecuentes y reserva de habitaciones sin depender de APIs externas.
- */
-class HotelChatbotResponder
-{
-    private const SESSION_KEY = 'chatbot_booking';
-=======
  * Gestiona respuestas frecuentes, reserva de habitaciones y solicitudes a la habitación sin depender de APIs externas.
  */
 class HotelChatbotResponder
 {
     private const BOOKING_SESSION_KEY = 'chatbot_booking';
     private const SERVICE_SESSION_KEY = 'chatbot_service';
->>>>>>> theirs
 
     private mysqli $conn;
     private ?int $userId;
@@ -34,8 +26,6 @@ class HotelChatbotResponder
     /** @var array<string, string> */
     private array $mealPlans;
 
-<<<<<<< ours
-=======
     /** @var array<string, string> */
     private array $serviceTypeLabels;
 
@@ -45,60 +35,12 @@ class HotelChatbotResponder
     /** @var array<int, array<string, string>> */
     private array $defaultSuggestions;
 
->>>>>>> theirs
     public function __construct(mysqli $conn)
     {
         $this->conn = $conn;
         guest_portal_ensure_schema($conn);
 
         $this->roomTypes = [
-<<<<<<< ours
-            'habitacion doble'    => 'Habitación Doble',
-            'doble'               => 'Habitación Doble',
-            'habitacion suite'    => 'Habitación Suite',
-            'suite'               => 'Habitación Suite',
-            'habitacion multiple' => 'Habitación Múltiple',
-            'multiple'            => 'Habitación Múltiple',
-            'habitacion sencilla' => 'Habitación Sencilla',
-            'sencilla'            => 'Habitación Sencilla',
-        ];
-
-        $this->bedOptions = [
-            '1 cliente' => '1 cliente',
-            'uno'       => '1 cliente',
-            '2 clientes'=> '2 clientes',
-            'dos'       => '2 clientes',
-            '3 clientes'=> '3 clientes',
-            'tres'      => '3 clientes',
-            '4 clientes'=> '4 clientes',
-            'cuatro'    => '4 clientes',
-            'ninguno'   => 'None',
-            'sin adicional' => 'None',
-            'none'      => 'None',
-        ];
-
-        $this->mealPlans = [
-            'solo habitacion' => 'Room only',
-            'room only'       => 'Room only',
-            'desayuno'        => 'Breakfast',
-            'half board'      => 'Half Board',
-            'desayuno y cena' => 'Half Board',
-            'media pension'   => 'Half Board',
-            'full board'      => 'Full Board',
-            'comidas completas'=> 'Full Board',
-            'pension completa'=> 'Full Board',
-        ];
-
-        $this->knowledge = [
-            'descripcion' => 'El Hotel Andino es un hotel de estilo contemporáneo ubicado en Puerto Boyacá, Boyacá. Combinamos un ' .
-                'ambiente acogedor con amenidades modernas para viajeros de negocio y turismo.',
-            'ubicacion' => 'Estamos en Puerto Boyacá, en el departamento de Boyacá, Colombia. Desde el centro de la ciudad puedes ' .
-                'tomar la vía principal hacia el malecón y encontrarás el hotel a pocas cuadras, cerca del río Magdalena.',
-            'servicios' => [
-                'Piscina con zona de solárium',
-                'Spa con cabinas de masajes y sauna',
-                'Restaurante y room service disponibles 24/7',
-=======
             'habitacion doble'     => 'Habitación Doble',
             'habitación doble'     => 'Habitación Doble',
             'doble'                => 'Habitación Doble',
@@ -193,7 +135,6 @@ class HotelChatbotResponder
                 'Piscina con zona de solárium',
                 'Spa con cabinas de masajes y sauna',
                 'Restaurante con room service 24/7',
->>>>>>> theirs
                 'Gimnasio equipado disponible 24/7',
                 'Servicio de transporte en helicóptero bajo reserva previa',
                 'Conectividad Wi-Fi de alta velocidad en todas las áreas',
@@ -204,35 +145,15 @@ class HotelChatbotResponder
                 'Habitación Múltiple: perfecta para familias o grupos, configuraciones flexibles hasta cuatro personas.',
                 'Habitación Sencilla: opción práctica para viajeros individuales con todas las comodidades esenciales.',
             ],
-<<<<<<< ours
-            'check' => 'El check-in se realiza desde las 15:00 y el check-out hasta las 12:00. Si necesitas horarios distintos, ' .
-                'cuéntanos y coordinamos con recepción.',
-            'contacto' => 'Puedes escribirnos a reservas@hotelandino.com o llamarnos al (+57) 320 555 0198. Nuestro equipo de recepción ' .
-                'atiende 24/7.',
-            'indicaciones' => 'Para llegar desde el centro de Puerto Boyacá dirígete hacia el malecón por la Carrera 8. Al pasar la plaza ' .
-                'principal verás señalización del Hotel Andino a tu derecha; contamos con estacionamiento vigilado.',
-            'turismo' => 'En la sección de experiencias (turismo.php) encontrarás atractivos cercanos, recorridos por el río Magdalena y ' .
-                'recomendaciones personalizadas según tus intereses.',
-=======
             'check' => 'El check-in se realiza desde las 15:00 y el check-out hasta las 12:00. Si necesitas horarios distintos, cuéntanos y coordinamos con recepción.',
             'contacto' => 'Puedes escribirnos a reservas@hotelandino.com o llamarnos al (+57) 320 555 0198. Nuestro equipo de recepción atiende 24/7.',
             'indicaciones' => 'Para llegar desde el centro de Puerto Boyacá dirígete hacia el malecón por la Carrera 8. Al pasar la plaza principal verás señalización del Hotel Andino a tu derecha; contamos con estacionamiento vigilado.',
             'turismo' => 'En la sección de experiencias (turismo.php) encontrarás atractivos cercanos, recorridos por el río Magdalena y recomendaciones personalizadas según tus intereses.',
             'gastronomia' => 'Nuestro restaurante ofrece desayuno típico colombiano, opciones saludables, almuerzos ejecutivos y cenas gourmet. También podemos llevar platos y bebidas a tu habitación las 24 horas.',
->>>>>>> theirs
         ];
 
         $this->userId = $this->resolveUserId();
         $this->activeReservation = $this->userId ? guest_portal_active_reservation($conn, $this->userId) : null;
-<<<<<<< ours
-    }
-
-    public function handle(string $message): string
-    {
-        $message = trim($message);
-        if ($message === '') {
-            return 'Cuéntame en qué puedo ayudarte: información del hotel, servicios o si deseas reservar una habitación.';
-=======
         $this->defaultSuggestions = $this->buildDefaultSuggestions();
     }
 
@@ -247,30 +168,22 @@ class HotelChatbotResponder
                 'Cuéntame en qué puedo ayudarte: información del hotel, servicios o si deseas reservar una habitación.',
                 $this->defaultSuggestions,
             );
->>>>>>> theirs
         }
 
         $normalized = mb_strtolower($message, 'UTF-8');
 
         if ($this->isResetCommand($normalized)) {
             $this->resetBooking();
-<<<<<<< ours
-            return 'He reiniciado la conversación. ¿Necesitas información del hotel o deseas iniciar una reserva?';
-=======
             $this->resetService();
             return $this->respond(
                 'He reiniciado la conversación. ¿Necesitas información del hotel, deseas reservar o prefieres solicitar algo a tu habitación?',
                 $this->defaultSuggestions,
             );
->>>>>>> theirs
         }
 
         if ($this->isCancelling($normalized)) {
             if ($this->isBookingActive()) {
                 $this->resetBooking();
-<<<<<<< ours
-                return 'No hay problema, cancelé la reserva en curso. Si necesitas retomarla solo dime “reservar habitación”.';
-=======
                 return $this->respond(
                     'No hay problema, cancelé la reserva en curso. Si necesitas retomarla solo dime “reservar habitación”.',
                     $this->defaultSuggestions,
@@ -282,7 +195,6 @@ class HotelChatbotResponder
                     'Cancelé la solicitud en curso. Si necesitas pedir algo a la habitación vuelve a indicármelo.',
                     $this->defaultSuggestions,
                 );
->>>>>>> theirs
             }
         }
 
@@ -290,82 +202,23 @@ class HotelChatbotResponder
             return $this->continueBooking($message);
         }
 
-<<<<<<< ours
-=======
         if ($this->isServiceActive()) {
             return $this->continueServiceRequest($message);
         }
 
->>>>>>> theirs
         if ($this->shouldStartBooking($normalized)) {
             return $this->startBooking();
         }
 
-<<<<<<< ours
-=======
         if ($this->shouldStartServiceRequest($normalized)) {
             return $this->startServiceRequest();
         }
 
->>>>>>> theirs
         if ($this->isReservationStatusQuestion($normalized)) {
             return $this->reservationStatusMessage();
         }
 
         if ($this->contains($normalized, ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'hey', 'saludos'])) {
-<<<<<<< ours
-            return '¡Hola! Soy el asistente virtual del Hotel Andino. Puedo darte detalles del hotel, servicios o ayudarte a reservar.';
-        }
-
-        if ($this->contains($normalized, ['dónde están', 'donde estan', 'ubicación', 'ubicacion', 'ciudad', 'puerto boyacá', 'puerto boyaca'])) {
-            return $this->knowledge['ubicacion'];
-        }
-
-        if ($this->contains($normalized, ['qué es el hotel', 'que es el hotel', 'sobre el hotel', 'quienes son', 'información del hotel', 'informacion del hotel'])) {
-            return $this->knowledge['descripcion'];
-        }
-
-        if ($this->contains($normalized, ['habitaciones', 'tipos de habitación', 'tipo de habitación', 'cuartos disponibles', 'habitacion', 'habitaciones disponibles'])) {
-            return 'Contamos con estas opciones de habitación: ' . $this->formatList($this->knowledge['habitaciones']);
-        }
-
-        if ($this->contains($normalized, ['servicios', 'amenidades', 'instalaciones', 'spa', 'piscina', 'gimnasio', 'restaurante'])) {
-            return 'Nuestros servicios destacados incluyen: ' . $this->formatList($this->knowledge['servicios']);
-        }
-
-        if ($this->contains($normalized, ['check in', 'check-in', 'check out', 'check-out', 'horario de llegada', 'horario de salida'])) {
-            return $this->knowledge['check'];
-        }
-
-        if ($this->contains($normalized, ['contacto', 'teléfono', 'telefono', 'correo', 'email', 'whatsapp'])) {
-            return $this->knowledge['contacto'];
-        }
-
-        if ($this->contains($normalized, ['cómo llegar', 'como llegar', 'indicaciones', 'llegar al hotel', 'direccion'])) {
-            return $this->knowledge['indicaciones'];
-        }
-
-        if ($this->contains($normalized, ['actividades', 'planes', 'turismo', 'qué hacer', 'que hacer', 'lugares cercanos'])) {
-            return $this->knowledge['turismo'];
-        }
-
-        if ($this->contains($normalized, ['precio', 'tarifa', 'costo', 'cuánto vale', 'cuanto vale', 'valores'])) {
-            return 'Las tarifas cambian según temporada y disponibilidad. Dime qué fechas te interesan o inicia una reserva y te ' .
-                'contactaremos con la cotización exacta.';
-        }
-
-        if ($this->contains($normalized, ['ayuda', 'qué puedes hacer', 'que puedes hacer', 'opciones'])) {
-            return 'Puedo compartir información del Hotel Andino, detallar servicios, contarte sobre experiencias turísticas y gestionar ' .
-                'una solicitud de reserva paso a paso.';
-        }
-
-        return 'Puedo ayudarte con información del hotel, servicios disponibles y reservas. Si quieres reservar dime “reservar habitación”.';
-    }
-
-    private function startBooking(): string
-    {
-        $_SESSION[self::SESSION_KEY] = [
-=======
             return $this->respond(
                 '¡Hola! Soy el asistente virtual del Hotel Andino. Puedo darte detalles del hotel, servicios, ayudarte a reservar o solicitar algo para tu habitación.',
                 $this->defaultSuggestions,
@@ -431,19 +284,10 @@ class HotelChatbotResponder
     private function startBooking(): array
     {
         $_SESSION[self::BOOKING_SESSION_KEY] = [
->>>>>>> theirs
             'step' => 'name',
             'data' => [],
         ];
 
-<<<<<<< ours
-        return 'Perfecto, iniciemos tu reserva. ¿Cuál es tu nombre completo? (Escribe “cancelar” para detener el proceso.)';
-    }
-
-    private function continueBooking(string $message): string
-    {
-        $state = $_SESSION[self::SESSION_KEY] ?? ['step' => 'name', 'data' => []];
-=======
         return $this->respond(
             'Perfecto, iniciemos tu reserva. ¿Cuál es tu nombre completo? (Escribe “cancelar” para detener el proceso.)',
             [],
@@ -454,7 +298,6 @@ class HotelChatbotResponder
     private function continueBooking(string $message): array
     {
         $state = $_SESSION[self::BOOKING_SESSION_KEY] ?? ['step' => 'name', 'data' => []];
->>>>>>> theirs
         $step = $state['step'] ?? 'name';
         $data = $state['data'] ?? [];
 
@@ -462,72 +305,51 @@ class HotelChatbotResponder
             case 'name':
                 $value = trim($message);
                 if (mb_strlen($value, 'UTF-8') < 3) {
-<<<<<<< ours
-                    return 'Necesito un nombre y apellido para la reserva. Por favor escríbelo completo.';
-=======
                     return $this->respond(
                         'Necesito un nombre y apellido para la reserva. Por favor escríbelo completo.',
                         [],
                         ['inputType' => 'text', 'placeholder' => 'Nombre y apellido']
                     );
->>>>>>> theirs
                 }
                 $data['Name'] = $value;
                 $nextPrompt = 'Gracias, ' . $value . '. ¿Cuál es tu correo electrónico de contacto?';
                 $nextStep = 'email';
-<<<<<<< ours
-=======
                 $suggestions = [];
                 $meta = ['inputType' => 'email', 'placeholder' => 'correo@ejemplo.com'];
->>>>>>> theirs
                 break;
 
             case 'email':
                 $email = filter_var(trim($message), FILTER_VALIDATE_EMAIL);
                 if (!$email) {
-<<<<<<< ours
-                    return 'El correo no parece válido. Escríbelo con formato nombre@dominio.com.';
-=======
                     return $this->respond(
                         'El correo no parece válido. Escríbelo con formato nombre@dominio.com.',
                         [],
                         ['inputType' => 'email', 'placeholder' => 'correo@ejemplo.com']
                     );
->>>>>>> theirs
                 }
                 $data['Email'] = $email;
                 $nextPrompt = '¿Desde qué país nos visitas?';
                 $nextStep = 'country';
-<<<<<<< ours
-=======
                 $suggestions = [];
                 $meta = ['inputType' => 'text', 'placeholder' => 'Escribe tu país'];
->>>>>>> theirs
                 break;
 
             case 'country':
                 $country = trim($message);
                 if ($country === '') {
-<<<<<<< ours
-                    return 'Indica el país de procedencia para registrar la reserva.';
-=======
                     return $this->respond(
                         'Indica el país de procedencia para registrar la reserva.',
                         [],
                         ['inputType' => 'text', 'placeholder' => 'Escribe tu país']
                     );
->>>>>>> theirs
                 }
                 $data['Country'] = $country;
                 $nextPrompt = '¿Deseas registrar un número de teléfono? (puedes escribir “omitir”).';
                 $nextStep = 'phone';
-<<<<<<< ours
-=======
                 $suggestions = [
                     $this->suggestion('Omitir', 'Omitir'),
                 ];
                 $meta = ['inputType' => 'tel', 'placeholder' => 'Número con indicativo u “omitir”'];
->>>>>>> theirs
                 break;
 
             case 'phone':
@@ -537,15 +359,6 @@ class HotelChatbotResponder
                 } else {
                     $sanitized = preg_replace('/[^0-9+\s()-]/', '', $phone);
                     if ($sanitized === '') {
-<<<<<<< ours
-                        return 'Si deseas compartirlo, escribe el número incluyendo indicativo. También puedes responder “omitir”.';
-                    }
-                    $data['Phone'] = $sanitized;
-                }
-                $options = implode(', ', array_unique(array_values($this->roomTypes)));
-                $nextPrompt = '¿Qué tipo de habitación prefieres? Opciones: ' . $options . '.';
-                $nextStep = 'room_type';
-=======
                         return $this->respond(
                             'Si deseas compartirlo, escribe el número incluyendo indicativo. También puedes responder “omitir”.',
                             [$this->suggestion('Omitir', 'Omitir')],
@@ -559,19 +372,11 @@ class HotelChatbotResponder
                 $nextStep = 'room_type';
                 $suggestions = $options;
                 $meta = ['inputType' => 'text', 'placeholder' => 'Selecciona un tipo de habitación'];
->>>>>>> theirs
                 break;
 
             case 'room_type':
                 $room = $this->matchOption($message, $this->roomTypes);
                 if ($room === null) {
-<<<<<<< ours
-                    return 'Indica uno de los tipos disponibles (Doble, Suite, Múltiple o Sencilla).';
-                }
-                $data['RoomType'] = $room;
-                $nextPrompt = '¿Para cuántas personas necesitas la habitación? (1, 2, 3, 4 clientes o “sin adicional”).';
-                $nextStep = 'bed';
-=======
                     return $this->respond(
                         'Indica uno de los tipos disponibles (Doble, Suite, Múltiple o Sencilla).',
                         $this->suggestionListFromValues(array_values($this->roomTypes)),
@@ -589,19 +394,11 @@ class HotelChatbotResponder
                 $nextPrompt = '¿Para cuántas personas necesitas la habitación? (1, 2, 3, 4 clientes o “sin adicional”).';
                 $nextStep = 'bed';
                 $meta = ['inputType' => 'text', 'placeholder' => 'Selecciona la capacidad'];
->>>>>>> theirs
                 break;
 
             case 'bed':
                 $bed = $this->matchOption($message, $this->bedOptions);
                 if ($bed === null) {
-<<<<<<< ours
-                    return 'Responde con 1, 2, 3, 4 clientes o indica “sin adicional”.';
-                }
-                $data['Bed'] = $bed;
-                $nextPrompt = '¿Cuántas habitaciones del mismo tipo necesitas? (normalmente 1).';
-                $nextStep = 'rooms';
-=======
                     return $this->respond(
                         'Responde con 1, 2, 3, 4 clientes o indica “sin adicional”.',
                         [
@@ -623,20 +420,11 @@ class HotelChatbotResponder
                 $nextPrompt = '¿Cuántas habitaciones del mismo tipo necesitas? (normalmente 1).';
                 $nextStep = 'rooms';
                 $meta = ['inputType' => 'number', 'placeholder' => 'Indica un número'];
->>>>>>> theirs
                 break;
 
             case 'rooms':
                 $count = (int) filter_var($message, FILTER_SANITIZE_NUMBER_INT);
                 if ($count < 1) {
-<<<<<<< ours
-                    return 'Indica un número válido de habitaciones (por ejemplo 1).';
-                }
-                $data['NoofRoom'] = $count;
-                $options = implode(', ', array_unique(array_values($this->mealPlans)));
-                $nextPrompt = '¿Qué plan de alimentación prefieres? Opciones: ' . $options . '.';
-                $nextStep = 'meal';
-=======
                     return $this->respond(
                         'Indica un número válido de habitaciones (por ejemplo 1).',
                         [
@@ -657,19 +445,11 @@ class HotelChatbotResponder
                 $nextPrompt = '¿Qué plan de alimentación prefieres?';
                 $nextStep = 'meal';
                 $meta = ['inputType' => 'text', 'placeholder' => 'Selecciona un plan de alimentación'];
->>>>>>> theirs
                 break;
 
             case 'meal':
                 $meal = $this->matchOption($message, $this->mealPlans);
                 if ($meal === null) {
-<<<<<<< ours
-                    return 'Elige entre Solo habitación, Desayuno, Desayuno y Cena o Comidas completas.';
-                }
-                $data['Meal'] = $meal;
-                $nextPrompt = '¿Cuál es la fecha de llegada? (formato AAAA-MM-DD o DD/MM/AAAA).';
-                $nextStep = 'check_in';
-=======
                     return $this->respond(
                         'Elige entre Solo habitación, Desayuno incluido, Desayuno y cena o Pensión completa.',
                         [
@@ -686,19 +466,11 @@ class HotelChatbotResponder
                 $nextStep = 'check_in';
                 $suggestions = [];
                 $meta = ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de llegada'];
->>>>>>> theirs
                 break;
 
             case 'check_in':
                 $cin = $this->parseDate($message);
                 if ($cin === null) {
-<<<<<<< ours
-                    return 'No pude reconocer la fecha de llegada. Usa el formato AAAA-MM-DD o DD/MM/AAAA.';
-                }
-                $data['cin'] = $cin;
-                $nextPrompt = '¿Cuál es la fecha de salida? (formato AAAA-MM-DD o DD/MM/AAAA).';
-                $nextStep = 'check_out';
-=======
                     return $this->respond(
                         'No pude reconocer la fecha de llegada. Usa el selector o el formato AAAA-MM-DD.',
                         [],
@@ -710,21 +482,16 @@ class HotelChatbotResponder
                 $nextStep = 'check_out';
                 $suggestions = [];
                 $meta = ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de salida'];
->>>>>>> theirs
                 break;
 
             case 'check_out':
                 $cout = $this->parseDate($message);
                 if ($cout === null) {
-<<<<<<< ours
-                    return 'No pude reconocer la fecha de salida. Usa el formato AAAA-MM-DD o DD/MM/AAAA.';
-=======
                     return $this->respond(
                         'No pude reconocer la fecha de salida. Usa el selector o el formato AAAA-MM-DD.',
                         [],
                         ['inputType' => 'date', 'placeholder' => 'Selecciona la fecha de salida']
                     );
->>>>>>> theirs
                 }
                 $data['cout'] = $cout;
                 $this->resetBooking();
@@ -732,12 +499,6 @@ class HotelChatbotResponder
 
             default:
                 $this->resetBooking();
-<<<<<<< ours
-                return 'Ocurrió algo inesperado, reiniciemos la reserva. ¿Deseas intentarlo de nuevo?';
-        }
-
-        $_SESSION[self::SESSION_KEY] = [
-=======
                 return $this->respond(
                     'Ocurrió algo inesperado, reiniciemos la reserva. ¿Deseas intentarlo de nuevo?',
                     $this->defaultSuggestions
@@ -745,35 +506,23 @@ class HotelChatbotResponder
         }
 
         $_SESSION[self::BOOKING_SESSION_KEY] = [
->>>>>>> theirs
             'step' => $nextStep,
             'data' => $data,
         ];
 
-<<<<<<< ours
-        return $nextPrompt;
-    }
-
-    private function finalizeBooking(array $data): string
-=======
         return $this->respond($nextPrompt, $suggestions ?? [], $meta ?? []);
     }
 
     private function finalizeBooking(array $data): array
->>>>>>> theirs
     {
         $cin = strtotime($data['cin']);
         $cout = strtotime($data['cout']);
         if ($cin === false || $cout === false || $cout <= $cin) {
-<<<<<<< ours
-            return 'La fecha de salida debe ser posterior a la llegada. Vuelve a iniciar la reserva para corregir las fechas.';
-=======
             return $this->respond(
                 'La fecha de salida debe ser posterior a la llegada. Vuelve a iniciar la reserva para corregir las fechas.',
                 $this->defaultSuggestions,
                 ['inputType' => 'text']
             );
->>>>>>> theirs
         }
         $nodays = (int) round(($cout - $cin) / 86400);
 
@@ -784,14 +533,10 @@ class HotelChatbotResponder
             . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) {
-<<<<<<< ours
-            return 'No pude registrar la reserva en este momento. Intenta nuevamente en unos minutos.';
-=======
             return $this->respond(
                 'No pude registrar la reserva en este momento. Intenta nuevamente en unos minutos.',
                 $this->defaultSuggestions
             );
->>>>>>> theirs
         }
 
         $phone = $data['Phone'] ?? '';
@@ -821,14 +566,10 @@ class HotelChatbotResponder
         $stmt->close();
 
         if (!$ok || $reservationId <= 0) {
-<<<<<<< ours
-            return 'No pude registrar la reserva en la base de datos. Por favor intenta nuevamente más tarde.';
-=======
             return $this->respond(
                 'No pude registrar la reserva en la base de datos. Por favor intenta nuevamente más tarde.',
                 $this->defaultSuggestions
             );
->>>>>>> theirs
         }
 
         $notifMessage = sprintf('Nueva reserva pendiente de %s (%s)', $data['Name'], $data['Email']);
@@ -840,28 +581,11 @@ class HotelChatbotResponder
             $data['Name'],
             $data['Email'],
             $data['RoomType'],
-<<<<<<< ours
-            $data['Meal'],
-=======
             $this->friendlyMealLabel($data['Meal']),
->>>>>>> theirs
             $this->formatDateForUser($data['cin']),
             $this->formatDateForUser($data['cout'])
         );
 
-<<<<<<< ours
-        return $summary;
-    }
-
-    private function reservationStatusMessage(): string
-    {
-        if (!$this->userId) {
-            return 'Para consultar el estado de tus reservas inicia sesión con tu cuenta y dirígete a la sección “Mis reservas” en el portal de huéspedes.';
-        }
-
-        if (!$this->activeReservation) {
-            return 'No encuentro reservas activas asociadas a tu cuenta en este momento. Puedes iniciar una nueva reserva cuando lo desees.';
-=======
         return $this->respond($summary, $this->defaultSuggestions);
     }
 
@@ -879,37 +603,12 @@ class HotelChatbotResponder
                 'No encuentro reservas activas asociadas a tu cuenta en este momento. Puedes iniciar una nueva reserva cuando lo desees.',
                 $this->defaultSuggestions
             );
->>>>>>> theirs
         }
 
         $status = $this->activeReservation['stat'] ?? 'NotConfirm';
         $label = match ($status) {
             'Confirm' => 'confirmada',
             'Ocupado', 'CheckIn' => 'en curso',
-<<<<<<< ours
-            'NotConfirm' => 'pendiente de confirmación',
-            default => strtolower($status),
-        };
-
-        $room = $this->activeReservation['RoomType']
-            ?? $this->activeReservation['room_type_name']
-            ?? 'habitación';
-        $cin = $this->activeReservation['cin'] ?? '';
-        $cout = $this->activeReservation['cout'] ?? '';
-
-        return sprintf(
-            'Tu reserva más reciente es %s para la %s. Check-in %s y check-out %s. Si necesitas ajustes avísanos por este medio.',
-            $label,
-            $room,
-            $cin ? $this->formatDateForUser($cin) : 'sin fecha registrada',
-            $cout ? $this->formatDateForUser($cout) : 'sin fecha registrada'
-        );
-    }
-
-    private function isBookingActive(): bool
-    {
-        return isset($_SESSION[self::SESSION_KEY]) && is_array($_SESSION[self::SESSION_KEY]);
-=======
             'Checkout' => 'finalizada',
             default => 'pendiente de confirmación',
         };
@@ -1086,14 +785,10 @@ class HotelChatbotResponder
     private function isBookingActive(): bool
     {
         return isset($_SESSION[self::BOOKING_SESSION_KEY]) && is_array($_SESSION[self::BOOKING_SESSION_KEY]);
->>>>>>> theirs
     }
 
     private function resetBooking(): void
     {
-<<<<<<< ours
-        unset($_SESSION[self::SESSION_KEY]);
-=======
         unset($_SESSION[self::BOOKING_SESSION_KEY]);
     }
 
@@ -1105,7 +800,6 @@ class HotelChatbotResponder
     private function resetService(): void
     {
         unset($_SESSION[self::SERVICE_SESSION_KEY]);
->>>>>>> theirs
     }
 
     private function isResetCommand(string $normalized): bool
@@ -1115,11 +809,7 @@ class HotelChatbotResponder
 
     private function isCancelling(string $normalized): bool
     {
-<<<<<<< ours
-        return $this->contains($normalized, ['cancelar', 'detener', 'no continuar', 'parar reserva']);
-=======
         return $this->contains($normalized, ['cancelar', 'detener', 'no continuar', 'parar reserva', 'cancelar solicitud']);
->>>>>>> theirs
     }
 
     private function shouldStartBooking(string $normalized): bool
@@ -1127,9 +817,6 @@ class HotelChatbotResponder
         if ($this->contains($normalized, ['mi reserva', 'estado de mi reserva', 'tengo una reserva'])) {
             return false;
         }
-<<<<<<< ours
-        return $this->contains($normalized, ['reservar', 'hacer una reserva', 'quiero reservar', 'book', 'necesito una habitación', 'necesito habitacion']);
-=======
         return $this->contains($normalized, ['reservar', 'reservar habitación', 'reservar habitacion', 'hacer una reserva', 'quiero reservar', 'necesito una habitación', 'necesito habitacion']);
     }
 
@@ -1147,7 +834,6 @@ class HotelChatbotResponder
             'solicitud a la habitación',
             'solicitar a la habitacion',
         ]);
->>>>>>> theirs
     }
 
     private function isReservationStatusQuestion(string $normalized): bool
@@ -1231,22 +917,6 @@ class HotelChatbotResponder
 
     private function resolveUserId(): ?int
     {
-<<<<<<< ours
-        $email = $_SESSION['usermail'] ?? null;
-        if (!is_string($email) || $email === '') {
-            return null;
-        }
-
-        $user = guest_portal_fetch_user($this->conn, $email);
-        if (!$user) {
-            return null;
-        }
-
-        $id = $user['UserID'] ?? null;
-        return is_numeric($id) ? (int) $id : null;
-    }
-}
-=======
         if (isset($_SESSION['user'])) {
             $user = $_SESSION['user'];
             if (is_array($user)) {
@@ -1401,5 +1071,3 @@ class HotelChatbotResponder
         ];
     }
 }
-
->>>>>>> theirs
