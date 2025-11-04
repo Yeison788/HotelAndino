@@ -1,6 +1,6 @@
 <?php
 include 'config.php';
-require_once __DIR__ . '/includes/guest_portal.php';
+require_once __DIR__ . './admin/includes/guest_portal.php';
 session_start();
 
 /* ===========
